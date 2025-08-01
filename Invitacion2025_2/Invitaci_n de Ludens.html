@@ -11,22 +11,22 @@
 	<body>
 		<tw-story tags></tw-story>
 		<tw-storydata name="Invitación de Ludens" startnode="1" creator="Twine" creator-version="2.10.0" format="Snowman" format-version="2.0.2" ifid="238f88e5-8ea8-42be-9b08-5b35560acf41" options="" tags="" zoom="1" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css"><link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&family=Cormorant+Garamond:wght@600&display=swap" rel="stylesheet">
-/* === Estilo base: fondo de pergamino y tipografía serif === */
+
 body {
-  background-color: #f8f4e6; /* Color papel antiguo */
-  color: #3a3226; /* Tinta marrón oscura */
+  background-color: #f8f4e6;
+  color: #3a3226;
   font-family: 'Crimson Text', 'Times New Roman', serif;
   line-height: 1.8;
   padding: 40px;
   max-width: 700px;
   margin: 0 auto;
-  border: 12px double #8b5a2b; /* Borde doble como encuadernación */
+  border: 12px double #8b5a2b;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  font-size: 18px;
 }
 
-/* === Título principal (estilo capitular) === */
 h1 {
-  color: #5c2b1a; /* Rojo oscuro */
+  color: #5c2b1a;
   text-align: center;
   font-family: 'Cormorant Garamond', 'Times New Roman', serif;
   font-weight: 450;
@@ -34,18 +34,17 @@ h1 {
   letter-spacing: 1px;
   border-bottom: 1px solid #8b5a2b;
   padding-bottom: 10px;
+  font-size: 2em;
 }
 
-/* === Contenedor del texto (simula página de libro) === */
 .passage {
   background-color: rgba(248, 244, 230, 0.9);
   padding: 30px;
   margin: 20px 0;
 }
 
-/* === Enlaces (simulan anotaciones en tinta) === */
 a {
-  color: #7a4a3a; /* Marrón rojizo */
+  color: #7a4a3a;
   text-decoration: none;
   border-bottom: 1px solid #7a4a3a;
   padding-bottom: 2px;
@@ -57,7 +56,6 @@ a:hover {
   background-color: rgba(139, 90, 43, 0.05);
 }
 
-/* === Botones (como botones de libros antiguos) === */
 .button {
   display: inline-block;
   background-color: transparent;
@@ -74,7 +72,6 @@ a:hover {
   background-color: rgba(92, 43, 26, 0.1);
 }
 
-/* === Pistas temáticas (como citas o notas al margen) === */
 .pista {
   background-color: rgba(222, 207, 182, 0.5);
   border-left: 3px solid #8b5a2b;
@@ -83,12 +80,33 @@ a:hover {
   font-style: normal;
 }
 
-/* === Tipografías personalizadas (importar en HTML) === */
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&family=Cormorant+Garamond:wght@600&display=swap');
-
-/* === Tamaño imagen === */
+/* Tamaño de imágenes */
 span.smaller > img {
-	width: 800px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* === Media queries para móviles === */
+@media (max-width: 600px) {
+  body {
+    padding: 20px;
+    font-size: 16px;
+  }
+
+  h1 {
+    font-size: 1.5em;
+  }
+
+  .passage {
+    padding: 20px;
+  }
+
+  .button {
+    font-size: 1em;
+    padding: 6px 16px;
+  }
 }</style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="Inicio" tags="" position="800,400" size="100,100"># El Llamado del Profesor Ludens
 
 En un aula olvidada de la universidad, donde las ideas de clase se acumulan como polvo, el Profesor Ludens ha dejado una misteriosa carta en un escritorio. 
@@ -132,23 +150,27 @@ El Profesor Ludens, con una sonrisa, te lanza un desafío:
 &lt;center&gt;
 &lt;div class= &quot;button&quot;&gt;
 	[[Un tablero de cultivos y montañas-&gt;Cosecha y Solidaridad]]&lt;/div&gt;
+&lt;/div&gt;
 
 &lt;div class= &quot;button&quot;&gt;
 	[[Cartas con rostros de mineros y empresarios-&gt;La mina de los secretos]]&lt;/div&gt; 
-
+&lt;/div&gt;
 &lt;div class= &quot;button&quot;&gt;
 	[[Simulador de ecosistemas con fichas de animales-&gt;Balance Ecológico]]&lt;/div&gt;
+&lt;/div&gt;
 &lt;/center&gt;</tw-passagedata><tw-passagedata pid="3" name="Fin Aburrido" tags="" position="875,600" size="100,100"># Final aburrido
 
 &lt;center&gt;
 ¡El semestre termina sin sorpresas!
 
+&lt;span class=&quot;smaller&quot;&gt;
 &lt;img src =  ImagesInvitacionLudens\old_fashion_teacher-removebg-preview.png&gt;
+&lt;/span&gt;
 
 Pero... ¿y si hubieras dicho sí?
 
 &lt;div class= &quot;button&quot;&gt;
-[[¡Vovler en el tiempo!-&gt;Inicio]]
+[[¡Volver en el tiempo!-&gt;Inicio]]
 &lt;/div&gt;</tw-passagedata><tw-passagedata pid="4" name="Cosecha y Solidaridad" tags="" position="1175,275" size="100,100"># Cosecha y Solidaridad
 
 El Profesor Ludens despliega un tablero de campos y ríos hexagonales donde los jugadores son familias campesinas. 
@@ -160,33 +182,39 @@ El Profesor Ludens despliega un tablero de campos y ríos hexagonales donde los 
 Cada turno, los dados deciden la cosecha, pero hay reglas clave:
 
 ✔️Intercambios: trueques de maíz por leña.
+
 ✔️Consecuencias: Si acaparas, la comunidad te excluye.
+
 ✔️Eventos: &quot;Sequía: ¿comparten el agua o guardan para su familia?
 
 Ludens sonríe: 
 &lt;div class=&quot;pista&quot;&gt;
-&quot;Gana quien mejor colabore, no quien acumule más.&quot;
+&#39;Gana quien mejor colabore, no quien acumule más&#39;.
 &lt;/div&gt;
 
 &lt;center&gt;
-¡Lo usaré en mi clase! 
-&lt;div class= &quot;button&quot;&gt;
-&lt;center&gt;
-[[Firma con semillas: cosecharás cooperación-&gt;Invitación]]
-&lt;/div&gt;
-
-&lt;div class= &quot;button&quot;&gt;
-[[Quiero otra opción-&gt;El Laboratorio Secreto]]
-&lt;/div&gt;
+	¡Lo usaré en mi clase! 
 &lt;/center&gt;
 
-</tw-passagedata><tw-passagedata pid="5" name="La mina de los secretos" tags="" position="1175,400" size="100,100"># La Mina de los Secretos
+&lt;center&gt;
+  &lt;div class= &quot;button&quot;&gt;
+  &lt;center&gt;
+  	[[Firma con semillas: cosecharás cooperación-&gt;Invitación]]
+  &lt;/div&gt;
+&lt;/center&gt;
+
+&lt;center&gt;
+  &lt;div class= &quot;button&quot;&gt;
+  	[[Quiero otra opción-&gt;El Laboratorio Secreto]]
+  &lt;/div&gt;
+&lt;/center&gt;</tw-passagedata><tw-passagedata pid="5" name="La mina de los secretos" tags="" position="1175,400" size="100,100"># La Mina de los Secretos
 
 Ludens reparte cartas ocultas a los jugadores:
 
 1.	Mineros (80% del grupo): deben organizar una huelga para mejorar condiciones.
 2.	Líderes comunitarios (15%): buscan apoyo para escuelas y hospitales.
 3.	CEO oculto (5%, al estilo Hitler Secreto): su meta es despedir trabajadores sin ser descubierto.
+
 &lt;center&gt;
 	&lt;img src =  ImagesInvitacionLudens\miner-removebg-preview.png
 &lt;/center&gt;
@@ -201,18 +229,18 @@ Dinámica por turnos:
 
 Ludens susurra: 
 &lt;div class=&quot;pista&quot;&gt;
-&quot;¿Ven? El poder real nunca se muestra… hasta que es demasiado tarde.&quot;
+&#39;¿Ven? El poder real nunca se muestra… hasta que es demasiado tarde&#39;.
 &lt;/div&gt;
 
 &lt;center&gt;
-¡Es perfecto para discutir desigualdad laboral!
-&lt;div class= &quot;button&quot;&gt;
-&lt;center&gt;
-[[Firma con polvo de carbón y revelarás las grietas del sistema-&gt;Invitación]]
+	¡Es perfecto para discutir desigualdad laboral!
+  &lt;div class= &quot;button&quot;&gt;
+  &lt;center&gt;
+  [[Firma con polvo de carbón y revelarás las grietas del sistema-&gt;Invitación]]
 &lt;/div&gt;
 
 &lt;div class= &quot;button&quot;&gt;
-[[Demasiado intenso para mi grupo-&gt;El Laboratorio Secreto]]
+	[[Demasiado intenso para mi grupo-&gt;El Laboratorio Secreto]]
 &lt;/div&gt;
 &lt;/center&gt;
 </tw-passagedata><tw-passagedata pid="6" name="Balance Ecológico" tags="" position="1175,525" size="100,100"># Balance Ecológico
@@ -239,8 +267,9 @@ Ludens ajusta sus gafas:
 
 &lt;div class= &quot;button&quot;&gt;[[Necesito más ejemplos-&gt;El Laboratorio Secreto]]&lt;/div&gt;
 &lt;/center&gt;</tw-passagedata><tw-passagedata pid="7" name="Invitación" tags="" position="1350,400" size="100,100"># Invitación al Juegaboratorio
-
+&lt;center&gt;
 ¡Ve reservando los viernes cada 15 días!
+&lt;/center&gt;
 
 &lt;center&gt;
 &lt;span class=&quot;smaller&quot;&gt;
