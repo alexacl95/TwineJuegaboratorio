@@ -290,7 +290,180 @@ a:hover {
   margin: 10px;
 }
 
-</style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="Inicio" tags="" position="675,200" size="100,100">&lt;h1&gt;Material Interactivo&lt;/h1&gt;
+
+/* Estilos para NetLogo */
+.contenedor-netlogo {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  margin: 25px auto;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  border: 2px solid var(--border-soft);
+}
+
+.contenedor-netlogo iframe {
+  width: 100%;
+  height: 650px;
+  display: block;
+  border: none;
+}
+
+.simulador-completo {
+  margin: 40px 0;
+  padding: 25px;
+  background-color: var(--panel-bg);
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+}
+
+.controles-simulacion {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-top: 25px;
+}
+
+.descripcion-simulacion {
+  background-color: rgba(31, 78, 121, 0.05);
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--blue-main);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .contenedor-netlogo iframe {
+    height: 500px;
+  }
+  
+  .controles-simulacion {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .contenedor-netlogo iframe {
+    height: 400px;
+  }
+}
+
+
+
+/*========== NETLOGO===========*/
+
+/* ================================
+   NETLOGO FULLSCREEN
+================================ */
+
+/* Contenedor de pantalla completa */
+.netlogo-fullscreen-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+  background: white !important;
+  display: none;
+  flex-direction: column;
+  font-family: inherit !important;
+}
+
+/* Cabecera del modal */
+.netlogo-fullscreen-header {
+  padding: 15px 20px !important;
+  background: var(--blue-main) !important;
+  color: white !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  border-bottom: 2px solid var(--blue-accent) !important;
+}
+
+.netlogo-fullscreen-title {
+  margin: 0 !important;
+  font-size: 1.3em !important;
+  font-weight: 500 !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Botón de cerrar */
+.netlogo-close-btn {
+  background: white !important;
+  color: var(--blue-main) !important;
+  border: none !important;
+  padding: 8px 18px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-weight: bold !important;
+  font-size: 0.9em !important;
+  transition: all 0.2s ease !important;
+}
+
+.netlogo-close-btn:hover {
+  background: #f0f0f0 !important;
+  transform: scale(1.05) !important;
+}
+
+/* Iframe dentro del modal */
+.netlogo-fullscreen-iframe {
+  width: 100% !important;
+  height: calc(100vh - 64px) !important; /* Resta altura del header */
+  border: none !important;
+  flex-grow: 1 !important;
+  display: block !important;
+}
+
+/* Botón para abrir modal */
+.netlogo-open-btn {
+  background: var(--blue-main) !important;
+  color: white !important;
+  border: none !important;
+  padding: 14px 28px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  margin: 25px auto !important;
+  font-weight: bold !important;
+  font-size: 1.1em !important;
+  display: block !important;
+  transition: all 0.3s ease !important;
+  box-shadow: var(--shadow-button) !important;
+  border-bottom: none !important;
+  text-decoration: none !important;
+  text-align: center !important;
+  width: fit-content !important;
+}
+
+.netlogo-open-btn:hover {
+  background: var(--blue-accent) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15) !important;
+  color: white !important;
+}
+
+/* Texto de recomendación */
+.netlogo-recommendation {
+  text-align: center !important;
+  color: #666 !important;
+  font-style: italic !important;
+  margin: 10px 0 30px 0 !important;
+  font-size: 0.95em !important;
+}
+
+/* Contenedor para múltiples simulaciones */
+.netlogo-sim-container {
+  margin: 30px 0;
+  padding: 20px;
+  background: var(--panel-bg);
+  border-radius: 10px;
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
+}</style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="Inicio" tags="" position="675,200" size="100,100">&lt;h1&gt;Material Interactivo&lt;/h1&gt;
 
 &lt;p&gt;
 Explora los simuladores disponibles por área y selecciona el módulo que deseas trabajar.
@@ -399,7 +572,289 @@ Cada sección contiene actividades guiadas y experimentos virtuales diseñados p
 
 &lt;footer style=&quot;text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--border-soft); color: #666; font-size: 0.9em;&quot;&gt;
   &lt;p&gt;&lt;strong&gt;IU Digital de Antioquia · Área de Ciencias Básicas&lt;/strong&gt;&lt;/p&gt;
-&lt;/footer&gt;</tw-passagedata><tw-passagedata pid="3" name="Epidemiología" tags="" position="925,300" size="100,100"></tw-passagedata><tw-passagedata pid="4" name="Jamovi" tags="" position="550,450" size="100,100">&lt;h1&gt;📊 Estadística: Jamovi&lt;/h1&gt;
+&lt;/footer&gt;</tw-passagedata><tw-passagedata pid="3" name="Epidemiología" tags="" position="925,175" size="100,100">&lt;h1&gt;🦠 Epidemiología&lt;/h1&gt;
+
+&lt;h2&gt; Simuladores Interactivos: agentes&lt;/h2&gt;
+&lt;p&gt;Explora modelos epidemiológicos a través de simulaciones interactivas que te permiten comprender la dinámica de propagación de enfermedades.&lt;/p&gt;
+
+&lt;details class=&quot;accordion&quot;&gt;
+  &lt;summary&gt;&lt;strong&gt;🔗 Virus en una Red - Modelo SIR&lt;/strong&gt;&lt;/summary&gt;
+  
+  &lt;div class=&quot;pista&quot;&gt;
+    &lt;p&gt;&lt;strong&gt;Simulador de propagación de virus en una red (SIR: Susceptible-Infectado-Resistente).&lt;/strong&gt; Cada nodo representa un elemento (ej. computadora) con tres estados:&lt;/p&gt;
+    &lt;ul&gt;
+      &lt;li&gt;🔵 &lt;strong&gt;Susceptible (azul):&lt;/strong&gt; Puede contagiarse&lt;/li&gt;
+      &lt;li&gt;🔴 &lt;strong&gt;Infectado (rojo):&lt;/strong&gt; Portador activo del virus&lt;/li&gt;
+      &lt;li&gt;⚪ &lt;strong&gt;Resistente (gris):&lt;/strong&gt; Recuperado e inmune&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Modal NetLogo --&gt;
+  &lt;div class=&quot;netlogo-fullscreen-modal&quot; id=&quot;epidemiologia-virus-red&quot;&gt;
+    &lt;div class=&quot;netlogo-fullscreen-header&quot;&gt;
+      &lt;h4 class=&quot;netlogo-fullscreen-title&quot;&gt;🔗 Simulación: Virus en una Red&lt;/h4&gt;
+      &lt;button class=&quot;netlogo-close-btn&quot; onclick=&quot;document.getElementById(&#39;epidemiologia-virus-red&#39;).style.display=&#39;none&#39;&quot;&gt;
+        Cerrar
+      &lt;/button&gt;
+    &lt;/div&gt;
+    &lt;iframe class=&quot;netlogo-fullscreen-iframe&quot; src=&quot;https://www.netlogoweb.org/launch#https://www.netlogoweb.org/assets/modelslib/Sample%20Models/Networks/Virus%20on%20a%20Network.nlogox&quot; title=&quot;Simulación de propagación de virus en red&quot;&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Botón para abrir simulación --&gt;
+  &lt;div class=&quot;centrar&quot; style=&quot;margin: 25px 0;&quot;&gt;
+    &lt;button class=&quot;netlogo-open-btn&quot; onclick=&quot;document.getElementById(&#39;epidemiologia-virus-red&#39;).style.display=&#39;flex&#39;&quot;&gt;
+      🚀 Abrir Simulación en Pantalla Completa
+    &lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;h3&gt; ¿Cómo funciona el modelo?&lt;/h3&gt;
+  
+  &lt;div class=&quot;pista&quot;&gt;
+    &lt;p&gt;&lt;strong&gt;Cada paso (tick) de la simulación:&lt;/strong&gt;&lt;/p&gt;
+    &lt;ol&gt;
+      &lt;li&gt;&lt;strong&gt;Contagio:&lt;/strong&gt; Nodos infectados intentan contagiar a vecinos susceptibles con probabilidad ajustable (&lt;code&gt;VIRUS-SPREAD-CHANCE&lt;/code&gt;)&lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;Detección:&lt;/strong&gt; Nodos infectados detectan el virus periódicamente (&lt;code&gt;VIRUS-CHECK-FREQUENCY&lt;/code&gt;)&lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;Recuperación:&lt;/strong&gt; Al detectarlo, pueden recuperarse (&lt;code&gt;RECOVERY-CHANCE&lt;/code&gt;) y volverse resistentes (&lt;code&gt;GAIN-RESISTANCE-CHANCE&lt;/code&gt;)&lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;Bloqueo:&lt;/strong&gt; Nodos resistentes oscurecen sus conexiones, bloqueando futuros contagios&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/div&gt;
+
+  &lt;h3&gt;Guía de uso paso a paso&lt;/h3&gt;
+  
+  &lt;div class=&quot;pista&quot;&gt;
+    &lt;strong&gt;1. ⚙️ Configuración inicial:&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code&gt;NUMBER-OF-NODES&lt;/code&gt; - Número total de nodos en la red&lt;/li&gt;
+      &lt;li&gt;&lt;code&gt;AVERAGE-NODE-DEGREE&lt;/code&gt; - Grado promedio de conexiones por nodo&lt;/li&gt;
+      &lt;li&gt;&lt;code&gt;INITIAL-OUTBREAK-SIZE&lt;/code&gt; - Tamaño inicial del brote infeccioso&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;pista&quot;&gt;
+    &lt;strong&gt;2. 🏃‍♂️ Ejecución:&lt;/strong&gt;
+    &lt;ol&gt;
+      &lt;li&gt;Haz clic en &lt;strong&gt;SETUP&lt;/strong&gt; para generar la red inicial&lt;/li&gt;
+      &lt;li&gt;Haz clic en &lt;strong&gt;GO&lt;/strong&gt; para iniciar la simulación (se detiene automáticamente al eliminar el virus)&lt;/li&gt;
+      &lt;li&gt;Puedes modificar los controles deslizantes durante la ejecución&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;pista&quot;&gt;
+    &lt;strong&gt;3. 📈 Monitoreo:&lt;/strong&gt;
+    &lt;p&gt;Observa la gráfica &lt;strong&gt;NETWORK STATUS&lt;/strong&gt; que muestra la evolución de los estados S, I, R en el tiempo:&lt;/p&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;strong&gt;Curva S:&lt;/strong&gt; Susceptibles (disminuye con los contagios)&lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;Curva I:&lt;/strong&gt; Infectados (aumenta y luego disminuye)&lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;Curva R:&lt;/strong&gt; Resistentes (aumenta con las recuperaciones)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/details&gt;
+
+
+
+&lt;details class=&quot;accordion&quot;&gt;
+  &lt;summary&gt;&lt;strong&gt; 👥 Contagio de una Enfermedad en una Población&lt;/strong&gt;&lt;/summary&gt;
+  
+  &lt;div class=&quot;pista&quot;&gt;
+    &lt;p&gt;Este modelo explora la propagación de una enfermedad bajo diferentes condiciones y entornos. Analiza cómo las suposiciones sobre las interacciones entre agentes pueden afectar drásticamente los resultados de la simulación.&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Modal NetLogo --&gt;
+  &lt;div class=&quot;netlogo-fullscreen-modal&quot; id=&quot;contagio-enfermedad-avanzado&quot;&gt;
+    &lt;div class=&quot;netlogo-fullscreen-header&quot;&gt;
+      &lt;h4 class=&quot;netlogo-fullscreen-title&quot;&gt;👥 Simulación: Contagio de una Enfermedad en una Población&lt;/h4&gt;
+      &lt;button class=&quot;netlogo-close-btn&quot; onclick=&quot;document.getElementById(&#39;contagio-enfermedad-avanzado&#39;).style.display=&#39;none&#39;&quot;&gt;
+        Cerrar
+      &lt;/button&gt;
+    &lt;/div&gt;
+    &lt;iframe class=&quot;netlogo-fullscreen-iframe&quot; src=&quot;https://www.netlogoweb.org/launch#https://www.netlogoweb.org/assets/modelslib/IABM%20Textbook/chapter%206/Spread%20of%20Disease.nlogox&quot; title=&quot;Simulación avanzada de contagio de enfermedad&quot;&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Botón para abrir simulación --&gt;
+  &lt;div class=&quot;centrar&quot; style=&quot;margin: 25px 0;&quot;&gt;
+    &lt;button class=&quot;netlogo-open-btn&quot; onclick=&quot;document.getElementById(&#39;contagio-enfermedad-avanzado&#39;).style.display=&#39;flex&#39;&quot;&gt;
+      🚀 Abrir Simulación en Pantalla Completa
+    &lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;h3&gt; ¿Cómo funciona?&lt;/h3&gt;
+  
+  &lt;div class=&quot;pista&quot;&gt;
+    &lt;p&gt;&lt;strong&gt;El procedimiento SETUP crea una población de agentes.&lt;/strong&gt; Según la opción seleccionada en &lt;code&gt;VARIANT&lt;/code&gt; (Variante), estos agentes tienen propiedades diferentes:&lt;/p&gt;
+    
+    &lt;ul&gt;
+      &lt;li&gt;🌐 &lt;strong&gt;NETWORK (Red):&lt;/strong&gt; Los agentes están conectados a través de una red social.&lt;/li&gt;
+      &lt;li&gt;🚶 &lt;strong&gt;MOBILE (Móvil) y ENVIRONMENTAL (Ambiental):&lt;/strong&gt; Los agentes se mueven por el entorno.&lt;/li&gt;
+    &lt;/ul&gt;
+    
+    &lt;p&gt;Al inicio, &lt;code&gt;NUM-INFECTED&lt;/code&gt; (Número de infectados) agentes contraen la enfermedad.&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;pista&quot;&gt;
+    &lt;p&gt;&lt;strong&gt;El procedimiento GO propaga la enfermedad:&lt;/strong&gt;&lt;/p&gt;
+    
+    &lt;ul&gt;
+      &lt;li&gt; &lt;strong&gt;En NETWORK:&lt;/strong&gt; A través de los enlaces de la red social.&lt;/li&gt;
+      &lt;li&gt; &lt;strong&gt;En MOBILE o ENVIRONMENTAL:&lt;/strong&gt; A vecinos cercanos en el espacio físico.&lt;/li&gt;
+      &lt;li&gt; &lt;strong&gt;En ENVIRONMENTAL:&lt;/strong&gt; También se propaga a través del ambiente (contaminación ambiental).&lt;/li&gt;
+      &lt;li&gt; &lt;strong&gt;En MOBILE y ENVIRONMENTAL:&lt;/strong&gt; Los agentes se mueven cada paso.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+
+  &lt;h3&gt; ¿Cómo usarlo?&lt;/h3&gt;
+  
+  &lt;div class=&quot;pista&quot;&gt;
+    &lt;strong&gt; Controles principales:&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code&gt;NUM-PEOPLE&lt;/code&gt; - &lt;strong&gt;Número de personas:&lt;/strong&gt; Define la cantidad de agentes en el mundo.&lt;/li&gt;
+      &lt;li&gt;&lt;code&gt;VARIANT&lt;/code&gt; - &lt;strong&gt;Variante:&lt;/strong&gt; Selecciona el mecanismo de propagación (Red, Móvil o Ambiental).&lt;/li&gt;
+      &lt;li&gt;&lt;code&gt;NUM-INFECTED&lt;/code&gt; - &lt;strong&gt;Número de infectados:&lt;/strong&gt; Define cuántos agentes empiezan infectados.&lt;/li&gt;
+      &lt;li&gt;&lt;code&gt;CONNECTIONS-PER-NODE&lt;/code&gt; - &lt;strong&gt;Conexiones por nodo:&lt;/strong&gt; Controla el número de enlaces que cada nodo intenta establecer en la variante NETWORK.&lt;/li&gt;
+      &lt;li&gt;&lt;code&gt;DISEASE-DECAY&lt;/code&gt; - &lt;strong&gt;Descomposición de la enfermedad:&lt;/strong&gt; Controla la rapidez con la que la enfermedad desaparece del ambiente (en la variante ENVIRONMENTAL).&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+
+  &lt;h3&gt;Botones de Control&lt;/h3&gt;
+  
+  &lt;div style=&quot;display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;&quot;&gt;
+    &lt;div class=&quot;pista&quot;&gt;
+      &lt;strong&gt; Control de Ejecución:&lt;/strong&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;strong&gt;SETUP:&lt;/strong&gt; Prepara la simulación con los parámetros actuales.&lt;/li&gt;
+        &lt;li&gt;&lt;strong&gt;GO ONCE:&lt;/strong&gt; Avanza la simulación un solo paso (tick).&lt;/li&gt;
+        &lt;li&gt;&lt;strong&gt;GO:&lt;/strong&gt; Ejecuta la simulación continuamente hasta que todos los agentes se infecten.&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+    
+    &lt;div class=&quot;pista&quot;&gt;
+      &lt;strong&gt;Visualización:&lt;/strong&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;strong&gt;REDO LAYOUT / Reorganizar diseño:&lt;/strong&gt; Mejora continuamente la disposición visual de la red (solo en variante NETWORK).&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;pista&quot; style=&quot;background-color: rgba(31, 78, 121, 0.1);&quot;&gt;
+    &lt;strong&gt;💡 Experimento Sugerido:&lt;/strong&gt;
+    &lt;p&gt;Prueba las tres variantes con los mismos parámetros iniciales y compara: ¿Cuál tiene la propagación más rápida? ¿Cómo afecta el número de conexiones en NETWORK? ¿Qué diferencia hace la descomposición ambiental en ENVIRONMENTAL?&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/details&gt;
+
+
+
+&lt;details class=&quot;accordion&quot;&gt;
+  &lt;summary&gt;&lt;strong&gt;😷 Contagio de una Enfermedad en Solitario&lt;/strong&gt;&lt;/summary&gt;
+  
+  &lt;div class=&quot;pista&quot;&gt;
+    &lt;p&gt;&lt;strong&gt;Simula la propagación de una enfermedad en una población.&lt;/strong&gt; Un agente (de color azul) es controlado por el usuario; los demás son &quot;androides&quot; controlados por el ordenador.&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Modal NetLogo --&gt;
+  &lt;div class=&quot;netlogo-fullscreen-modal&quot; id=&quot;contagio-enfermedad-solo&quot;&gt;
+    &lt;div class=&quot;netlogo-fullscreen-header&quot;&gt;
+      &lt;h4 class=&quot;netlogo-fullscreen-title&quot;&gt;😷 Simulación: Contagio de una Enfermedad en Solitario&lt;/h4&gt;
+      &lt;button class=&quot;netlogo-close-btn&quot; onclick=&quot;document.getElementById(&#39;contagio-enfermedad-solo&#39;).style.display=&#39;none&#39;&quot;&gt;
+        Cerrar
+      &lt;/button&gt;
+    &lt;/div&gt;
+    &lt;iframe class=&quot;netlogo-fullscreen-iframe&quot; src=&quot;https://www.netlogoweb.org/launch#https://www.netlogoweb.org/assets/modelslib/Sample%20Models/Biology/Disease%20Solo.nlogox&quot; title=&quot;Simulación de contagio de enfermedad en población&quot;&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Botón para abrir simulación --&gt;
+  &lt;div class=&quot;centrar&quot; style=&quot;margin: 25px 0;&quot;&gt;
+    &lt;button class=&quot;netlogo-open-btn&quot; onclick=&quot;document.getElementById(&#39;contagio-enfermedad-solo&#39;).style.display=&#39;flex&#39;&quot;&gt;
+      🚀 Abrir Simulación en Pantalla Completa
+    &lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;h3&gt;¿Cómo funciona?&lt;/h3&gt;
+  
+  &lt;div class=&quot;pista&quot;&gt;
+    &lt;ol&gt;
+      &lt;li&gt;&lt;strong&gt;Control del agente azul:&lt;/strong&gt; El usuario controla al agente azul con los botones y el deslizador de la derecha.&lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;Inicio de la infección:&lt;/strong&gt; La infección comienza al pulsar el botón &lt;strong&gt;INFECT&lt;/strong&gt; (infectar).&lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;Agentes enfermos:&lt;/strong&gt; Los agentes enfermos se muestran con un círculo rojo.&lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;Comportamiento de androides:&lt;/strong&gt; Los androides se mueven con estrategias simples. Por defecto, se mueven al azar, pero con los interruptores puedes modificar su comportamiento:&lt;/li&gt;
+    &lt;/ol&gt;
+    
+    &lt;div style=&quot;margin-left: 30px; margin-top: 10px;&quot;&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;strong&gt;AVOID? (¿evitar?):&lt;/strong&gt; Los androides no infectados huyen de los infectados.&lt;/li&gt;
+        &lt;li&gt;&lt;strong&gt;CHASE? (¿perseguir?):&lt;/strong&gt; Los androides infectados persiguen a los no infectados.&lt;/li&gt;
+        &lt;li&gt;&lt;strong&gt;Contagio del usuario:&lt;/strong&gt; El agente del usuario también puede contagiarse.&lt;/li&gt;
+        &lt;li&gt;&lt;strong&gt;Probabilidad de contagio:&lt;/strong&gt; Un agente sano que esté en el mismo parche que un agente enfermo tiene una probabilidad de infectarse determinada por &lt;code&gt;INFECTION-CHANCE&lt;/code&gt;.&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;h3&gt;¿Cómo usarlo?&lt;/h3&gt;
+  
+  &lt;div class=&quot;pista&quot;&gt;
+    &lt;strong&gt;Botones principales:&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;strong&gt;SETUP/CLEAR:&lt;/strong&gt; Prepara el mundo y borra las gráficas.&lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;SETUP/KEEP:&lt;/strong&gt; Prepara el mundo sin borrar las gráficas (para comparar varias ejecuciones).&lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;GO:&lt;/strong&gt; Ejecuta la simulación.&lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;INFECT:&lt;/strong&gt; Infecta a uno de los androides.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+
+  &lt;h3&gt; Controles y Configuración&lt;/h3&gt;
+  
+  &lt;div style=&quot;display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;&quot;&gt;
+    &lt;div class=&quot;pista&quot;&gt;
+      &lt;strong&gt;Controles deslizantes:&lt;/strong&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;code&gt;NUM-ANDROIDS&lt;/code&gt; - Número de androides: Define cuántos androides se crean.&lt;/li&gt;
+        &lt;li&gt;&lt;code&gt;INFECTION-CHANCE&lt;/code&gt; - Probabilidad de contagio: Probabilidad de que un agente sano se infecte si comparte parche con un enfermo.&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+    
+    &lt;div class=&quot;pista&quot;&gt;
+      &lt;strong&gt;Monitores y Gráficas:&lt;/strong&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;strong&gt;NUMBER SICK:&lt;/strong&gt; Muestra la cantidad de agentes infectados (monitor).&lt;/li&gt;
+        &lt;li&gt;&lt;strong&gt;NUMBER SICK:&lt;/strong&gt; Muestra la evolución del número de enfermos en el tiempo (gráfica).&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;h3&gt;Interruptores y Controles de Comportamiento&lt;/h3&gt;
+  
+  &lt;div style=&quot;display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;&quot;&gt;
+    &lt;div class=&quot;pista&quot;&gt;
+      &lt;strong&gt;Interruptores:&lt;/strong&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;strong&gt;AVOID? / ¿Evitar?:&lt;/strong&gt; Activa que los androides no infectados huyan de los infectados.&lt;/li&gt;
+        &lt;li&gt;&lt;strong&gt;CHASE? / ¿Perseguir?:&lt;/strong&gt; Activa que los androides infectados persigan a los no infectados.&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+    
+    &lt;div class=&quot;pista&quot;&gt;
+      &lt;strong&gt;Controles del usuario:&lt;/strong&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;strong&gt;UP, DOWN, LEFT, RIGHT:&lt;/strong&gt; Mueven al agente del usuario (Arriba, Abajo, Izquierda, Derecha).&lt;/li&gt;
+        &lt;li&gt;&lt;strong&gt;STEP-SIZE / Longitud de paso:&lt;/strong&gt; Determina la distancia que se mueve el agente con cada pulsación.&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;pista&quot; style=&quot;background-color: rgba(42, 127, 158, 0.1);&quot;&gt;
+    &lt;strong&gt;💡 Consejo para el experimento:&lt;/strong&gt;
+    &lt;p&gt;Prueba diferentes combinaciones de interruptores (AVOID? y CHASE?) para observar cómo cambia la dinámica de contagio. ¿Qué configuración resulta en la mayor propagación? ¿Y en la menor?&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/details&gt;
+
+
+
+
+&lt;div class=&quot;centrar&quot;&gt;
+ [[🏠 Volver al Inicio-&gt;Inicio]]
+&lt;/div&gt;
+
+&lt;footer style=&quot;text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--border-soft); color: #666; font-size: 0.9em;&quot;&gt;
+  &lt;p&gt;&lt;strong&gt;IU Digital de Antioquia · Área de Ciencias Básicas&lt;/strong&gt;&lt;/p&gt;
+&lt;/footer&gt;</tw-passagedata><tw-passagedata pid="4" name="Jamovi" tags="" position="550,450" size="100,100">&lt;h1&gt;📊 Estadística: Jamovi&lt;/h1&gt;
 
 &lt;p&gt; A continuación encontrarás una colección completa de tutoriales para que aprendas a utilizar las herramientas extra para el análisis de datos.&lt;/p&gt;
 
@@ -537,7 +992,13 @@ Cada sección contiene actividades guiadas y experimentos virtuales diseñados p
 
 &lt;footer style=&quot;text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--border-soft); color: #666; font-size: 0.9em;&quot;&gt;
   &lt;p&gt;&lt;strong&gt;IU Digital de Antioquia · Área de Ciencias Básicas&lt;/strong&gt;&lt;/p&gt;
-&lt;/footer&gt;</tw-passagedata><tw-passagedata pid="5" name="Programación" tags="" position="925,175" size="100,100"></tw-passagedata><tw-passagedata pid="6" name="Excel" tags="" position="400,450" size="100,100">&lt;h1&gt;📊 Estadística: Excel&lt;/h1&gt;
+&lt;/footer&gt;</tw-passagedata><tw-passagedata pid="5" name="Programación" tags="" position="925,300" size="100,100">&lt;div class=&quot;centrar&quot; style=&quot;margin-top: 40px; padding-top: 20px&quot;&gt;
+  [[🏠 Volver al Inicio-&gt;Inicio]]
+&lt;/div&gt;
+
+&lt;footer style=&quot;text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--border-soft); color: #666; font-size: 0.9em;&quot;&gt;
+  &lt;p&gt;&lt;strong&gt;IU Digital de Antioquia · Área de Ciencias Básicas&lt;/strong&gt;&lt;/p&gt;
+&lt;/footer&gt;</tw-passagedata><tw-passagedata pid="6" name="Excel" tags="" position="400,450" size="100,100">&lt;h1&gt;📊 Estadística: Excel&lt;/h1&gt;
 
 &lt;p&gt; A continuación encontrarás una colección completa de tutoriales para que aprendas a utilizar las herramientas esenciales del análisis de datos.&lt;/p&gt;
 
@@ -678,7 +1139,27 @@ Cada sección contiene actividades guiadas y experimentos virtuales diseñados p
 
 &lt;footer style=&quot;text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--border-soft); color: #666; font-size: 0.9em;&quot;&gt;
   &lt;p&gt;&lt;strong&gt;IU Digital de Antioquia · Área de Ciencias Básicas&lt;/strong&gt;&lt;/p&gt;
-&lt;/footer&gt;</tw-passagedata></tw-storydata>
+&lt;/footer&gt;</tw-passagedata><tw-passagedata pid="7" name="Listado" tags="" position="175,500" size="100,100">Química: 
+https://chemistry-en.nobook.com/console/coursewares
+https://chemequations.com/es/
+
+Programación:
+Curso tipo duolingo: https://coddy.tech/
+https://visualgo.net/en/heap
+https://exercism.org/
+https://quickref.me/
+
+Biología:
+https://human.biodigital.com/login?returnUrl=/explore
+
+Matemáticas:
+https://www.cymath.com/sp/
+
+Estadìstica:
+https://seeing-theory.brown.edu/
+
+Epidemiología:
+chronas.org</tw-passagedata></tw-storydata>
 		<script>
 		(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";window.either=function(){for(var n=[],t=0;t<arguments.length;t++)if(arguments[t]instanceof Array)for(var r=0;r<arguments[t].length;r++)n.push(arguments[t][r]);else n.push(arguments[t]);return n[_.random(n.length-1)]},window.hasVisited=function(){var n=null;if(1==arguments.length)return null!=(n=window.story.passage(arguments[0]))&&window.story.history.includes(n.id);for(var t=0;t<arguments.length;t++)if(null==(n=window.story.passage(arguments[t]))||0==window.story.history.includes(n.id))return!1;return!0},window.visited=function(){for(var n=[],t=[],r=0;r<arguments.length;r++){var e=window.story.passage(arguments[r]);null!=e&&(t=window.story.history.filter(function(n){return n==e.id})),n.push(t.length)}return Math.min.apply(Math,n)},window.renderToSelector=function(n,t){var r=window.story.passage(t);null!=r&&$(n).html(r.render())},window.getStyles=function(){return $.when.apply($,$.map(arguments,function(n){return $.get(n,function(n){$("<style>"+n+"</style>").appendTo("head")})}))};
