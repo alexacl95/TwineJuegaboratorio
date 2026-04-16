@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pistas Cruzadas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos personalizados para mejorar la apariencia en dispositivos móviles */
+        .board-grid {
+            display: grid;
+            gap: 0.5rem;
+        }
+        .hide { display: none !important; }
+        .cell-transition { transition: all 0.2s ease-in-out; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col items-center">
+
+    <!-- Contenedor Principal -->
+    <div id="app" class="w-full max-w-5xl mx-auto p-4 flex-grow flex flex-col">
+        
+        <!-- PANTALLA DE CONFIGURACIÓN -->
+        <div id="setup-screen" class="flex-grow flex flex-col items-center justify-center">
+            <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-200">
+                <h1 class="text-3xl font-bold text-center text-indigo-600 mb-2">Pistas Cruzadas</h1>
+                <p class="text-center text-slate-500 mb-8">Configura tu partida local</p>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Tamaño del Tablero</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button class="size-btn border-2 border-indigo-500 bg-indigo-50 text-indigo-700 rounded-xl py-2 font-bold" data-size="3">3x3</button>
+                        <button class="size-btn border-2 border-slate-200 bg-white text-slate-600 rounded-xl py-2 font-bold hover:border-indigo-300" data-size="4">4x4</button>
+                        <button class="size-btn border-2 border-slate-200 bg-white text-slate-600 rounded-xl py-2 font-bold hover:border-indigo-300" data-size="5">5x5</button>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Tiempo de Juego (Minutos)</label>
+                    <input type="number" id="time-input" min="1" max="60" value="5" class="w-full border-2 border-slate-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition">
+                </div>
+
+                <button id="btn-start" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg py-4 rounded-xl shadow-lg transform transition hover:-translate-y-1">
+                    ¡Comenzar Juego!
+                </button>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE JUEGO -->
+        <div id="game-screen" class="hide flex-grow flex flex-col w-full">
+            <!-- Cabecera del Juego -->
+            <div class="bg-white p-4 rounded-2xl shadow-md flex justify-between items-center mb-6 border border-slate-200">
+                <div class="flex items-center gap-4">
+                    <div id="timer-display" class="text-3xl font-mono font-bold text-slate-800 bg-slate-100 px-4 py-2 rounded-lg border border-slate-300">05:00</div>
+                    <div class="text-sm font-semibold text-slate-500 hidden sm:block">Tiempo Restante</div>
+                </div>
+                <button id="btn-finish" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg shadow transition">
+                    Finalizar Partida
+                </button>
+            </div>
+
+            <!-- Contenedor del Tablero -->
+            <div class="flex-grow flex justify-center items-start overflow-x-auto pb-8">
+                <div id="board-container" class="board-grid min-w-max p-2">
+                    <!-- El tablero se inyectará aquí con JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE RESULTADOS -->
+        <div id="results-screen" class="hide flex-grow flex flex-col items-center justify-center">
+            <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-200 text-center">
+                <h2 class="text-4xl font-black text-indigo-600 mb-2">¡Fin del Juego!</h2>
+                <p class="text-slate-500 mb-8 font-medium">Aquí están los resultados de sus pistas</p>
+
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="bg-emerald-100 border-2 border-emerald-400 p-4 rounded-xl">
+                        <div class="text-3xl font-bold text-emerald-600 mb-1" id="res-hits">0</div>
+                        <div class="text-sm font-semibold text-emerald-800 uppercase tracking-wider">Aciertos</div>
+                    </div>
+                    <div class="bg-red-100 border-2 border-red-400 p-4 rounded-xl">
+                        <div class="text-3xl font-bold text-red-600 mb-1" id="res-misses">0</div>
+                        <div class="text-sm font-semibold text-red-800 uppercase tracking-wider">Fallos</div>
+                    </div>
+                </div>
+
+                <div class="text-slate-600 mb-8 font-medium" id="res-unplayed">
+                    Faltaron 0 pistas por jugar.
+                </div>
+
+                <button id="btn-restart" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg py-4 rounded-xl shadow-lg transition">
+                    Jugar de Nuevo
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL DE ACCIÓN (Acierto/Fallo) -->
+    <div id="action-modal" class="hide fixed inset-0 bg-slate-900 bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm transform scale-100 transition-transform">
+            <h3 class="text-xl font-bold text-center text-slate-800 mb-6">¿Qué pasó en la posición <span id="modal-coord" class="text-indigo-600 font-black">A1</span>?</h3>
+            <div class="flex flex-col gap-3">
+                <button id="btn-mark-hit" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow transition flex items-center justify-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    ¡Acertamos!
+                </button>
+                <button id="btn-mark-miss" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl shadow transition flex items-center justify-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    Fallamos
+                </button>
+                <button id="btn-mark-clear" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition mt-2">
+                    Limpiar Casilla (No Jugada)
+                </button>
+                <button id="btn-modal-cancel" class="text-slate-500 font-semibold py-2 mt-2 hover:text-slate-800 transition">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LÓGICA DEL JUEGO EN JAVASCRIPT -->
+    <script>
+        // --- 1. BASE DE DATOS DE PALABRAS (ESPAÑOL LATINOAMÉRICA) ---
+        const wordList = [
+            "Aguacate", "Arepa", "Carro", "Celular", "Computadora", "Playa", "Montaña", "Perro", "Gato", "Zapato",
+            "Sombrero", "Camisa", "Pantalón", "Reloj", "Lentes", "Botella", "Vaso", "Plato", "Tenedor", "Cuchara",
+            "Cuchillo", "Mesa", "Silla", "Cama", "Televisión", "Película", "Música", "Guitarra", "Tambor", "Trompeta",
+            "Libro", "Cuaderno", "Lápiz", "Bolígrafo", "Escuela", "Trabajo", "Fiesta", "Baile", "Comida", "Agua",
+            "Jugo", "Refresco", "Cerveza", "Vino", "Café", "Té", "Leche", "Pan", "Queso", "Carne",
+            "Pollo", "Pescado", "Fruta", "Manzana", "Plátano", "Naranja", "Limón", "Fresa", "Uva", "Sandía",
+            "Melón", "Mango", "Piña", "Tomate", "Cebolla", "Ajo", "Papa", "Zanahoria", "Lechuga", "Maíz",
+            "Arroz", "Frijol", "Sopa", "Ensalada", "Postre", "Pastel", "Helado", "Chocolate", "Dulce", "Galleta",
+            "Dinero", "Cartera", "Llave", "Puerta", "Ventana", "Casa", "Edificio", "Calle", "Ciudad", "Pueblo",
+            "País", "Mundo", "Sol", "Luna", "Estrella", "Cielo", "Nube", "Lluvia", "Nieve", "Viento",
+            "Fuego", "Tierra", "Árbol", "Flor", "Planta", "Animal", "Pájaro", "Pez", "Insecto", "Araña",
+            "Serpiente", "Oso", "León", "Tigre", "Elefante", "Mono", "Caballo", "Vaca", "Cerdo", "Oveja",
+            "Gallina", "Pato", "Chamarra", "Nevera", "Alberca", "Banqueta", "Boleto", "Parque", "Plaza", "Mercado",
+            "Avión", "Tren", "Barco", "Bicicleta", "Moto", "Camión", "Autobús", "Taxi", "Cine", "Teatro",
+            "Hospital", "Farmacia", "Banco", "Restaurante", "Hotel", "Iglesia", "Museo", "Biblioteca", "Gimnasio", "Cancha"
+        ];
+
+        // --- 2. ESTADO DEL JUEGO ---
+        let currentSize = 3; // Por defecto 3x3
+        let timerInterval = null;
+        let timeRemaining = 0; // en segundos
+        let colWords = [];
+        let rowWords = [];
+        let gridState = {}; // Guarda estado: 'unplayed', 'hit', 'miss'
+        let selectedCell = null;
+
+        // Elementos del DOM
+        const screens = {
+            setup: document.getElementById('setup-screen'),
+            game: document.getElementById('game-screen'),
+            results: document.getElementById('results-screen')
+        };
+        const boardContainer = document.getElementById('board-container');
+        const timerDisplay = document.getElementById('timer-display');
+        const actionModal = document.getElementById('action-modal');
+        const modalCoord = document.getElementById('modal-coord');
+
+        // --- 3. INICIALIZACIÓN DE EVENTOS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Botones de tamaño de tablero
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // Resetear estilos de todos
+                    document.querySelectorAll('.size-btn').forEach(b => {
+                        b.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-700');
+                        b.classList.add('border-slate-200', 'bg-white', 'text-slate-600');
+                    });
+                    // Activar el seleccionado
+                    const target = e.target;
+                    target.classList.remove('border-slate-200', 'bg-white', 'text-slate-600');
+                    target.classList.add('border-indigo-500', 'bg-indigo-50', 'text-indigo-700');
+                    currentSize = parseInt(target.getAttribute('data-size'));
+                });
+            });
+
+            // Botones de control principal
+            document.getElementById('btn-start').addEventListener('click', startGame);
+            document.getElementById('btn-finish').addEventListener('click', endGame);
+            document.getElementById('btn-restart').addEventListener('click', () => showScreen('setup'));
+
+            // Botones del Modal
+            document.getElementById('btn-mark-hit').addEventListener('click', () => markCell('hit'));
+            document.getElementById('btn-mark-miss').addEventListener('click', () => markCell('miss'));
+            document.getElementById('btn-mark-clear').addEventListener('click', () => markCell('unplayed'));
+            document.getElementById('btn-modal-cancel').addEventListener('click', closeModal);
+        });
+
+        // --- 4. FUNCIONES PRINCIPALES ---
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(screen => screen.classList.add('hide'));
+            screens[screenName].classList.remove('hide');
+        }
+
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function startGame() {
+            // 1. Obtener y validar el tiempo
+            const timeInput = document.getElementById('time-input').value;
+            let minutes = parseInt(timeInput);
+            if (isNaN(minutes) || minutes < 1) minutes = 5;
+            timeRemaining = minutes * 60;
+
+            // 2. Seleccionar palabras aleatorias
+            const totalWordsNeeded = currentSize * 2;
+            const shuffledWords = shuffleArray(wordList);
+            const selectedWords = shuffledWords.slice(0, totalWordsNeeded);
+            
+            colWords = selectedWords.slice(0, currentSize);
+            rowWords = selectedWords.slice(currentSize, totalWordsNeeded);
+
+            // 3. Inicializar el estado de las celdas
+            gridState = {};
+            for(let r = 0; r < currentSize; r++) {
+                for(let c = 0; c < currentSize; c++) {
+                    const letter = String.fromCharCode(65 + c); // A, B, C...
+                    const number = r + 1; // 1, 2, 3...
+                    const coord = `${letter}${number}`;
+                    gridState[coord] = 'unplayed';
+                }
+            }
+
+            // 4. Renderizar el tablero
+            renderBoard();
+
+            // 5. Iniciar Temporizador y mostrar pantalla de juego
+            updateTimerDisplay();
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(timerTick, 1000);
+            
+            showScreen('game');
+        }
+
+        function renderBoard() {
+            // Limpiar contenedor
+            boardContainer.innerHTML = '';
+            
+            // Configurar columnas de la grilla (Esquina vacía + columnas)
+            boardContainer.style.gridTemplateColumns = `auto repeat(${currentSize}, 1fr)`;
+
+            // 1. Fila Superior (Cabeceras de Columnas)
+            // Esquina superior izquierda vacía
+            let emptyCorner = document.createElement('div');
+            boardContainer.appendChild(emptyCorner);
+
+            // Letras y Palabras de columnas
+            for(let c = 0; c < currentSize; c++) {
+                const letter = String.fromCharCode(65 + c);
+                const colHeader = document.createElement('div');
+                colHeader.className = "bg-amber-100 border-2 border-amber-300 rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm";
+                colHeader.innerHTML = `
+                    <span class="text-amber-800 font-black text-xl mb-1">${letter}</span>
+                    <span class="text-amber-900 font-semibold text-sm break-words">${colWords[c]}</span>
+                `;
+                boardContainer.appendChild(colHeader);
+            }
+
+            // 2. Filas con Números y Celdas Jugables
+            for(let r = 0; r < currentSize; r++) {
+                const number = r + 1;
+                
+                // Cabecera de Fila (Número y Palabra)
+                const rowHeader = document.createElement('div');
+                rowHeader.className = "bg-cyan-100 border-2 border-cyan-300 rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[100px] min-w-[120px]";
+                rowHeader.innerHTML = `
+                    <span class="text-cyan-800 font-black text-xl mb-1">${number}</span>
+                    <span class="text-cyan-900 font-semibold text-sm break-words">${rowWords[r]}</span>
+                `;
+                boardContainer.appendChild(rowHeader);
+
+                // Celdas Jugables (Intersecciones)
+                for(let c = 0; c < currentSize; c++) {
+                    const letter = String.fromCharCode(65 + c);
+                    const coord = `${letter}${number}`;
+                    
+                    const cell = document.createElement('button');
+                    cell.id = `cell-${coord}`;
+                    cell.className = "cell-transition rounded-xl border-4 font-black text-2xl w-full h-full min-h-[100px] flex items-center justify-center focus:outline-none shadow-sm cursor-pointer";
+                    cell.onclick = () => openModal(coord);
+                    
+                    boardContainer.appendChild(cell);
+                    
+                    // Aplicar estado inicial
+                    applyCellVisuals(coord);
+                }
+            }
+        }
+
+        // --- 5. INTERACCIÓN DE CELDAS Y MODAL ---
+        function openModal(coord) {
+            selectedCell = coord;
+            modalCoord.textContent = coord;
+            actionModal.classList.remove('hide');
+        }
+
+        function closeModal() {
+            selectedCell = null;
+            actionModal.classList.add('hide');
+        }
+
+        function markCell(status) {
+            if (!selectedCell) return;
+            gridState[selectedCell] = status;
+            applyCellVisuals(selectedCell);
+            closeModal();
+        }
+
+        function applyCellVisuals(coord) {
+            const cell = document.getElementById(`cell-${coord}`);
+            if(!cell) return;
+            
+            const status = gridState[coord];
+            
+            // Limpiar clases previas
+            cell.className = "cell-transition rounded-xl border-4 font-black text-2xl w-full h-full min-h-[100px] flex items-center justify-center focus:outline-none shadow-sm cursor-pointer transform hover:scale-105 active:scale-95";
+
+            if (status === 'unplayed') {
+                cell.classList.add('border-slate-300', 'bg-slate-50', 'text-slate-400', 'border-dashed');
+                cell.innerHTML = coord;
+            } else if (status === 'hit') {
+                cell.classList.add('border-emerald-500', 'bg-emerald-400', 'text-white');
+                cell.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        <span class="text-sm opacity-80">${coord}</span>
+                    </div>`;
+            } else if (status === 'miss') {
+                cell.classList.add('border-red-500', 'bg-red-400', 'text-white');
+                cell.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        <span class="text-sm opacity-80">${coord}</span>
+                    </div>`;
+            }
+        }
+
+        // --- 6. TEMPORIZADOR ---
+        function timerTick() {
+            if (timeRemaining > 0) {
+                timeRemaining--;
+                updateTimerDisplay();
+                
+                // Efecto visual cuando queda poco tiempo (< 10s)
+                if (timeRemaining <= 10) {
+                    timerDisplay.classList.remove('bg-slate-100', 'text-slate-800', 'border-slate-300');
+                    timerDisplay.classList.add('bg-red-100', 'text-red-600', 'border-red-400', 'animate-pulse');
+                }
+            } else {
+                clearInterval(timerInterval);
+                alert("¡Se acabó el tiempo!");
+                endGame();
+            }
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+            const s = (timeRemaining % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${m}:${s}`;
+            
+            // Resetear colores por si venimos de un reinicio
+            if(timeRemaining > 10) {
+                timerDisplay.classList.remove('bg-red-100', 'text-red-600', 'border-red-400', 'animate-pulse');
+                timerDisplay.classList.add('bg-slate-100', 'text-slate-800', 'border-slate-300');
+            }
+        }
+
+        // --- 7. FINALIZAR Y RESULTADOS ---
+        function endGame() {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            let hits = 0;
+            let misses = 0;
+            let unplayed = 0;
+
+            for (const key in gridState) {
+                if (gridState[key] === 'hit') hits++;
+                else if (gridState[key] === 'miss') misses++;
+                else unplayed++;
+            }
+
+            document.getElementById('res-hits').textContent = hits;
+            document.getElementById('res-misses').textContent = misses;
+            
+            const unplayedEl = document.getElementById('res-unplayed');
+            if (unplayed > 0) {
+                unplayedEl.textContent = `Faltaron ${unplayed} pistas por jugar.`;
+                unplayedEl.classList.remove('hidden');
+            } else {
+                unplayedEl.classList.add('hidden');
+            }
+
+            showScreen('results');
+        }
+    </script>
+</body>
+</html>

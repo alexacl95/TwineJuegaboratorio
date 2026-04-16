@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Stories: Edición Pensamiento Lateral</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        .crt-overlay {
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; opacity: 0.15;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
+        
+        /* Animación suave para el desplegable */
+        .collapse-content {
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .collapse-content.open {
+            max-height: 1000px;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="crt-overlay"></div>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const storiesDatabase = [
+            // --- GENERALES ---
+            {
+                id: 1,
+                category: "general",
+                icon: "🦆",
+                title: "El Pelícano Crudo",
+                premise: "Dos hombres entran rápidamente a un restaurante. Uno de ellos pide un pelícano crudo y el otro pide lo que salga más rápido de la carta. La mesera entrega los pedidos. El que pidió el pelícano crudo lo prueba, saca un arma, dispara, sale corriendo, se cae, sale corriendo nuevamente, se choca contra una gran estantería, se levanta y sale corriendo. ¿Qué fue lo que sucedió?",
+                solution: "El hombre que pidió el pelícano es CIEGO. Años atrás, él y su hijo sufrieron un accidente en el mar y quedaron a la deriva en una isla. El hombre quedó ciego en el impacto. Su hijo lo alimentó con una carne que afirmó ser 'pelícano crudo' para mantenerlo vivo, pero en realidad era su propia carne (el hijo murió de hambre/heridas para salvar a su padre). Al entrar al restaurante y probar verdadero pelícano, el hombre ciego descubrió el sabor, entendió la horrorosa verdad de lo que comió en la isla, y enloqueció de dolor. Sacó su arma para suicidarse pero, al ser ciego, falló el disparo. Huyó presa del pánico, tropezando y chocando con la estantería debido a su ceguera.",
+                clues: [
+                    "Piensa en por qué el hombre se cae y choca constantemente contra las cosas al huir.",
+                    "Él ya había 'probado' pelícano antes de entrar a ese restaurante... o eso le hicieron creer.",
+                    "El disparo no impactó a nadie intencionalmente. Quería lastimarse a sí mismo, pero su condición física se lo impidió."
+                ]
+            },
+            {
+                id: 2,
+                category: "general",
+                icon: "📦",
+                title: "El Paquete Intacto",
+                premise: "Un hombre yace muerto en medio de un campo llano y despejado. A su lado hay un paquete cerrado que no ha sido abierto. No hay huellas alrededor ni signos de violencia, animales o armas. ¿Cómo murió?",
+                solution: "El paquete cerrado es un paracaídas que no se abrió. El hombre saltó de un avión y se estrelló contra el suelo.",
+                clues: [
+                    "El hombre no llegó al campo caminando.",
+                    "El contenido del paquete era vital para su supervivencia.",
+                    "La causa de la muerte fue un impacto contundente a alta velocidad."
+                ]
+            },
+            {
+                id: 3,
+                category: "general",
+                icon: "🧊",
+                title: "Muerte en el Bar",
+                premise: "Dos hombres entran a un bar y piden exactamente la misma bebida con hielo. Uno se la toma de un solo trago rápidamente y sobrevive. El otro se la toma lentamente a lo largo de una hora y muere envenenado. ¿Por qué?",
+                solution: "El veneno estaba congelado dentro de los cubos de hielo. El hombre que bebió rápido ingirió el líquido antes de que el hielo se derritiera. El hombre que bebió lento le dio tiempo al hielo venenoso de derretirse e integrarse a la bebida.",
+                clues: [
+                    "El cantinero no envenenó los vasos de forma individual. El líquido era inofensivo al ser servido.",
+                    "El tiempo de consumo es el factor letal, no la cantidad.",
+                    "Concéntrate en el estado físico de los ingredientes de la bebida."
+                ]
+            },
+            
+            // --- EPIDEMIOLOGÍA (Actualizados y mejorados) ---
+            {
+                id: 4,
+                category: "epidemiologia",
+                icon: "🐄",
+                title: "La Visita que Salvó al Pueblo",
+                premise: "Decenas de aldeanos ardían en fiebre y se retorcían de dolor abdominal. Un joven forastero llegó al pueblo y, con solo mirar la mesa del desayuno de una familia, dio una simple instrucción. Sin dar una sola pastilla, sin aislar a nadie y sin ser médico de humanos, detuvo el letal brote para siempre. ¿Qué dijo y por qué funcionó?",
+                solution: "El forastero era un veterinario. Al ver leche cruda en la mesa, dedujo que el brote era una Zoonosis (Brucelosis) transmitida por las vacas enfermas de la aldea. Su instrucción fue 'Hiervan la leche antes de consumirla'. Al usar este método físico para destruir el agente patógeno en el vehículo de transmisión (la leche), cortó la exposición y salvó al pueblo sin necesitar medicamentos.",
+                clues: [
+                    "El forastero no atiende personas, pero es un experto en cierto tipo de enfermedades biológicas.",
+                    "La clave no estaba en el aire ni en el agua del pozo, sino en algo que los aldeanos ingerían a diario.",
+                    "Su recomendación fue aplicar calor a un líquido específico."
+                ]
+            },
+            {
+                id: 5,
+                category: "epidemiologia",
+                icon: "💧",
+                title: "La Bomba sin Explosión",
+                premise: "Un hombre caminó por una calle de Londres llena de cadáveres recientes. Se acercó a una estructura pública de metal, sacó sus herramientas y la inutilizó arrancándole una pieza. Fue tratado como un vándalo, pero años después fue reconocido como el héroe que detuvo a un asesino despiadado. ¿Qué destruyó y a quién detuvo?",
+                solution: "El hombre era John Snow (considerado el padre de la epidemiología). El 'asesino' invisible era el Cólera. Snow cartografió los casos y descubrió que las muertes se agrupaban alrededor de la bomba de agua pública de Broad Street. Al arrancar la manija de la bomba (vandalismo aparente), impidió que la gente extrajera agua, cortando el vehículo de infección y deteniendo la epidemia.",
+                clues: [
+                    "El asesino que detuvo no era un ser humano, sino una enfermedad que se propagaba rápidamente.",
+                    "La estructura de metal era visitada todos los días por las personas que terminaron muertas.",
+                    "Al arrancar la pieza, el hombre impidió que las personas pudieran extraer algo vital del subsuelo."
+                ]
+            },
+            {
+                id: 6,
+                category: "epidemiologia",
+                icon: "👩‍🍳",
+                title: "El Asesino que Nadie Aisló",
+                premise: "Siete familias ricas contrataron a la misma persona durante un periodo de tres años. En cada casa, alguien murió de una terrible infección intestinal poco después de su llegada. Sin embargo, la policía no encontró evidencia de envenenamiento y los médicos se negaban a aislar a esta persona porque lucía perfectamente sana. ¿Cómo lograba matar?",
+                solution: "Es el caso de un PORTADOR ASINTOMÁTICO (basado en 'María la Tifoidea'). La persona era una cocinera que albergaba la bacteria de la fiebre tifoidea en su vesícula biliar. Aunque ella no presentaba ningún síntoma (lucía sana), excretaba el patógeno y lo transmitía a través de los alimentos que manipulaba y servía a las familias. Como no estaba enferma, nadie sospechaba que ella fuera el foco del contagio.",
+                clues: [
+                    "Las víctimas murieron por una enfermedad biológica real, no fue un homicidio intencional con toxinas sintéticas.",
+                    "La profesión de esta persona requería que manipulara algo que las familias ricas introducían en sus cuerpos.",
+                    "La persona albergaba al agente patógeno en su interior, pero su sistema no se veía afectado por la enfermedad."
+                ]
+            },
+            {
+                id: 7,
+                category: "epidemiologia",
+                icon: "☠️",
+                title: "La Epidemia Falsa",
+                premise: "Varias familias de una aldea sufrieron vómitos intensos y parálisis tras una reunión comunitaria. Los epidemiólogos buscaron un 'paciente cero', pero fracasaron. No había fiebre y los animales, que compartían el mismo ambiente, estaban sanos. Con horror, descubrieron que no enfrentaban una epidemia biológica, sino un patrón muy humano. ¿Qué ocurrió realmente?",
+                solution: "El brote no fue causado por un microorganismo contagioso, sino por una intoxicación química intencional. Durante la reunión comunitaria, alguien con malas intenciones (por una disputa de tierras o enemistad) arrojó un pesticida tóxico en el pozo exclusivo del que bebieron esas familias. Al ser químico, no generaba fiebre; los animales no enfermaron porque bebían de otro lado. Parecía una epidemia de fuente común, pero fue un acto criminal.",
+                clues: [
+                    "La ausencia de fiebre es la gran pista para descartar que se trate de un virus, bacteria o parásito.",
+                    "Si fuera una enfermedad ambiental natural, los animales también habrían enfermado.",
+                    "El 'vector' de esta enfermedad no tenía alas ni patas, caminaba en dos piernas y tenía un motivo de venganza."
+                ]
+            }
+        ];
+
+        function App() {
+            const [view, setView] = useState('menu'); // menu, category, story
+            const [selectedCategory, setSelectedCategory] = useState(null);
+            const [activeStory, setActiveStory] = useState(null);
+            
+            // Estado para pistas desbloqueadas y para mostrar el menú desplegable de la solución
+            const [unlockedClues, setUnlockedClues] = useState([]);
+            const [showSolution, setShowSolution] = useState(false);
+
+            // Funciones de navegación
+            const goMenu = () => setView('menu');
+            const goCategory = (cat) => {
+                setSelectedCategory(cat);
+                setView('category');
+            };
+            
+            const openStory = (story) => {
+                setActiveStory(story);
+                setUnlockedClues([]);
+                setShowSolution(false); // Reseteamos la solución al abrir una nueva historia
+                setView('story');
+            };
+
+            const unlockClue = (index) => {
+                if (!unlockedClues.includes(index)) {
+                    setUnlockedClues([...unlockedClues, index]);
+                }
+            };
+
+            const toggleSolution = () => {
+                setShowSolution(!showSolution);
+            };
+
+            // --- VISTAS ---
+
+            if (view === 'menu') {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-6 animate-fade">
+                        <div className="text-center mb-12">
+                            <h1 className="text-5xl md:text-7xl font-black text-red-600 tracking-tighter mb-4 drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">
+                                DARK STORIES
+                            </h1>
+                            <p className="text-slate-400 text-lg uppercase tracking-[0.3em] font-semibold">
+                                Pensamiento Lateral
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+                            <button 
+                                onClick={() => goCategory('general')}
+                                className="group relative overflow-hidden bg-slate-800 border-2 border-slate-700 hover:border-red-500 rounded-2xl p-8 transition-all hover:-translate-y-2 text-left"
+                            >
+                                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🕵️‍♂️</div>
+                                <h2 className="text-2xl font-bold text-white mb-2">Misterios Generales</h2>
+                                <p className="text-slate-400 text-sm">Casos oscuros, crímenes absurdos y el clásico enigma del pelícano.</p>
+                            </button>
+
+                            <button 
+                                onClick={() => goCategory('epidemiologia')}
+                                className="group relative overflow-hidden bg-slate-800 border-2 border-slate-700 hover:border-teal-500 rounded-2xl p-8 transition-all hover:-translate-y-2 text-left"
+                            >
+                                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🦠</div>
+                                <h2 className="text-2xl font-bold text-white mb-2">Casos Epidemiológicos</h2>
+                                <p className="text-slate-400 text-sm">Acertijos crípticos sobre portadores, zoonosis, vectores y venenos.</p>
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (view === 'category') {
+                const stories = storiesDatabase.filter(s => s.category === selectedCategory);
+                const titleCat = selectedCategory === 'general' ? 'Misterios Generales' : 'Casos Epidemiológicos';
+                const themeColor = selectedCategory === 'general' ? 'text-red-500' : 'text-teal-500';
+
+                return (
+                    <div className="min-h-screen p-6 md:p-12 animate-fade">
+                        <button onClick={goMenu} className="text-slate-400 hover:text-white mb-8 font-bold flex items-center gap-2 transition-colors">
+                            <span>←</span> Volver al Menú
+                        </button>
+                        
+                        <h2 className={`text-3xl md:text-4xl font-black ${themeColor} uppercase tracking-wider mb-8`}>
+                            {titleCat}
+                        </h2>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {stories.map(story => (
+                                <div 
+                                    key={story.id} 
+                                    onClick={() => openStory(story)}
+                                    className="bg-slate-800 border border-slate-700 hover:border-slate-500 p-6 rounded-xl cursor-pointer transition-all hover:bg-slate-700 shadow-lg text-center md:text-left"
+                                >
+                                    <div className="text-4xl mb-4">{story.icon}</div>
+                                    <h3 className="text-xl font-bold text-slate-100">{story.title}</h3>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+
+            if (view === 'story') {
+                return (
+                    <div className="min-h-screen flex flex-col items-center py-10 px-4 md:px-8 animate-fade pb-20">
+                        {/* BOTÓN VOLVER */}
+                        <div className="w-full max-w-3xl mb-6">
+                            <button onClick={() => goCategory(activeStory.category)} className="text-slate-400 hover:text-white font-bold flex items-center gap-2 transition-colors bg-slate-800 px-4 py-2 rounded-lg w-fit">
+                                <span>←</span> Atrás
+                            </button>
+                        </div>
+
+                        {/* PANTALLA PRINCIPAL */}
+                        <div className="w-full max-w-3xl bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 overflow-hidden relative">
+                            {/* Tape deco */}
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-4 bg-slate-600/50 rounded-b-xl"></div>
+                            
+                            <div className="p-8 md:p-12">
+                                <div className="text-center mb-10">
+                                    <div className="text-6xl mb-6">{activeStory.icon}</div>
+                                    <h1 className="text-3xl md:text-4xl font-black text-white mb-8 uppercase tracking-widest">
+                                        {activeStory.title}
+                                    </h1>
+                                    
+                                    <div className="bg-slate-900/50 p-6 md:p-8 rounded-2xl border border-slate-700 shadow-inner">
+                                        <p className="text-lg md:text-xl text-slate-300 leading-relaxed font-medium">
+                                            "{activeStory.premise}"
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* SECCIÓN DE PISTAS BLOQUEADAS */}
+                                <div className="mt-8 space-y-4">
+                                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4 border-b border-slate-700 pb-2">
+                                        Ayudas y Pistas
+                                    </h3>
+                                    
+                                    {activeStory.clues.map((clue, idx) => {
+                                        const isUnlocked = unlockedClues.includes(idx);
+                                        return (
+                                            <div 
+                                                key={idx} 
+                                                onClick={() => unlockClue(idx)} 
+                                                className={`cursor-pointer p-4 rounded-xl border transition-all duration-300 ${
+                                                    isUnlocked 
+                                                    ? 'bg-amber-900/20 border-amber-500/30 text-amber-200 cursor-default' 
+                                                    : 'bg-slate-900/50 border-slate-700 hover:bg-slate-700 text-slate-400 flex items-center gap-4 hover:border-slate-500 shadow-sm'
+                                                }`}
+                                            >
+                                                {isUnlocked ? (
+                                                    <div className="flex items-start gap-4 animate-fade">
+                                                        <span className="text-amber-500 text-xl">💡</span>
+                                                        <p className="text-sm md:text-base leading-relaxed">{clue}</p>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <span className="text-xl">🔒</span>
+                                                        <p className="font-bold tracking-wider uppercase text-sm">
+                                                            Desbloquear Pista {idx + 1}
+                                                        </p>
+                                                    </>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* BOTÓN DESPLEGABLE DE RESPUESTA */}
+                                <div className="mt-12 pt-8 border-t border-slate-700">
+                                    <button 
+                                        onClick={toggleSolution}
+                                        className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-3 border ${
+                                            showSolution 
+                                            ? 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600' 
+                                            : 'bg-red-900/40 hover:bg-red-900/60 border-red-800 text-red-200'
+                                        }`}
+                                    >
+                                        {showSolution ? '🙈 Ocultar Respuesta' : '⚠️ Revelar Verdad Absoluta'}
+                                    </button>
+
+                                    {/* CONTENIDO DESPLEGABLE */}
+                                    <div className={`collapse-content ${showSolution ? 'open' : ''} mt-4`}>
+                                        <div className="bg-slate-950 p-6 md:p-8 rounded-xl border border-red-900/50 shadow-inner relative overflow-hidden">
+                                            <div className="absolute top-0 left-0 w-1 h-full bg-red-600"></div>
+                                            <h4 className="text-sm font-bold text-red-500 uppercase tracking-widest mb-3">Solución Oficial:</h4>
+                                            <p className="text-slate-300 text-base md:text-lg leading-relaxed selection:bg-red-900">
+                                                {activeStory.solution}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

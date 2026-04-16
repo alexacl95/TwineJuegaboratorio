@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Dice: Epidemiología</title>
+    
+    <!-- Tailwind CSS para los estilos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React, ReactDOM y Babel para ejecutar la lógica en el navegador -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Base de datos de íconos (adaptada a Emojis para uso local) y sus significados epidemiológicos
+        const diceDictionary = [
+          { id: 1, icon: "🐛", concept: "Vector / Zoonosis", unit: "Unidad 1" },
+          { id: 2, icon: "🧍", concept: "Huésped Susceptible", unit: "Unidad 1" },
+          { id: 3, icon: "👥", concept: "Población / Cohorte", unit: "Bioestadística" },
+          { id: 4, icon: "🌡️", concept: "Síntoma Clínico", unit: "Unidad 1" },
+          { id: 5, icon: "📈", concept: "Signo / Estado de Salud", unit: "Unidad 1" },
+          { id: 6, icon: "🌍", concept: "Pandemia / Distribución", unit: "Unidad 1" },
+          { id: 7, icon: "📍", concept: "Foco / Lugar del Brote", unit: "Unidad 3" },
+          { id: 8, icon: "📉", concept: "Curva Epidémica / Incidencia", unit: "Unidad 3" },
+          { id: 9, icon: "⚠️", concept: "Alarma / Canal Endémico", unit: "Unidad 3" },
+          { id: 10, icon: "👁️", concept: "Vigilancia / SIVIGILA", unit: "Unidad 3" },
+          { id: 11, icon: "🕸️", concept: "Red Multicausal / Telaraña", unit: "Unidad 2" },
+          { id: 12, icon: "🔗", concept: "Asociación / Causalidad (Hill)", unit: "Unidad 2" },
+          { id: 13, icon: "⏱️", concept: "Periodo de Incubación / Temporalidad", unit: "Unidad 2" },
+          { id: 14, icon: "🏭", concept: "Fuerzas Motrices / Ambiente", unit: "Unidad 2" },
+          { id: 15, icon: "💉", concept: "Intervención / Prevención", unit: "Unidad 1" },
+          { id: 16, icon: "⚖️", concept: "Determinantes Sociales / Sesgo", unit: "Unidad 2" },
+          { id: 17, icon: "📋", concept: "Estudio Observacional / Encuesta", unit: "Bioestadística" },
+          { id: 18, icon: "💀", concept: "Tasa de Mortalidad / Letalidad", unit: "Bioestadística" },
+          { id: 19, icon: "👶", concept: "Natalidad / Exposición Temprana", unit: "Bioestadística" },
+          { id: 20, icon: "🧪", concept: "Agente Patógeno / Laboratorio", unit: "Unidad 1" },
+          { id: 21, icon: "💧", concept: "Fuente de Infección / Vehículo", unit: "Unidad 1" },
+          { id: 22, icon: "🩺", concept: "Diagnóstico Médico", unit: "Unidad 1" },
+          { id: 23, icon: "🌳", concept: "Medio Ambiente / Ecología", unit: "Unidad 1" },
+          { id: 24, icon: "🧬", concept: "Plausibilidad Biológica", unit: "Unidad 2" }
+        ];
+
+        function StoryDiceEpidemiology() {
+          const [activeDice, setActiveDice] = useState([]);
+          const [isRolling, setIsRolling] = useState(false);
+          const [diceCount, setDiceCount] = useState(6);
+          const [revealedDice, setRevealedDice] = useState({});
+
+          // Función para mezclar un array (Fisher-Yates)
+          const shuffleArray = (array) => {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+          };
+
+          // Lógica para lanzar los dados con animación
+          const rollDice = () => {
+            if (isRolling) return;
+            
+            setIsRolling(true);
+            setRevealedDice({});
+            
+            // Animación de "girar" cambiando los dados rápidamente
+            let rolls = 0;
+            const maxRolls = 10;
+            const interval = setInterval(() => {
+              const randomSet = shuffleArray(diceDictionary).slice(0, diceCount);
+              setActiveDice(randomSet);
+              rolls++;
+              
+              if (rolls >= maxRolls) {
+                clearInterval(interval);
+                setIsRolling(false);
+              }
+            }, 100);
+          };
+
+          // Iniciar con un set de dados al cargar
+          useEffect(() => {
+            const initialSet = shuffleArray(diceDictionary).slice(0, diceCount);
+            setActiveDice(initialSet);
+          }, [diceCount]);
+
+          const toggleReveal = (id) => {
+            setRevealedDice(prev => ({
+              ...prev,
+              [id]: !prev[id]
+            }));
+          };
+
+          return (
+            <div className="min-h-screen bg-slate-100 flex flex-col items-center p-4 md:p-8 font-sans text-slate-800">
+              
+              {/* Header */}
+              <div className="w-full max-w-4xl bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="bg-indigo-600 p-3 rounded-xl text-white shadow-md text-2xl">
+                    <span className={isRolling ? "inline-block animate-spin" : "inline-block"}>🎲</span>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-black text-slate-800 leading-tight">Story Dice</h1>
+                    <p className="text-sm font-medium text-indigo-600">Edición Epidemiología</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                  <span className="text-sm font-bold text-slate-500 uppercase tracking-wider ml-2">Cant. Dados:</span>
+                  <div className="flex gap-2">
+                    {[4, 6, 9].map(num => (
+                      <button
+                        key={num}
+                        onClick={() => setDiceCount(num)}
+                        className={`w-10 h-10 rounded-lg font-bold transition-all ${
+                          diceCount === num 
+                          ? 'bg-indigo-600 text-white shadow-md' 
+                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full max-w-4xl flex flex-col gap-6">
+                
+                {/* Tablero de Dados */}
+                <div className="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden flex flex-col">
+                  <div className="bg-slate-800 p-4 text-white flex justify-between items-center">
+                    <h2 className="font-bold flex items-center gap-2">📖 Tablero de Juego</h2>
+                    <button 
+                      onClick={rollDice}
+                      disabled={isRolling}
+                      className="bg-indigo-500 hover:bg-indigo-400 disabled:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-all active:scale-95 shadow-sm"
+                    >
+                      <span className={isRolling ? "inline-block animate-spin" : "inline-block"}>🔄</span>
+                      {isRolling ? 'Lanzando...' : 'Lanzar Dados'}
+                    </button>
+                  </div>
+                  
+                  <div className="p-8 flex-grow flex flex-col items-center justify-center bg-slate-50 relative">
+                    <div className="absolute inset-0 opacity-10" style={{backgroundImage: "radial-gradient(#cbd5e1 1px, transparent 1px)", backgroundSize: "20px 20px"}}></div>
+                    
+                    {/* Contenedor de Dados */}
+                    <div className="flex flex-wrap justify-center gap-6 max-w-2xl relative z-10">
+                      {activeDice.map((die) => {
+                        const isRevealed = revealedDice[die.id];
+                        
+                        return (
+                          <div 
+                            key={die.id}
+                            onClick={() => toggleReveal(die.id)}
+                            className={`
+                              relative group cursor-pointer w-24 h-24 md:w-28 md:h-28 rounded-2xl flex flex-col items-center justify-center
+                              transition-all duration-300 shadow-lg border-b-4 select-none
+                              ${isRolling ? 'animate-bounce border-slate-300 bg-white' : 'hover:-translate-y-2'}
+                              ${isRevealed ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200'}
+                            `}
+                            style={{ animationDelay: `${Math.random() * 0.2}s` }}
+                          >
+                            {/* Icono del dado */}
+                            <div className={`transition-all duration-300 ${isRevealed ? 'scale-75 -translate-y-3' : 'scale-100'}`}>
+                              <span style={{ fontSize: isRevealed ? '2rem' : '3.5rem' }}>{die.icon}</span>
+                            </div>
+                            
+                            {/* Texto revelado */}
+                            <div className={`absolute bottom-2 left-0 w-full px-2 text-center transition-all duration-300 ${isRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+                              <p className="text-[10px] font-bold text-indigo-800 leading-tight uppercase mb-0.5">{die.concept}</p>
+                              <p className="text-[9px] text-indigo-400 font-medium">{die.unit}</p>
+                            </div>
+
+                            {/* Hint hover (solo visible si no está revelado) */}
+                            {!isRevealed && !isRolling && (
+                              <div className="absolute -top-2 -right-2 w-6 h-6 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-sm border border-amber-200">
+                                ?
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    <p className="mt-8 text-sm text-slate-500 font-medium text-center relative z-10 bg-slate-50 px-4 py-1 rounded-full border border-slate-200">
+                      Haz clic en cualquier dado si no estás seguro de qué concepto epidemiológico representa.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          );
+        }
+
+        // Renderizar la aplicación en el DOM
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<StoryDiceEpidemiology />);
+    </script>
+</body>
+</html>

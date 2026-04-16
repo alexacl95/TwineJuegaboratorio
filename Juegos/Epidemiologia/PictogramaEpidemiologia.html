@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pictogramas: Epidemiología</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { background-color: #f0fdf4; font-family: system-ui, -apple-system, sans-serif; color: #0f172a; }
+        
+        @keyframes pop {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .emoji-float { animation: float 3s ease-in-out infinite; }
+        
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: radial-gradient(circle, #cbd5e1 1px, rgba(0, 0, 0, 0) 1px);
+        }
+    </style>
+</head>
+<body class="bg-grid">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Base de datos de módulos y niveles (Pictogramas reorganizados por Unidades según temario)
+        const modulesData = [
+            {
+                id: "u1",
+                title: "Unidad 1",
+                subtitle: "Fundamentos Básicos",
+                icon: "🦠",
+                levels: [
+                    {
+                        id: "1-1",
+                        emojis: "🌍 ✈️ 🦠 😷",
+                        acceptedAnswers: ["pandemia", "pandemia global"],
+                        hint: "Enfermedad epidémica que se extiende a muchos países o que ataca a casi todos los individuos de una región."
+                    },
+                    {
+                        id: "1-2",
+                        emojis: "🦇 🐒 ➡️ 🧍",
+                        acceptedAnswers: ["zoonosis", "enfermedad zoonotica"],
+                        hint: "Enfermedad infecciosa que ha pasado de un animal a humanos."
+                    },
+                    {
+                        id: "1-3",
+                        emojis: "🦟 🩸 🦠 🧍",
+                        acceptedAnswers: ["vector", "vectores", "transmision por vector"],
+                        hint: "Organismo vivo (como un insecto) que transmite un agente infeccioso de un huésped a otro."
+                    },
+                    {
+                        id: "1-4",
+                        emojis: "🦠 ⏳ ❓ 🤒",
+                        acceptedAnswers: ["incubacion", "periodo de incubacion", "latencia"],
+                        hint: "Intervalo de tiempo entre la exposición a un agente infeccioso y la aparición del primer síntoma."
+                    },
+                    {
+                        id: "1-5",
+                        emojis: "💉 🛡️ 📉 🦠",
+                        acceptedAnswers: ["prevencion", "vacunacion", "prevencion primaria"],
+                        hint: "Medidas destinadas no solo a evitar la aparición de la enfermedad, sino a detener su avance."
+                    }
+                ]
+            },
+            {
+                id: "u2",
+                title: "Unidad 2",
+                subtitle: "Causalidad y Frecuencia",
+                icon: "🕸️",
+                levels: [
+                    {
+                        id: "2-1",
+                        emojis: "🕸️ 🔗 🎯 🤒",
+                        acceptedAnswers: ["multicausalidad", "multicausal", "red de causalidad", "telaraña"],
+                        hint: "Modelo que explica que la enfermedad no surge de una sola causa, sino de una red o telaraña de factores."
+                    },
+                    {
+                        id: "2-2",
+                        emojis: "🏭 📈 🌍 ⚠️",
+                        acceptedAnswers: ["fuerzas motrices", "fuerza motriz", "modelo de fuerzas motrices"],
+                        hint: "Factores macro (como crecimiento poblacional o desarrollo industrial) que ejercen presión sobre el medio ambiente."
+                    },
+                    {
+                        id: "2-3",
+                        emojis: "⏳ ➡️ 🤒 📋",
+                        acceptedAnswers: ["temporalidad", "criterio temporal", "criterio de temporalidad"],
+                        hint: "El único criterio de Bradford Hill inamovible: la exposición debe ocurrir antes que el efecto."
+                    },
+                    {
+                        id: "2-4",
+                        emojis: "🆕 🤒 📅 📈",
+                        acceptedAnswers: ["incidencia", "casos nuevos", "tasa de incidencia"],
+                        hint: "Medida de frecuencia que cuantifica la velocidad de aparición de casos NUEVOS en un período."
+                    },
+                    {
+                        id: "2-5",
+                        emojis: "🧮 🤒 📍 🕰️",
+                        acceptedAnswers: ["prevalencia", "casos totales", "proporcion de prevalencia"],
+                        hint: "Medida de frecuencia que indica el número TOTAL de casos (nuevos y antiguos) existentes en un momento determinado."
+                    }
+                ]
+            },
+            {
+                id: "u3",
+                title: "Unidad 3",
+                subtitle: "Vigilancia y Estudios",
+                icon: "🚨",
+                levels: [
+                    {
+                        id: "3-1",
+                        emojis: "👁️ 🖥️ 📊 🚨",
+                        acceptedAnswers: ["vigilancia", "vigilancia epidemiologica", "sivigila"],
+                        hint: "Recolección sistemática, análisis e interpretación de datos de salud en Colombia."
+                    },
+                    {
+                        id: "3-2",
+                        emojis: "📊 🟢 🟡 🔴",
+                        acceptedAnswers: ["canal endemico", "corredor endemico"],
+                        hint: "Gráfica con zonas de éxito, seguridad y alarma usada para monitorear el comportamiento histórico de una enfermedad."
+                    },
+                    {
+                        id: "3-3",
+                        emojis: "👥 ⏳ ➡️ 🤒",
+                        acceptedAnswers: ["cohorte", "estudio de cohorte", "prospectivo"],
+                        hint: "Diseño de estudio observacional que parte de individuos expuestos y los sigue hacia el futuro para ver si enferman."
+                    },
+                    {
+                        id: "3-4",
+                        emojis: "🤒 ⬅️ ⏳ 🧍",
+                        acceptedAnswers: ["casos y controles", "estudio de casos y controles", "retrospectivo"],
+                        hint: "Diseño de estudio que parte de personas ya enfermas y mira hacia el pasado buscando la exposición causal."
+                    },
+                    {
+                        id: "3-5",
+                        emojis: "📸 🧍 📊 🕰️",
+                        acceptedAnswers: ["transversal", "estudio transversal", "corte transversal"],
+                        hint: "Diseño de estudio observacional sin seguimiento temporal que es como una 'fotografía' instantánea de la población."
+                    }
+                ]
+            },
+            {
+                id: "final",
+                title: "Nivel Final",
+                subtitle: "Bioestadística e Integración",
+                icon: "⚖️",
+                levels: [
+                    {
+                        id: "f-1",
+                        emojis: "💰 🏠 🥗 📉",
+                        acceptedAnswers: ["determinantes sociales", "determinante social"],
+                        hint: "Circunstancias en que las personas nacen, crecen, viven, trabajan y envejecen que afectan su estado de salud."
+                    },
+                    {
+                        id: "f-2",
+                        emojis: "💊 📈 ➡️ 🤒 📈",
+                        acceptedAnswers: ["gradiente", "gradiente biologico", "dosis respuesta"],
+                        hint: "Criterio de causalidad donde a mayor nivel de exposición, mayor es el riesgo o intensidad de la enfermedad."
+                    },
+                    {
+                        id: "f-3",
+                        emojis: "🌍 ❌ 🧍 📉",
+                        acceptedAnswers: ["falacia ecologica", "sesgo ecologico"],
+                        hint: "Error que ocurre cuando se asume equivocadamente que una asociación observada a nivel poblacional aplica a individuos."
+                    },
+                    {
+                        id: "f-4",
+                        emojis: "🎯 ➗ 📊 ⚖️",
+                        acceptedAnswers: ["riesgo relativo", "razon de momios", "odds ratio"],
+                        hint: "Medida estadística que compara la probabilidad de que ocurra un evento entre un grupo expuesto y uno no expuesto."
+                    },
+                    {
+                        id: "f-5",
+                        emojis: "💥 📈 📍 🏥",
+                        acceptedAnswers: ["brote", "brote epidemico", "epidemia"],
+                        hint: "Aparición inusual, repentina y localizada de casos de una enfermedad, superando lo históricamente esperado."
+                    }
+                ]
+            }
+        ];
+
+        // Función para normalizar texto
+        const normalizeText = (text) => {
+            return text.normalize("NFD")
+                       .replace(/[\u0300-\u036f]/g, "")
+                       .replace(/[^a-zA-Z0-9\s]/g, "")
+                       .toLowerCase()
+                       .trim();
+        };
+
+        function App() {
+            const [gameState, setGameState] = useState('menu'); // menu, playing, endModule
+            const [currentModule, setCurrentModule] = useState(null);
+            const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
+            
+            const [guess, setGuess] = useState('');
+            const [feedback, setFeedback] = useState(null); // 'correct', 'incorrect'
+            const [showHint, setShowHint] = useState(false);
+            const [score, setScore] = useState(0);
+            
+            const inputRef = useRef(null);
+
+            const startModule = (moduleObj) => {
+                setCurrentModule(moduleObj);
+                setCurrentLevelIdx(0);
+                setScore(0);
+                setGuess('');
+                setFeedback(null);
+                setShowHint(false);
+                setGameState('playing');
+            };
+
+            // Autofocus en el input cuando cambia de nivel o entra a jugar
+            useEffect(() => {
+                if (gameState === 'playing' && inputRef.current && !feedback) {
+                    setTimeout(() => inputRef.current.focus(), 100);
+                }
+            }, [gameState, currentLevelIdx, feedback]);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (!guess.trim() || feedback) return;
+
+                const currentLevel = currentModule.levels[currentLevelIdx];
+                const normalizedGuess = normalizeText(guess);
+                
+                const isCorrect = currentLevel.acceptedAnswers.some(
+                    answer => normalizeText(answer) === normalizedGuess
+                );
+
+                if (isCorrect) {
+                    setFeedback('correct');
+                    if (!showHint) setScore(s => s + 10); // 10 puntos limpio
+                    else setScore(s => s + 5); // 5 puntos con pista
+                } else {
+                    setFeedback('incorrect');
+                }
+            };
+
+            // Nueva función para forzar una respuesta correcta en caso de sinónimos válidos
+            const handleOverrideCorrect = () => {
+                setFeedback('correct');
+                if (!showHint) setScore(s => s + 10);
+                else setScore(s => s + 5);
+            };
+
+            const nextLevel = () => {
+                if (currentLevelIdx + 1 < currentModule.levels.length) {
+                    setCurrentLevelIdx(currentLevelIdx + 1);
+                    setGuess('');
+                    setFeedback(null);
+                    setShowHint(false);
+                } else {
+                    setGameState('endModule');
+                }
+            };
+
+            // --- VISTAS ---
+
+            if (gameState === 'menu') {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4">
+                        <div className="bg-white/90 backdrop-blur-md p-8 md:p-12 rounded-3xl shadow-2xl max-w-4xl w-full text-center animate-pop border border-emerald-100">
+                            <div className="text-6xl mb-6 emoji-float">🧩</div>
+                            <h1 className="text-4xl font-black text-slate-800 mb-2 tracking-tight">Pictogramas</h1>
+                            <h2 className="text-emerald-600 font-bold mb-8 tracking-widest uppercase text-sm">Epidemiología</h2>
+                            
+                            <p className="text-slate-600 mb-8 font-medium">
+                                Selecciona el módulo de estudio. Deberás descifrar el concepto oculto detrás de cada secuencia de emojis. 
+                            </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {modulesData.map(mod => (
+                                    <button 
+                                        key={mod.id}
+                                        onClick={() => startModule(mod)}
+                                        className="group relative overflow-hidden bg-slate-50 border-2 border-slate-200 hover:border-emerald-500 rounded-2xl p-6 transition-all hover:bg-emerald-50 hover:-translate-y-1 text-left flex items-center gap-4 shadow-sm hover:shadow-md"
+                                    >
+                                        <div className="text-5xl group-hover:scale-110 transition-transform">{mod.icon}</div>
+                                        <div>
+                                            <div className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-1">{mod.title}</div>
+                                            <div className="text-lg font-bold text-slate-800 leading-tight">{mod.subtitle}</div>
+                                            <div className="text-sm text-slate-500 mt-2">{mod.levels.length} Conceptos</div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'endModule') {
+                const maxScore = currentModule.levels.length * 10;
+                let message = "¡Sigue repasando esta unidad!";
+                if (score === maxScore) message = "¡Perfección Epidemiológica!";
+                else if (score >= maxScore * 0.7) message = "¡Excelente deducción!";
+
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4">
+                        <div className="bg-white/90 backdrop-blur-md p-8 md:p-12 rounded-3xl shadow-2xl max-w-md w-full text-center animate-pop border border-emerald-100">
+                            <div className="text-6xl mb-4">🏆</div>
+                            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">
+                                {currentModule.title} Completada
+                            </h2>
+                            <h1 className="text-3xl font-black text-slate-800 mb-6">{message}</h1>
+                            
+                            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 mb-8 shadow-inner">
+                                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Tu Puntaje</div>
+                                <div className="text-5xl font-black text-emerald-500">
+                                    {score} <span className="text-2xl text-slate-300">/ {maxScore}</span>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={() => setGameState('menu')}
+                                className="w-full py-4 px-6 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold transition-all shadow-md flex items-center justify-center gap-2"
+                            >
+                                🏠 Volver al Menú
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Vista 'playing'
+            const currentLevel = currentModule.levels[currentLevelIdx];
+
+            return (
+                <div className="min-h-screen flex flex-col items-center p-4 md:p-8">
+                    
+                    {/* Barra superior */}
+                    <div className="w-full max-w-2xl flex justify-between items-center mb-8 bg-white/90 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-slate-200">
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={() => { if(window.confirm('¿Salir del módulo actual?')) setGameState('menu') }}
+                                className="text-2xl hover:scale-110 transition-transform p-1"
+                            >
+                                🏠
+                            </button>
+                            <div className="hidden md:block">
+                                <h2 className="font-bold text-slate-800 text-sm leading-tight">{currentModule.title}</h2>
+                                <p className="text-xs text-slate-500 font-medium">{currentModule.subtitle}</p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex-1 mx-6">
+                            <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div 
+                                    className="h-full bg-emerald-500 transition-all duration-300"
+                                    style={{ width: `${((currentLevelIdx) / currentModule.levels.length) * 100}%` }}
+                                ></div>
+                            </div>
+                            <div className="text-center text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">
+                                Concepto {currentLevelIdx + 1} de {currentModule.levels.length}
+                            </div>
+                        </div>
+
+                        <div className="text-right">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Puntos</span>
+                            <span className="font-black text-emerald-600 text-lg">{score}</span>
+                        </div>
+                    </div>
+
+                    {/* Tablero del Juego */}
+                    <div className="w-full max-w-2xl bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden flex flex-col items-center p-6 md:p-10 relative">
+                        
+                        {/* Pictograma */}
+                        <div className="bg-slate-50 w-full rounded-3xl p-8 md:p-12 flex items-center justify-center border-2 border-dashed border-slate-200 mb-8 min-h-[160px] md:min-h-[200px] relative overflow-hidden">
+                            <div className="absolute inset-0 opacity-20" style={{backgroundImage: 'radial-gradient(#94a3b8 2px, transparent 2px)', backgroundSize: '20px 20px'}}></div>
+                            <span className="text-5xl md:text-7xl tracking-[0.1em] md:tracking-[0.2em] relative z-10 filter drop-shadow-md text-center animate-pop" key={currentLevel.id}>
+                                {currentLevel.emojis}
+                            </span>
+                        </div>
+
+                        {/* Botón de Pista */}
+                        {!showHint && !feedback && (
+                            <button 
+                                onClick={() => setShowHint(true)}
+                                className="mb-6 text-sm font-bold text-amber-500 hover:text-amber-600 bg-amber-50 hover:bg-amber-100 px-4 py-2 rounded-full transition-colors flex items-center gap-2"
+                            >
+                                💡 Obtener una pista (-5 pts)
+                            </button>
+                        )}
+
+                        {/* Pista revelada */}
+                        {showHint && !feedback && (
+                            <div className="mb-6 w-full bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl text-sm font-medium text-center animate-pop">
+                                <strong>Pista:</strong> {currentLevel.hint}
+                            </div>
+                        )}
+
+                        {/* Input y Feedback */}
+                        <div className="w-full max-w-md">
+                            {!feedback ? (
+                                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                                    <input 
+                                        ref={inputRef}
+                                        type="text" 
+                                        value={guess}
+                                        onChange={(e) => setGuess(e.target.value)}
+                                        placeholder="Escribe el concepto..."
+                                        className="w-full text-center text-2xl font-bold uppercase tracking-wider py-4 px-6 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:border-emerald-400 focus:bg-white outline-none transition-all placeholder:text-slate-300 placeholder:normal-case placeholder:tracking-normal placeholder:font-normal"
+                                        autoComplete="off"
+                                        spellCheck="false"
+                                    />
+                                    <button 
+                                        type="submit"
+                                        disabled={!guess.trim()}
+                                        className="w-full py-4 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl font-bold uppercase tracking-widest transition-all shadow-md"
+                                    >
+                                        Comprobar
+                                    </button>
+                                </form>
+                            ) : (
+                                <div className="text-center animate-pop">
+                                    {feedback === 'correct' ? (
+                                        <div className="bg-emerald-50 border-2 border-emerald-400 text-emerald-700 p-6 rounded-2xl mb-6">
+                                            <div className="text-4xl mb-2">✅</div>
+                                            <h3 className="text-xl font-black uppercase mb-1">¡Correcto!</h3>
+                                            <p className="text-sm font-medium text-emerald-600">{currentLevel.hint}</p>
+                                        </div>
+                                    ) : (
+                                        <div className="bg-rose-50 border-2 border-rose-400 text-rose-700 p-6 rounded-2xl mb-6 animate-shake">
+                                            <div className="text-4xl mb-2">❌</div>
+                                            <h3 className="text-xl font-black uppercase mb-2">Incorrecto</h3>
+                                            <p className="text-xs font-bold text-rose-400 uppercase tracking-widest mb-1">La respuesta era:</p>
+                                            <p className="text-2xl font-black uppercase tracking-widest">{currentLevel.acceptedAnswers[0]}</p>
+                                            <div className="mt-3 text-sm bg-white/60 p-3 rounded-lg border border-rose-200 text-rose-800">
+                                                {currentLevel.hint}
+                                            </div>
+                                            
+                                            {/* BOTÓN PARA FORZAR ACIERTO */}
+                                            <button 
+                                                onClick={handleOverrideCorrect}
+                                                className="mt-4 w-full py-2 px-4 bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-700 rounded-xl font-bold transition-all text-sm flex items-center justify-center gap-2"
+                                            >
+                                                ✨ Mi respuesta era válida (Forzar acierto)
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <button 
+                                        onClick={nextLevel}
+                                        autoFocus
+                                        className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold uppercase tracking-widest transition-all shadow-md"
+                                    >
+                                        {currentLevelIdx + 1 < currentModule.levels.length ? 'Siguiente Concepto ➔' : 'Ver Evaluación del Módulo'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

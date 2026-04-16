@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pistas Cruzadas: Epidemiología (Modo Docente)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; color: #1e293b; }
+        
+        @keyframes popIn { 
+            0% { transform: scale(0.8); opacity: 0; } 
+            100% { transform: scale(1); opacity: 1; } 
+        }
+        .animate-pop { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide { animation: slideUp 0.3s ease-out forwards; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+
+        .grid-cell { transition: all 0.2s ease; }
+        .grid-cell:hover:not(.filled):not(.axis-label) { background-color: #e2e8f0; cursor: pointer; }
+        .grid-cell.selected { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); z-index: 10; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- BASE DE DATOS ESTRUCTURADA POR NIVELES (3x3) ---
+        const levelsData = [
+            {
+                id: 1, unit: "Unidad 1", title: "Mecanismos y Control",
+                cols: ["Mecanismo", "Enfermedad", "Control"],
+                rows: ["Mosquito", "Virus", "Mercurio"],
+                cards: {
+                    "A1": { word: "Vector", explanation: "Un mosquito es un mecanismo de transmisión conocido como vector, ya que transporta y transmite un patógeno de un huésped a otro." },
+                    "B1": { word: "Zoonosis", explanation: "Una enfermedad como la fiebre amarilla, transmitida por un mosquito, es un ejemplo de zoonosis, ya que salta de animales a humanos." },
+                    "C1": { word: "Fumigación", explanation: "La fumigación es una medida de control directa para eliminar mosquitos vectores de enfermedades en el ambiente." },
+                    "A2": { word: "Contacto Directo", explanation: "La forma de transmisión por contacto directo (ej: gotículas) es un mecanismo primario para muchos virus respiratorios." },
+                    "B2": { word: "Infecciosa", explanation: "Una enfermedad causada por un virus es, por definición, infecciosa y transmisible entre huéspedes." },
+                    "C2": { word: "Vacunación", explanation: "La vacunación es la estrategia de control y prevención primaria más efectiva para erradicar enfermedades virales." },
+                    "A3": { word: "Inhalación", explanation: "La inhalación de vapores es el principal mecanismo de exposición a toxinas como el mercurio en entornos industriales." },
+                    "B3": { word: "Crónica", explanation: "La intoxicación por mercurio genera una enfermedad crónica, ya que sus efectos neurotóxicos son persistentes y de larga duración." },
+                    "C3": { word: "Filtración", explanation: "La filtración de agua es una medida de control crítica para evitar la exposición al mercurio en fuentes hídricas." }
+                }
+            },
+            {
+                id: 2, unit: "Unidad 1", title: "Evolución del Pensamiento",
+                cols: ["Miasma", "Contagio", "Germen"],
+                rows: ["Teoría", "Contacto Físico", "Pasteur"],
+                cards: {
+                    "A1": { word: "Aire Pestilente", explanation: "La teoría miasmática sostenía que las enfermedades provenían de un aire pestilente y vapores nocivos emanados de la tierra." },
+                    "B1": { word: "Cuarentena", explanation: "Bajo la teoría del contagio, la cuarentena se impuso como primera gran medida de aislamiento para evitar la propagación." },
+                    "C1": { word: "Koch", explanation: "Robert Koch consolidó la teoría germinal estableciendo sus famosos postulados biológicos." },
+                    "A2": { word: "Innecesario", explanation: "En la teoría miasmática, el contacto físico era irrelevante; se creía que respirar el mismo ambiente era la causa." },
+                    "B2": { word: "Directo", explanation: "El contagio directo por contacto físico estrecho es el mecanismo de transmisión central de esta teoría." },
+                    "C2": { word: "Fómites", explanation: "La teoría del germen explica que el contacto físico con objetos inanimados contaminados (fómites) transmite patógenos invisibles." },
+                    "A3": { word: "Refutación", explanation: "Louis Pasteur demostró que el miasma era falso al probar experimentalmente que el aire contenía microorganismos, no 'vapores mágicos'." },
+                    "B3": { word: "Aislamiento", explanation: "Pasteur promovió el aislamiento estricto en hospitales para prevenir el contagio, especialmente en sus estudios sobre fiebre puerperal." },
+                    "C3": { word: "Esterilizar", explanation: "Basado en los gérmenes, Pasteur desarrolló técnicas para esterilizar (calentar o limpiar) y destruir microorganismos." }
+                }
+            },
+            {
+                id: 3, unit: "Unidad 2", title: "Modelos de Causalidad",
+                cols: ["Efecto", "Asociación", "Criterio"],
+                rows: ["Causa", "Tiempo", "Dosis"],
+                cards: {
+                    "A1": { word: "Consecuencia", explanation: "En el modelo multicausal, el efecto es la consecuencia final de que se haya completado una red de causas componentes." },
+                    "B1": { word: "Estadística", explanation: "Una asociación estadística indica que la causa y el efecto varían juntos, pero correlación no siempre implica verdadera causalidad." },
+                    "C1": { word: "Hill", explanation: "Los Criterios de Bradford Hill se utilizan precisamente para evaluar si una causa realmente está generando la enfermedad." },
+                    "A2": { word: "Posterior", explanation: "El efecto, resultado o enfermedad siempre debe ser lógicamente posterior a la exposición causal." },
+                    "B2": { word: "Temporalidad", explanation: "La temporalidad es el único criterio inamovible de asociación: la causa debe preceder sí o sí al efecto en el tiempo." },
+                    "C2": { word: "Incubación", explanation: "El periodo de incubación es un criterio clínico que mide el tiempo entre la exposición y el inicio de los síntomas." },
+                    "A3": { word: "Intensidad", explanation: "La intensidad del efecto o daño orgánico suele ser proporcional a la dosis de la causa (toxina, radiación, carga viral)." },
+                    "B3": { word: "Biológica", explanation: "La asociación biológica de dosis-respuesta dicta que a mayor exposición al factor de riesgo, mayor probabilidad de enfermar." },
+                    "C3": { word: "Gradiente", explanation: "El criterio de Gradiente Biológico establece una curva donde se compara el nivel de dosis frente a la respuesta clínica." }
+                }
+            },
+            {
+                id: 4, unit: "Unidad 2", title: "Determinantes Ambientales",
+                cols: ["Ambiental", "Social", "Motriz"],
+                rows: ["Presión", "Estado", "Respuesta"],
+                cards: {
+                    "A1": { word: "Contaminante", explanation: "La presión sobre el entorno natural genera la liberación de un factor contaminante netamente ambiental." },
+                    "B1": { word: "Pobreza", explanation: "La presión social ejercida por la pobreza aumenta drásticamente la vulnerabilidad comunitaria a las enfermedades." },
+                    "C1": { word: "Crecimiento", explanation: "El crecimiento poblacional acelerado es una 'fuerza motriz' macro que ejerce constante presión sobre los recursos." },
+                    "A2": { word: "Daño", explanation: "El estado de un entorno que ha sufrido daño ecológico afecta directamente la salud de la comunidad." },
+                    "B2": { word: "Desigualdad", explanation: "El estado perpetuo de desigualdad es catalogado por la OMS como uno de los principales determinantes sociales negativos." },
+                    "C2": { word: "Dinámica", explanation: "Las fuerzas motrices mantienen en constante cambio y dinámica el estado de todo el sistema epidemiológico." },
+                    "A3": { word: "Mitigación", explanation: "La respuesta de salud pública ambiental busca la mitigación y control del riesgo ecológico." },
+                    "B3": { word: "Política", explanation: "La única respuesta efectiva para solucionar determinantes sociales estructurales es la aplicación de política pública." },
+                    "C3": { word: "Prevención", explanation: "Frenar la fuerza motriz desde su raíz (origen) se considera la forma más pura de prevención primordial." }
+                }
+            },
+            {
+                id: 5, unit: "Unidad 3", title: "Análisis y Medidas",
+                cols: ["Frecuencia", "Estrategia", "Clasificación"],
+                rows: ["Total de casos", "Casos Nuevos", "Exposición"],
+                cards: {
+                    "A1": { word: "Prevalencia", explanation: "Es la medida de frecuencia que cuantifica el número total de casos existentes (viejos y nuevos) en un momento dado." },
+                    "B1": { word: "Control", explanation: "El control es una estrategia de salud enfocada en reducir el número de casos totales de una enfermedad en curso." },
+                    "C1": { word: "Endemia", explanation: "Describe a una enfermedad clasificada por mantener un total de casos constantes y esperados en una región." },
+                    "A2": { word: "Incidencia", explanation: "La incidencia es la medida matemática que cuenta exclusivamente los casos nuevos que aparecen en un periodo." },
+                    "B2": { word: "Prevención", explanation: "La prevención es la estrategia dirigida específicamente a evitar la aparición del primer caso nuevo." },
+                    "C2": { word: "Epidemia", explanation: "La epidemia se clasifica clínicamente cuando ocurre un aumento inusual y repentino en el número de casos nuevos." },
+                    "A3": { word: "Razón", explanation: "La razón de momios (Odds) o el riesgo relativo miden la frecuencia comparando grupos con y sin exposición." },
+                    "B3": { word: "Vigilancia", explanation: "La vigilancia epidemiológica es la estrategia para monitorear factores ambientales o poblaciones en constante exposición." },
+                    "C3": { word: "Riesgo", explanation: "La clasificación de 'Factor de Riesgo' se asigna a elementos cuya exposición aumenta la probabilidad del evento." }
+                }
+            },
+            {
+                id: 6, unit: "Unidad 3", title: "Sistemas de Vigilancia",
+                cols: ["SIVIGILA", "Canal", "Curva"],
+                rows: ["Notificación", "Tiempo", "Límite"],
+                cards: {
+                    "A1": { word: "Obligatoria", explanation: "La notificación al sistema SIVIGILA en Colombia es de carácter legal y obligatoria para todos los entes de salud." },
+                    "B1": { word: "Histórico", explanation: "Para construir un canal endémico se requiere la recolección y notificación de un registro histórico de al menos 5 a 7 años." },
+                    "C1": { word: "Brote", explanation: "Cuando se notifica un evento inusual o brote, los epidemiólogos inmediatamente grafican los datos en una curva." },
+                    "A2": { word: "Semanal", explanation: "El SIVIGILA funciona con un flujo de información estandarizado en unidades de tiempo semanal (semanas epidemiológicas)." },
+                    "B2": { word: "Corredor", explanation: "El canal traza un 'corredor endémico' para comparar de forma visual el comportamiento de los casos a lo largo del tiempo." },
+                    "C2": { word: "Campana", explanation: "Al graficar la evolución de un brote en el tiempo, la curva epidémica de fuente común suele tomar forma de campana." },
+                    "A3": { word: "Alerta", explanation: "El sistema genera una alerta nacional si la vigilancia detecta que se superó el límite preestablecido de casos." },
+                    "B3": { word: "Alarma", explanation: "La 'Zona de Alarma' se ubica entre la media y el cuartil o límite superior estadístico de un canal endémico." },
+                    "C3": { word: "Pico", explanation: "El punto de inflexión o pico epidémico representa el límite máximo alcanzado en la gráfica antes del descenso." }
+                }
+            },
+            {
+                id: 7, unit: "Finalizador", title: "Diseños de Bioestadística",
+                cols: ["Cohorte", "Casos/Controles", "Transversal"],
+                rows: ["Dirección", "Selección", "Resultado"],
+                cards: {
+                    "A1": { word: "Prospectivo", explanation: "La dirección general de los estudios de cohorte avanza en el tiempo (prospectivo) para ver quién enferma en el futuro." },
+                    "B1": { word: "Retrospectivo", explanation: "Este diseño tiene dirección retrospectiva: parte del hoy e indaga hacia el pasado para buscar la exposición que causó el daño." },
+                    "C1": { word: "Instantáneo", explanation: "El diseño transversal carece de dirección temporal, recolecta datos de exposición y enfermedad en un momento instantáneo." },
+                    "A2": { word: "Expuestos", explanation: "La selección inicial de los participantes en la cohorte se basa en dividirlos entre individuos expuestos y no expuestos." },
+                    "B2": { word: "Enfermos", explanation: "La selección arranca identificando primero a pacientes ya enfermos (los Casos) y se comparan con los sanos (los Controles)." },
+                    "C2": { word: "Aleatoria", explanation: "En estudios transversales, la selección de la muestra suele ser aleatoria sobre una sola población sin separar a priori por enfermedad." },
+                    "A3": { word: "Riesgo Relativo", explanation: "Al tener una línea de tiempo real, el resultado de la cohorte permite calcular directamente la incidencia y el Riesgo Relativo." },
+                    "B3": { word: "Momio (Odds)", explanation: "Debido a que no se puede calcular incidencia real hacia atrás, el resultado estadístico se mide a través del Momio u Odds Ratio." },
+                    "C3": { word: "Prevalencia", explanation: "El resultado principal o 'medida estrella' que arroja un análisis transversal es la Prevalencia poblacional exacta." }
+                }
+            }
+        ];
+
+        // --- COMPONENTE PRINCIPAL ---
+        function CrossCluesGame() {
+            const [gameState, setGameState] = useState('setup'); // setup, playing, end
+            const [currentLevel, setCurrentLevel] = useState(null);
+            
+            const [clueCards, setClueCards] = useState([]);
+            const [currentCardId, setCurrentCardId] = useState(null);
+            
+            // Estado para la interacción de intentar colocar una carta
+            const [placedCards, setPlacedCards] = useState({}); // { 'A1': true/false }
+            const [score, setScore] = useState({ correct: 0, incorrect: 0 });
+            
+            const [isChecking, setIsChecking] = useState(false);
+            const [feedback, setFeedback] = useState(null); // 'correct' | 'incorrect'
+            const [clickedCell, setClickedCell] = useState(null);
+
+            // --- INICIALIZACIÓN ---
+            const startGame = (levelId) => {
+                const levelData = levelsData.find(l => l.id === levelId);
+                setCurrentLevel(levelData);
+                
+                // Generar el mazo de coordenadas (A1 a C3)
+                const letters = ['A', 'B', 'C'];
+                let deck = [];
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 1; j <= 3; j++) {
+                        deck.push(`${letters[i]}${j}`);
+                    }
+                }
+                
+                // Mezclar el mazo
+                deck = deck.sort(() => 0.5 - Math.random());
+                
+                setClueCards(deck);
+                setCurrentCardId(deck[0]);
+                setPlacedCards({});
+                setScore({ correct: 0, incorrect: 0 });
+                setIsChecking(false);
+                setFeedback(null);
+                setClickedCell(null);
+                
+                setGameState('playing');
+            };
+
+            // --- LÓGICA DE TURNO ---
+            const handleCellClick = (rowIdx, colIdx) => {
+                if (isChecking || !currentCardId) return;
+
+                const letters = ['A', 'B', 'C'];
+                const cellId = `${letters[colIdx]}${rowIdx + 1}`;
+
+                // Si la celda ya fue jugada, ignorar
+                if (placedCards[cellId] !== undefined) return;
+
+                setClickedCell(cellId);
+                verifySelection(cellId);
+            };
+
+            const verifySelection = (selectedId) => {
+                setIsChecking(true);
+                const isCorrect = selectedId === currentCardId;
+                setFeedback(isCorrect ? 'correct' : 'incorrect');
+
+                const newPlacedCards = { ...placedCards };
+                
+                if (isCorrect) {
+                    newPlacedCards[currentCardId] = true;
+                    setScore(prev => ({ ...prev, correct: prev.correct + 1 }));
+                } else {
+                    newPlacedCards[currentCardId] = false; // Marcamos como intentada y fallada
+                    setScore(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
+                }
+
+                setPlacedCards(newPlacedCards);
+            };
+
+            const nextTurn = () => {
+                const remainingCards = clueCards.slice(1);
+                setClueCards(remainingCards);
+                
+                if (remainingCards.length > 0) {
+                    setCurrentCardId(remainingCards[0]);
+                    setIsChecking(false);
+                    setFeedback(null);
+                    setClickedCell(null);
+                } else {
+                    setCurrentCardId(null);
+                    setGameState('end');
+                }
+            };
+
+            // Evaluar puntaje final
+            const getScoreEvaluation = () => {
+                const c = score.correct;
+                if (c < 4) return { text: "Necesitan repasar la teoría básica.", rank: "Análisis Incompleto" };
+                if (c <= 6) return { text: "Buena capacidad de asociación conceptual.", rank: "Nivel Promedio" };
+                if (c <= 8) return { text: "¡Gran dominio de la terminología epidemiológica!", rank: "Sobresaliente" };
+                return { text: "¡Sincronización total! Tienen mente de investigadores.", rank: "¡Perfección!" };
+            };
+
+            // --- VISTAS ---
+
+            if (gameState === 'setup') {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
+                        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-2xl w-full text-center animate-pop">
+                            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                            </div>
+                            <h1 className="text-3xl md:text-4xl font-black text-slate-800 mb-2 uppercase tracking-tight">Pistas Cruzadas</h1>
+                            <p className="text-blue-600 font-bold mb-6 tracking-widest uppercase text-sm bg-blue-50 py-1 px-4 rounded-full inline-block">Módulo Docente</p>
+                            
+                            <p className="text-slate-500 mb-8 text-sm md:text-base px-4">
+                                Proyecta el juego. El sistema generará una palabra clave. La clase debe debatir y decirte qué columna y fila se intersectan para formar ese concepto.
+                            </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                                {levelsData.map(lvl => (
+                                    <button 
+                                        key={lvl.id}
+                                        onClick={() => startGame(lvl.id)}
+                                        className={`p-4 rounded-xl font-bold transition-all flex flex-col justify-between group border-2 ${
+                                            lvl.unit === 'Finalizador' 
+                                            ? 'bg-slate-800 border-slate-800 text-white hover:bg-slate-900 md:col-span-2 items-center text-center' 
+                                            : 'bg-white border-slate-200 text-slate-700 hover:border-blue-400 hover:shadow-md'
+                                        }`}
+                                    >
+                                        <span className={`text-xs uppercase tracking-widest mb-1 ${lvl.unit === 'Finalizador' ? 'text-amber-400' : 'text-blue-500'}`}>
+                                            Nivel {lvl.id} • {lvl.unit}
+                                        </span>
+                                        <span className={lvl.unit === 'Finalizador' ? 'text-xl' : 'text-lg'}>{lvl.title}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'end') {
+                const evalResult = getScoreEvaluation();
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
+                        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center animate-pop">
+                            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Evaluación del Grupo</h2>
+                            <h1 className="text-3xl font-black text-slate-800 mb-6">{evalResult.rank}</h1>
+                            
+                            <div className="flex justify-center gap-4 mb-8">
+                                <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex-1">
+                                    <div className="text-3xl font-black text-green-600 mb-1">{score.correct}</div>
+                                    <div className="text-xs font-bold text-green-800 uppercase">Acertadas</div>
+                                </div>
+                                <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex-1">
+                                    <div className="text-3xl font-black text-red-600 mb-1">{score.incorrect}</div>
+                                    <div className="text-xs font-bold text-red-800 uppercase">Falladas</div>
+                                </div>
+                            </div>
+                            
+                            <p className="text-slate-600 mb-8 font-medium italic bg-slate-50 p-4 rounded-xl border border-slate-100">"{evalResult.text}"</p>
+
+                            <button 
+                                onClick={() => setGameState('setup')}
+                                className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md"
+                            >
+                                Volver al Menú de Módulos
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // --- VISTA PRINCIPAL (JUEGO) ---
+            const letters = ['A', 'B', 'C'];
+            const currentCardData = currentCardId ? currentLevel.cards[currentCardId] : null;
+
+            return (
+                <div className="min-h-screen bg-slate-50 p-4 md:p-8 flex flex-col items-center">
+                    
+                    {/* Header: Información */}
+                    <div className="w-full max-w-6xl flex flex-wrap justify-between items-center mb-8 bg-white p-4 rounded-2xl shadow-sm border border-slate-200 gap-4">
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={() => { if(window.confirm('¿Volver al menú de módulos?')) setGameState('setup') }}
+                                className="p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-lg transition-colors border border-slate-100"
+                            >
+                                🏠
+                            </button>
+                            <div>
+                                <h1 className="font-bold text-slate-800 text-lg leading-tight">Nivel {currentLevel.id}: {currentLevel.title}</h1>
+                                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">{currentLevel.unit}</p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex gap-4">
+                            <div className="bg-green-100 text-green-800 px-4 py-1.5 rounded-lg font-black flex items-center gap-2">
+                                ✓ {score.correct}
+                            </div>
+                            <div className="bg-red-100 text-red-800 px-4 py-1.5 rounded-lg font-black flex items-center gap-2">
+                                ✗ {score.incorrect}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-8">
+                        
+                        {/* PANEL DERECHO (Pasa arriba en móviles): LA PALABRA CLAVE Y EXPLICACIÓN */}
+                        <div className="w-full lg:w-96 flex flex-col gap-6 order-1 lg:order-2">
+                            
+                            {/* Panel del Moderador */}
+                            <div className="bg-slate-800 p-6 md:p-8 rounded-3xl shadow-xl text-white relative overflow-hidden flex-grow flex flex-col border border-slate-700">
+                                <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> Concepto Generado
+                                </h3>
+                                
+                                {currentCardData ? (
+                                    <>
+                                        <div className="bg-white text-slate-900 rounded-2xl p-6 text-center shadow-inner mt-4 mb-6">
+                                            <span className="text-3xl md:text-4xl font-black uppercase tracking-tight break-words">
+                                                {currentCardData.word}
+                                            </span>
+                                        </div>
+
+                                        {!isChecking ? (
+                                            <div className="bg-slate-700/50 p-4 rounded-xl border border-slate-600 text-sm text-slate-300">
+                                                Pregunta al grupo: <strong>"¿Qué Fila y qué Columna deben cruzarse para formar el concepto de arriba?"</strong> <br/><br/>
+                                                <span className="text-blue-300 font-medium">Haz clic en la celda de la grilla que la clase elija.</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col animate-slide flex-grow">
+                                                {/* Feedback Title */}
+                                                <div className={`text-center py-3 rounded-xl font-black uppercase tracking-widest mb-4 border-2 ${
+                                                    feedback === 'correct' ? 'bg-green-900/30 text-green-400 border-green-500/50' : 'bg-red-900/30 text-red-400 border-red-500/50'
+                                                }`}>
+                                                    {feedback === 'correct' ? '✅ ¡Intersección Correcta!' : '❌ Análisis Erróneo'}
+                                                </div>
+                                                
+                                                {/* Explicación Pedagógica */}
+                                                <div className="bg-slate-900 rounded-xl p-5 border border-slate-700 shadow-inner text-sm text-slate-300 leading-relaxed flex-grow">
+                                                    <span className="text-slate-400 font-bold block mb-2 uppercase text-xs tracking-wider">Justificación Teórica:</span>
+                                                    {currentCardData.explanation}
+                                                </div>
+
+                                                <button 
+                                                    onClick={nextTurn}
+                                                    className="w-full mt-6 py-4 rounded-xl font-bold uppercase tracking-widest transition-all bg-blue-600 hover:bg-blue-500 text-white shadow-lg"
+                                                >
+                                                    {clueCards.length > 1 ? 'Siguiente Palabra ➔' : 'Ver Evaluación Final'}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="flex-grow flex items-center justify-center text-slate-500">
+                                        Procesando datos...
+                                    </div>
+                                )}
+                                
+                                <div className="absolute bottom-4 right-6 opacity-20 text-5xl font-black pointer-events-none">
+                                    {clueCards.length}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* PANEL IZQUIERDO: La Grilla de Selección */}
+                        <div className="flex-1 overflow-x-auto pb-4 no-scrollbar order-2 lg:order-1">
+                            <div className="min-w-[500px] bg-white p-6 rounded-3xl shadow-lg border border-slate-200 inline-block w-full">
+                                <div 
+                                    className="grid gap-3" 
+                                    style={{ 
+                                        gridTemplateColumns: `120px repeat(3, 1fr)`,
+                                        gridTemplateRows: `100px repeat(3, 120px)`
+                                    }}
+                                >
+                                    {/* Esquina */}
+                                    <div className="flex items-center justify-center p-2">
+                                        <div className="text-xs font-bold text-slate-300 uppercase tracking-widest rotate-[-45deg]">Epidemiología</div>
+                                    </div>
+
+                                    {/* Cabeceras de Columnas */}
+                                    {currentLevel.cols.map((word, idx) => (
+                                        <div key={`col-${idx}`} className="relative bg-indigo-50 border-b-4 border-indigo-200 rounded-2xl flex flex-col items-center justify-center p-3 text-center shadow-sm">
+                                            <span className="absolute top-2 left-3 text-indigo-200 font-black text-2xl">{letters[idx]}</span>
+                                            <span className="font-bold text-indigo-900 text-sm md:text-base z-10 leading-tight">{word}</span>
+                                        </div>
+                                    ))}
+
+                                    {/* Filas */}
+                                    {currentLevel.rows.map((rowWord, rowIdx) => (
+                                        <React.Fragment key={`row-${rowIdx}`}>
+                                            {/* Cabecera de Fila */}
+                                            <div className="relative bg-teal-50 border-r-4 border-teal-200 rounded-2xl flex flex-col items-center justify-center p-3 text-center shadow-sm">
+                                                <span className="absolute top-2 left-3 text-teal-200 font-black text-2xl">{rowIdx + 1}</span>
+                                                <span className="font-bold text-teal-900 text-sm md:text-base z-10 leading-tight">{rowWord}</span>
+                                            </div>
+
+                                            {/* Celdas Interactivas */}
+                                            {currentLevel.cols.map((colWord, colIdx) => {
+                                                const cellId = `${letters[colIdx]}${rowIdx + 1}`;
+                                                const isClickedThisTurn = clickedCell === cellId;
+                                                const status = placedCards[cellId]; 
+                                                
+                                                let cellClasses = "grid-cell rounded-2xl border-2 border-slate-200 flex items-center justify-center relative ";
+                                                
+                                                if (status === undefined) {
+                                                    cellClasses += "bg-slate-50 border-dashed hover:border-blue-400 hover:bg-blue-50";
+                                                } else {
+                                                    cellClasses += "filled border-solid ";
+                                                    if (status === true) {
+                                                        cellClasses += isClickedThisTurn ? "bg-green-100 border-green-500 shadow-md" : "bg-green-50 border-green-200";
+                                                    }
+                                                    if (status === false) {
+                                                        cellClasses += isClickedThisTurn ? "bg-red-100 border-red-500 shadow-md" : "bg-red-50 border-red-200 opacity-60";
+                                                    }
+                                                }
+
+                                                // Contenido de la celda
+                                                let content = <span className="text-slate-300 font-bold text-xl">{cellId}</span>;
+                                                
+                                                if (status === true) {
+                                                    content = (
+                                                        <div className={`text-center ${isClickedThisTurn ? 'animate-pop' : ''}`}>
+                                                            <div className="text-green-600 font-black text-2xl mb-1">{cellId}</div>
+                                                            <div className="text-[10px] font-bold text-green-700 uppercase tracking-widest">Resuelto</div>
+                                                        </div>
+                                                    );
+                                                } else if (status === false) {
+                                                    content = (
+                                                        <div className={`text-center ${isClickedThisTurn ? 'animate-shake' : ''}`}>
+                                                            <div className="text-red-400 font-black text-2xl line-through">{cellId}</div>
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <div 
+                                                        key={`cell-${rowIdx}-${colIdx}`} 
+                                                        className={cellClasses}
+                                                        onClick={() => handleCellClick(rowIdx, colIdx)}
+                                                        title={`Intersección: ${colWord} + ${rowWord}`}
+                                                    >
+                                                        {content}
+                                                    </div>
+                                                );
+                                            })}
+                                        </React.Fragment>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<CrossCluesGame />);
+    </script>
+</body>
+</html>

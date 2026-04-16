@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solo Una: Máquina Epidemiológica</title>
+    
+    <!-- Tailwind CSS para los estilos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React, ReactDOM y Babel para ejecutar la lógica en el navegador -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Estilos adicionales para animaciones suaves */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .bg-grid-pattern { background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Base de datos de los 9 Niveles con 10 preguntas cada uno y sus respectivas explicaciones
+        const levelsData = [
+          {
+            id: 1, unit: "Unidad 1", title: "Fundamentos Básicos",
+            words: [
+              { word: "VECTOR", clues: ["Mosquito", "Transmisor", "Garrapata", "Vehículo"], explanation: "Un vector es un organismo (como mosquitos o garrapatas) que sirve de vehículo para transmitir un patógeno." },
+              { word: "ZOONOSIS", clues: ["Animal", "Humano", "Salto", "Contagio"], explanation: "Es la enfermedad o contagio que se transmite (salta) de un animal a un humano." },
+              { word: "ENDEMIA", clues: ["Constante", "Habitual", "Mantenida", "Región"], explanation: "Es la presencia habitual, constante y mantenida de una enfermedad dentro de una región geográfica determinada." },
+              { word: "EPIDEMIA", clues: ["Exceso", "Brote", "Inusual", "Repentino"], explanation: "Es el aumento repentino e inusual de casos (un exceso o brote) por encima de lo esperado." },
+              { word: "PANDEMIA", clues: ["Mundial", "Global", "Extensa", "Fronteras"], explanation: "Es una epidemia extensa y global que cruza fronteras internacionales, afectando a la población mundial." },
+              { word: "SINTOMA", clues: ["Subjetivo", "Dolor", "Sentimiento", "Paciente"], explanation: "Es la manifestación subjetiva de una enfermedad (ej. dolor), descrita o sentida directamente por el paciente." },
+              { word: "SIGNO", clues: ["Objetivo", "Medible", "Clínico", "Examen"], explanation: "Es una evidencia clínica objetiva y medible que el médico encuentra en un examen físico." },
+              { word: "SECUELA", clues: ["Daño", "Posterior", "Residual", "Consecuencia"], explanation: "Es el daño residual o consecuencia posterior que permanece tras la curación aparente de una enfermedad." },
+              { word: "TRIADA", clues: ["Agente", "Huésped", "Ambiente", "Triángulo"], explanation: "Modelo epidemiológico clásico en forma de triángulo que explica la interacción causal de las enfermedades." },
+              { word: "AGENTE", clues: ["Causante", "Microorganismo", "Patógeno", "Virus"], explanation: "Es el factor o patógeno (microorganismo/virus) que es causante directo de la enfermedad infecciosa." }
+            ]
+          },
+          {
+            id: 2, unit: "Unidad 1", title: "Procesos de Enfermedad",
+            words: [
+              { word: "HUESPED", clues: ["Susceptible", "Alojador", "Organismo", "Receptor"], explanation: "Es el organismo vivo o receptor que es susceptible de alojar a un agente patógeno." },
+              { word: "AMBIENTE", clues: ["Entorno", "Clima", "Alrededor", "Condiciones"], explanation: "Son las condiciones físicas (clima, entorno) alrededor que favorecen o no la transmisión de una enfermedad." },
+              { word: "CRONICA", clues: ["Larga", "Duración", "Permanente", "Continua"], explanation: "Se refiere a una enfermedad de progresión continua, permanente y de muy larga duración." },
+              { word: "INFECCIOSA", clues: ["Contagiosa", "Transmisible", "Microbiana", "Patógeno"], explanation: "Enfermedad contagiosa/transmisible originada por un patógeno de origen microbiano o viral." },
+              { word: "PRION", clues: ["Proteína", "Neurológico", "Infeccioso", "Plegamiento"], explanation: "Es un agente infeccioso compuesto exclusivamente de proteína con plegamiento anómalo que causa daño neurológico." },
+              { word: "SALUD", clues: ["Bienestar", "Equilibrio", "Estado", "Completo"], explanation: "Estado completo de bienestar físico, mental y social, representando un equilibrio sistémico." },
+              { word: "ENFERMEDAD", clues: ["Alteración", "Patología", "Trastorno", "Condición"], explanation: "Es un trastorno, condición o patología que genera una alteración medible de la fisiología normal." },
+              { word: "INCUBACION", clues: ["Periodo", "Latencia", "Preclínico", "Tiempo"], explanation: "Tiempo preclínico (o de latencia) entre la infección inicial y la aparición del primer síntoma." },
+              { word: "ASINTOMATICO", clues: ["Silencioso", "Inaparente", "Oculto", "Portador"], explanation: "Persona que es portadora de una enfermedad de manera oculta o inaparente (sin signos ni síntomas visibles)." },
+              { word: "LONDRES", clues: ["Sociedad", "Histórica", "Cólera", "Epidemiológica"], explanation: "Ciudad histórica donde John Snow estudió la epidemia del cólera y cuna de la primera Sociedad Epidemiológica." }
+            ]
+          },
+          {
+            id: 3, unit: "Unidad 2", title: "Teoría de la Causalidad",
+            words: [
+              { word: "CAUSALIDAD", clues: ["Relación", "Efecto", "Asociación", "Origen"], explanation: "Es el principio que evalúa la relación o asociación de origen entre una exposición y su efecto." },
+              { word: "UNICAUSAL", clues: ["Única", "Simple", "Directa", "Modelo"], explanation: "Modelo simple donde una única causa genera de forma directa un efecto determinado." },
+              { word: "MULTICAUSAL", clues: ["Múltiple", "Compleja", "Red", "Varios"], explanation: "Modelo donde múltiples factores (red compleja) interactúan en conjunto para generar un resultado de salud." },
+              { word: "DETERMINANTE", clues: ["Social", "Factor", "Influencia", "Económico"], explanation: "Factor (frecuentemente social o económico) que ejerce una influencia directa en las condiciones de salud poblacional." },
+              { word: "NECESARIA", clues: ["Indispensable", "Requerida", "Obligatoria", "Condición"], explanation: "Es una condición u factor que es obligatoriamente requerido o indispensable para que la enfermedad aparezca." },
+              { word: "SUFICIENTE", clues: ["Garantiza", "Completa", "Desencadena", "Sola"], explanation: "Condición que por sí sola está completa y garantiza que la enfermedad se desencadene." },
+              { word: "HILL", clues: ["Criterios", "Bradford", "Inglés", "Lista"], explanation: "Referencia a Austin Bradford Hill, el estadístico inglés que definió los 9 criterios para evaluar relaciones causales." },
+              { word: "TEMPORALIDAD", clues: ["Tiempo", "Precede", "Antes", "Causa-Efecto"], explanation: "Es el único criterio de Hill inamovible: la causa debe ocurrir en el tiempo obligatoriamente ANTES que el efecto." },
+              { word: "GRADIENTE", clues: ["Dosis", "Respuesta", "Biológico", "Intensidad"], explanation: "Criterio biológico donde una mayor intensidad (dosis) de exposición genera una mayor respuesta o efecto." },
+              { word: "PLAUSIBILIDAD", clues: ["Biológica", "Lógica", "Creíble", "Ciencia"], explanation: "Criterio que exige que la relación descubierta sea lógicamente creíble basándose en la ciencia biológica actual." }
+            ]
+          },
+          {
+            id: 4, unit: "Unidad 2", title: "Modelos Epidemiológicos",
+            words: [
+              { word: "CONSISTENCIA", clues: ["Repetición", "Estudios", "Similar", "Hallazgos"], explanation: "Criterio de Hill cumplido cuando hay repetición de hallazgos similares a través de varios estudios independientes." },
+              { word: "ESPECIFICIDAD", clues: ["Único", "Particular", "Exacto", "Vínculo"], explanation: "Criterio en el que una causa particular tiene un vínculo exacto y único con una enfermedad específica." },
+              { word: "ARAÑA", clues: ["Red", "MacMahon", "Complejidad", "Metáfora"], explanation: "Metáfora usada por MacMahon para describir la complejidad de la 'red' multicausal en los procesos de salud." },
+              { word: "MOTRIZ", clues: ["Fuerza", "Impulso", "Presión", "Modelo"], explanation: "En el modelo DPSIR, representa el impulso o fuerza macro-sistémica que ejerce presión sobre el ambiente." },
+              { word: "ESTADO", clues: ["Situación", "Condición", "Ambiental", "Momento"], explanation: "Representa la condición cualitativa y cuantitativa o situación del ambiente en un momento dado." },
+              { word: "EXPOSICION", clues: ["Contacto", "Riesgo", "Sujeto", "Vulnerabilidad"], explanation: "Es la medida o momento del contacto entre un sujeto vulnerable y el factor de riesgo." },
+              { word: "EFECTO", clues: ["Resultado", "Impacto", "Consecuencia", "Final"], explanation: "La consecuencia final o impacto en la salud como resultado de todo el proceso de exposición." },
+              { word: "PASTEL", clues: ["Rothman", "Porción", "Modelo", "Causa"], explanation: "El modelo de Rothman que grafica causas suficientes como un pastel entero, y causas componentes como sus porciones." },
+              { word: "CONVENCIONAL", clues: ["Tradicional", "Clásico", "Modelo", "Habitual"], explanation: "Referencia al modelo clásico, tradicional y lineal en epidemiología (como el modelo causa-efecto directo)." },
+              { word: "SOCIAL", clues: ["Determinante", "Sociedad", "Pobreza", "Entorno"], explanation: "Referencia a los modelos de la OMS que abordan la pobreza y el entorno dentro de la 'sociedad' como condicionantes." }
+            ]
+          },
+          {
+            id: 5, unit: "Unidad 3", title: "Vigilancia Epidemiológica",
+            words: [
+              { word: "VIGILANCIA", clues: ["Monitoreo", "Observación", "Sistema", "Control"], explanation: "Sistema de recolección continua, observación y monitoreo diseñado para el control en salud pública." },
+              { word: "SIVIGILA", clues: ["Colombia", "Notificación", "Nacional", "Eventos"], explanation: "El Sistema Nacional de Vigilancia en Salud Pública utilizado oficialmente en Colombia para notificar eventos." },
+              { word: "ACTIVA", clues: ["Búsqueda", "Terreno", "Encuesta", "Dinámica"], explanation: "Tipo de vigilancia dinámica donde el personal de salud sale a buscar la información en terreno mediante encuestas." },
+              { word: "PASIVA", clues: ["Espera", "Reporte", "Recepción", "Registros"], explanation: "Vigilancia basada en la espera y recepción de datos obtenidos en los registros habituales o reportes médicos." },
+              { word: "CENTINELA", clues: ["Sitios", "Clave", "Muestra", "Representativa"], explanation: "Vigilancia focalizada en 'sitios clave' para obtener información concentrada y de alta calidad (representativa)." },
+              { word: "CURVA", clues: ["Gráfica", "Epidémica", "Campana", "Tiempo"], explanation: "Gráfica (con frecuencia en forma de campana) que representa casos a través del tiempo en una epidemia." },
+              { word: "CANAL", clues: ["Endémico", "Corredor", "Zonas", "Alarma"], explanation: "Herramienta visual que crea un corredor (o canal) mediante cuartiles o desvío estándar, para definir áreas de alarma." },
+              { word: "INCIDENCIA", clues: ["Nuevos", "Casos", "Aparición", "Riesgo"], explanation: "Mide la velocidad o riesgo de aparición exclusiva de casos nuevos en un tiempo determinado." },
+              { word: "PREVALENCIA", clues: ["Totales", "Existentes", "Carga", "Acumulación"], explanation: "Proporción o carga acumulada que engloba casos totales existentes (tanto nuevos como antiguos) en un momento." },
+              { word: "BROTE", clues: ["Localizado", "Conglomerado", "Repentino", "Foco"], explanation: "Episodio repentino y muy localizado espacialmente, como un foco o conglomerado inusual de casos." }
+            ]
+          },
+          {
+            id: 6, unit: "Unidad 3", title: "Análisis y Medidas",
+            words: [
+              { word: "NOTIFICACION", clues: ["Aviso", "Reporte", "Obligatoria", "Sistema"], explanation: "Proceso del sistema mediante el cual es obligatorio realizar el reporte o aviso de una enfermedad de interés público." },
+              { word: "VIGIFRA", clues: ["Farmacovigilancia", "Medicamentos", "Reacciones", "Eventos"], explanation: "Subsistema dedicado exclusivamente a la vigilancia de eventos adversos y reacciones a medicamentos." },
+              { word: "TASA", clues: ["Velocidad", "Población", "Tiempo", "Multiplicador"], explanation: "Medida que indica la velocidad de un evento; siempre incluye un componente de tiempo, población y un multiplicador." },
+              { word: "PROPORCION", clues: ["Porcentaje", "Parte", "Total", "Fracción"], explanation: "Fracción matemática donde el numerador es parte del total (denominador), habitualmente expresada como porcentaje." },
+              { word: "RAZON", clues: ["División", "Diferentes", "Numerador", "Denominador"], explanation: "División de dos valores diferentes y excluyentes (el numerador no forma parte del denominador). Por ej: Hombre/Mujer." },
+              { word: "MORBILIDAD", clues: ["Enfermos", "Enfermedad", "Carga", "Población"], explanation: "Indicador que refleja la carga de enfermedad o número total de personas enfermas dentro de una población." },
+              { word: "MORTALIDAD", clues: ["Muertes", "Letalidad", "Fallecimientos", "Defunciones"], explanation: "Medida del número de muertes, fallecimientos o defunciones en un grupo." },
+              { word: "ALARMA", clues: ["Zona", "Precaución", "Canal", "Límite"], explanation: "Zona en el límite superior del canal endémico que sirve como indicador temprano (precaución) de que se aproxima una epidemia." },
+              { word: "SEGURIDAD", clues: ["Zona", "Éxito", "Debajo", "Verde"], explanation: "Zona del canal endémico situada por debajo de la media que indica un control normal (verde) de la enfermedad." },
+              { word: "EXITO", clues: ["Zona", "Mínimo", "Inferior", "Canal"], explanation: "La zona inferior del canal endémico, la cual indica el nivel más mínimo de casos." }
+            ]
+          },
+          {
+            id: 7, unit: "Bioestadística", title: "Diseños de Estudio",
+            words: [
+              { word: "COHORTE", clues: ["Seguimiento", "Futuro", "Prospectivo", "Expuestos"], explanation: "Estudio observacional analítico, en su mayoría prospectivo, que hace seguimiento futuro desde expuestos hasta desenlace." },
+              { word: "CASOS", clues: ["Controles", "Retrospectivo", "Pasado", "Enfermos"], explanation: "Parte del diseño 'casos y controles', de orden retrospectivo (hacia el pasado), partiendo de los enfermos (casos)." },
+              { word: "TRANSVERSAL", clues: ["Prevalencia", "Foto", "Momento", "Instantánea"], explanation: "Diseño que es como una foto instantánea en un solo momento de tiempo. Excelente para medir prevalencias." },
+              { word: "ECOLOGICO", clues: ["Grupos", "Poblaciones", "Agregados", "Falacia"], explanation: "Estudios que miden variables en agregados grupales poblacionales. Susceptible a la famosa falacia." },
+              { word: "OBSERVACIONAL", clues: ["Mirar", "Intervenir", "Natural", "Registro"], explanation: "Tipo general de diseño de estudio donde el investigador se limita a 'mirar' el curso natural sin manipular intervenciones." },
+              { word: "EXPERIMENTAL", clues: ["Ensayo", "Intervención", "Controlado", "Clínico"], explanation: "Diseño donde sí existe una manipulación o intervención por parte del investigador, como el ensayo clínico." },
+              { word: "MUESTRA", clues: ["Parte", "Subconjunto", "Representativa", "Selección"], explanation: "Subconjunto o parte extraída selectivamente para que sea representativa de un todo." },
+              { word: "POBLACION", clues: ["Universo", "Total", "Grupo", "Referencia"], explanation: "El conjunto total o universo de elementos de referencia que se desea estudiar." },
+              { word: "SESGO", clues: ["Error", "Sistemático", "Desviación", "Selección"], explanation: "Desviación o error sistemático presente en el diseño, selección o toma de datos de un estudio." },
+              { word: "FALACIA", clues: ["Ecológica", "Error", "Individual", "Agregado"], explanation: "Conocida como falacia ecológica: el error de inferir a nivel individual algo que solo se midió a nivel agregado/grupal." }
+            ]
+          },
+          {
+            id: 8, unit: "Bioestadística", title: "Inferencia y Variables",
+            words: [
+              { word: "NULA", clues: ["Hipótesis", "Igualdad", "Diferencia", "Cero"], explanation: "Hipótesis estadística que propone el status quo, asumiendo igualdad o cero diferencia entre los grupos comparados." },
+              { word: "ALTERNA", clues: ["Hipótesis", "Diferencia", "Investigador", "Cambio"], explanation: "La hipótesis de investigación que postula que sí existe un cambio, diferencia real o relación entre variables." },
+              { word: "FRECUENTISTA", clues: ["Probabilidad", "Repetición", "Clásica", "Enfoque"], explanation: "Enfoque clásico de probabilidad que entiende al azar como la frecuencia de un evento tras mucha repetición." },
+              { word: "BAYESIANO", clues: ["A priori", "Posterior", "Credibilidad", "Teorema"], explanation: "Enfoque probabilístico fundamentado en el Teorema que usa el conocimiento a priori para actualizar su credibilidad posterior." },
+              { word: "INTERVALO", clues: ["Confianza", "Rango", "Precisión", "Valores"], explanation: "Rango de valores (el intervalo de confianza) que da precisión sobre en dónde debe caer el verdadero parámetro." },
+              { word: "VALOR", clues: ["P", "Significación", "Probabilidad", "Umbral"], explanation: "El 'Valor-P': medida de probabilidad que se utiliza como umbral de significación para rechazar una hipótesis nula." },
+              { word: "CONTINUA", clues: ["Variable", "Decimales", "Medición", "Infinita"], explanation: "Tipo de variable cuantitativa derivada de una medición infinita (permite fracciones y decimales, ej. el peso)." },
+              { word: "DISCRETA", clues: ["Variable", "Enteros", "Conteo", "Saltos"], explanation: "Tipo de variable numérica derivada de un conteo, usando números enteros que ocurren 'en saltos' (ej. número de hijos)." },
+              { word: "ORDINAL", clues: ["Categoría", "Orden", "Jerarquía", "Nivel"], explanation: "Variable categórica donde la clasificación importa porque establece una jerarquía u orden (ej. Leve, Moderado, Severo)." },
+              { word: "NOMINAL", clues: ["Categoría", "Nombres", "Etiquetas", "Clasificación"], explanation: "Variable que sirve puramente como etiqueta o categoría para agrupar bajo diferentes nombres sin orden (ej. Tipo de sangre)." }
+            ]
+          },
+          {
+            id: 9, unit: "Mix Avanzado", title: "Reto Epidemiológico Final",
+            words: [
+              { word: "EPIDEMIOLOGIA", clues: ["Población", "Estudio", "Distribución", "Ciencia"], explanation: "Ciencia fundamental en salud pública que realiza el estudio riguroso de la distribución de eventos en una población." },
+              { word: "PREVENCION", clues: ["Evitar", "Primaria", "Secundaria", "Medidas"], explanation: "Aplicación de medidas en niveles (primaria, secundaria, etc) para evitar el riesgo o evolución del daño en la salud." },
+              { word: "RIESGO", clues: ["Probabilidad", "Peligro", "Relativo", "Amenaza"], explanation: "La probabilidad general o peligro de que una población en amenaza desarrolle un resultado no deseado." },
+              { word: "ATRIBUIBLE", clues: ["Fracción", "Diferencia", "Impacto", "Exposición"], explanation: "Medida (como la fracción o el riesgo atribuible) que evalúa el impacto o diferencia exclusiva debido a la exposición." },
+              { word: "RELATIVO", clues: ["Riesgo", "Razón", "Comparación", "Cociente"], explanation: "Es el Riesgo Relativo, un cociente matemático que funciona como la gran herramienta de comparación directa de incidencias." },
+              { word: "MOMIO", clues: ["Odds", "Oportunidad", "Ventaja", "Casos"], explanation: "También llamado 'Odds'. Expresa la razón de oportunidad o 'ventaja', la medida de asociación básica en los casos y controles." },
+              { word: "LETALIDAD", clues: ["Gravedad", "Muerte", "Enfermos", "Porcentaje"], explanation: "Indica la gravedad máxima: el porcentaje específico de individuos enfermos que finalmente encuentran la muerte." },
+              { word: "SUPERVIVENCIA", clues: ["Tiempo", "Vida", "Análisis", "Tabla"], explanation: "Análisis biológico o tabla matemática que registra el tiempo de vida (o tiempo a un evento) a lo largo de un estudio." },
+              { word: "VARIABLE", clues: ["Característica", "Medible", "Cambio", "Dato"], explanation: "Cualquier cualidad, dato o característica que se mide en un estudio y es susceptible a cambios." },
+              { word: "MUESTREO", clues: ["Proceso", "Selección", "Aleatorio", "Participantes"], explanation: "Proceso estadístico y aleatorio usado para garantizar la correcta selección probabilística de participantes." }
+            ]
+          }
+        ];
+
+        // Función para normalizar el texto (quitar acentos y mayúsculas)
+        const normalizeText = (text) => {
+          return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+        };
+
+        function App() {
+          const [gameState, setGameState] = useState('menu'); // menu, playing, feedback, endLevel
+          const [currentLevel, setCurrentLevel] = useState(null);
+          const [currentWordIndex, setCurrentWordIndex] = useState(0);
+          const [guess, setGuess] = useState('');
+          const [score, setScore] = useState(0);
+          const [lastResult, setLastResult] = useState(null); // 'correct', 'incorrect', 'skipped'
+          
+          const inputRef = useRef(null);
+
+          // Iniciar un nivel específico
+          const startLevel = (levelId) => {
+            const level = levelsData.find(l => l.id === levelId);
+            setCurrentLevel(level);
+            setCurrentWordIndex(0);
+            setScore(0);
+            setGuess('');
+            setLastResult(null);
+            setGameState('playing');
+          };
+
+          // Auto-focus en el input al cambiar de palabra
+          useEffect(() => {
+            if (gameState === 'playing' && inputRef.current) {
+              setTimeout(() => inputRef.current.focus(), 100);
+            }
+          }, [gameState, currentWordIndex]);
+
+          const handleGuessSubmit = (e) => {
+            e.preventDefault();
+            if (!guess.trim()) return;
+
+            const currentWord = currentLevel.words[currentWordIndex].word;
+            const isCorrect = normalizeText(guess) === normalizeText(currentWord);
+
+            if (isCorrect) {
+              setScore(s => s + 1);
+              setLastResult('correct');
+            } else {
+              setLastResult('incorrect');
+            }
+            
+            setGameState('feedback');
+          };
+
+          const handleSkip = () => {
+            setLastResult('skipped');
+            setGameState('feedback');
+          };
+
+          const nextWord = () => {
+            if (currentWordIndex + 1 < currentLevel.words.length) {
+              setCurrentWordIndex(c => c + 1);
+              setGuess('');
+              setGameState('playing');
+            } else {
+              setGameState('endLevel');
+            }
+          };
+
+          // --- Pantalla 1: Menú Principal ---
+          if (gameState === 'menu') {
+            return (
+              <div className="min-h-screen bg-slate-100 p-4 md:p-8 font-sans bg-grid-pattern">
+                <div className="max-w-5xl mx-auto">
+                  
+                  <div className="text-center mb-10 mt-6 animate-fade-in">
+                    <div className="inline-block bg-teal-600 text-white p-4 rounded-full shadow-lg mb-4 text-4xl">🤖</div>
+                    <h1 className="text-4xl md:text-5xl font-black text-slate-800 mb-2 tracking-tight">Máquina Analítica</h1>
+                    <p className="text-lg text-slate-500 font-medium max-w-xl mx-auto">
+                      El sistema ha preparado 9 simulaciones. Ingresa a los módulos para descifrar los conceptos epidemiológicos a partir de sus 4 pistas procesadas.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-fade-in" style={{animationDelay: '0.1s'}}>
+                    {levelsData.map((level) => (
+                      <div 
+                        key={level.id}
+                        onClick={() => startLevel(level.id)}
+                        className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:border-teal-500 hover:shadow-xl transition-all cursor-pointer group flex flex-col h-full relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-teal-50 rounded-bl-full -z-10 group-hover:bg-teal-100 transition-colors"></div>
+                        <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-2 flex items-center gap-1">
+                          <span>NIVEL {level.id}</span> <span className="text-slate-300">•</span> <span>{level.unit}</span>
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-800 mb-4 group-hover:text-teal-700 transition-colors">
+                          {level.title}
+                        </h3>
+                        <div className="mt-auto flex justify-between items-center pt-4 border-t border-slate-100">
+                          <span className="text-sm text-slate-500 font-medium">10 Conceptos</span>
+                          <div className="bg-slate-100 text-slate-600 w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-teal-600 group-hover:text-white transition-colors shadow-sm">
+                            ▶️
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // --- Pantalla 2: Fin del Nivel ---
+          if (gameState === 'endLevel') {
+            const total = currentLevel.words.length;
+            const percentage = Math.round((score / total) * 100);
+            let message = "Análisis completado. Sigue repasando.";
+            let emoji = "📚";
+            
+            if (percentage >= 90) { message = "¡Sincronización Perfecta!"; emoji = "🏆"; }
+            else if (percentage >= 70) { message = "Alto Nivel de Dominio."; emoji = "🌟"; }
+            else if (percentage >= 50) { message = "Procesamiento Aceptable."; emoji = "👍"; }
+
+            return (
+              <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 bg-grid-pattern">
+                <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 text-center p-8 animate-fade-in">
+                  <div className="text-6xl mb-4">{emoji}</div>
+                  <h2 className="text-2xl font-black mb-2 text-slate-800 tracking-tight">{message}</h2>
+                  <p className="text-slate-500 mb-6 font-medium">Módulo: Nivel {currentLevel.id} - {currentLevel.title}</p>
+                  
+                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 mb-8 shadow-inner">
+                    <div className="text-sm text-slate-400 uppercase tracking-widest font-bold mb-2">Tasa de Aciertos</div>
+                    <div className="text-5xl font-black text-teal-600">
+                      {score} <span className="text-2xl text-slate-300 font-medium">/ {total}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button 
+                      onClick={() => startLevel(currentLevel.id)}
+                      className="flex-1 bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-xl transition-all shadow-sm"
+                    >
+                      🔄 Reintentar
+                    </button>
+                    <button 
+                      onClick={() => setGameState('menu')}
+                      className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md"
+                    >
+                      🗂️ Ver Niveles
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Variables de acceso rápido para la pantalla de juego
+          const currentWordData = currentLevel.words[currentWordIndex];
+          const isPlaying = gameState === 'playing';
+
+          // --- Pantalla 3: Juego y Feedback ---
+          return (
+            <div className="min-h-screen bg-slate-100 flex flex-col items-center p-4 md:p-8 font-sans bg-grid-pattern">
+              
+              {/* Top Bar */}
+              <div className="w-full max-w-3xl flex justify-between items-center mb-8 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setGameState('menu')}
+                    className="bg-slate-100 p-2 rounded-xl text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors"
+                    title="Volver al menú"
+                  >
+                    🏠
+                  </button>
+                  <div>
+                    <h1 className="font-bold text-slate-800 leading-tight tracking-tight">Nivel {currentLevel.id}</h1>
+                    <p className="text-xs text-slate-400 font-bold uppercase">{currentLevel.unit}</p>
+                  </div>
+                </div>
+                <div className="text-right flex items-center gap-5">
+                  <div className="text-sm text-center">
+                    <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-0.5">Progreso</span>
+                    <span className="font-black text-slate-700 text-lg">
+                      {currentWordIndex + 1}<span className="text-slate-400 text-sm font-medium">/{currentLevel.words.length}</span>
+                    </span>
+                  </div>
+                  <div className="w-px h-8 bg-slate-200"></div>
+                  <div className="text-sm text-center">
+                    <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-0.5">Aciertos</span>
+                    <span className="font-black text-teal-600 text-lg">{score}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Game Board */}
+              <div className="w-full max-w-3xl bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden relative flex flex-col">
+                
+                {/* Progress Bar */}
+                <div className="w-full h-1.5 bg-slate-100">
+                  <div 
+                    className="h-full bg-teal-500 transition-all duration-300 ease-out" 
+                    style={{ width: `${((currentWordIndex) / currentLevel.words.length) * 100}%` }}
+                  ></div>
+                </div>
+
+                <div className="p-6 md:p-10 flex-grow flex flex-col">
+                  
+                  <div className="text-center mb-10 flex-grow">
+                    <div className="inline-flex items-center gap-2 bg-slate-800 text-white px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-6 shadow-md">
+                      <span className="text-teal-400">⚡</span> Análisis de sistema completado
+                    </div>
+                    
+                    <p className="text-slate-500 text-sm mb-6 font-medium">
+                      El sistema extrajo 4 características clave. Identifica el concepto:
+                    </p>
+
+                    {/* Clues Container */}
+                    <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-2 animate-fade-in" key={currentWordIndex}>
+                      {currentWordData.clues.map((clue, idx) => (
+                        <div 
+                          key={idx} 
+                          className="bg-indigo-50 text-indigo-900 px-6 py-4 rounded-xl border-2 border-indigo-100 shadow-sm min-w-[120px] flex items-center justify-center"
+                        >
+                          <span className="text-lg md:text-xl font-black uppercase tracking-widest">{clue}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Input / Feedback Area */}
+                  <div className="min-h-[160px] flex flex-col justify-end">
+                    {isPlaying ? (
+                      <form onSubmit={handleGuessSubmit} className="max-w-md mx-auto w-full animate-fade-in">
+                        <div className="relative flex flex-col items-center">
+                          <input
+                            ref={inputRef}
+                            type="text"
+                            value={guess}
+                            onChange={(e) => setGuess(e.target.value)}
+                            placeholder="Escribe 1 palabra..."
+                            className="w-full text-center text-2xl font-black uppercase py-4 px-6 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:border-teal-500 focus:bg-white focus:shadow-md outline-none transition-all placeholder:text-slate-300 placeholder:normal-case placeholder:font-normal"
+                            autoComplete="off"
+                            spellCheck="false"
+                          />
+                        </div>
+                        
+                        <div className="flex gap-3 mt-4">
+                          <button 
+                            type="button"
+                            onClick={handleSkip}
+                            className="flex-1 py-3 px-4 bg-white border-2 border-slate-200 hover:bg-slate-100 text-slate-500 font-bold rounded-xl transition-colors"
+                          >
+                            Omitir
+                          </button>
+                          <button 
+                            type="submit"
+                            disabled={!guess.trim()}
+                            className="flex-[2] py-3 px-4 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold rounded-xl transition-all shadow-md disabled:shadow-none"
+                          >
+                            Verificar
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="max-w-xl mx-auto w-full text-center animate-fade-in">
+                        {lastResult === 'correct' && (
+                          <div className="mb-5 p-5 bg-emerald-50 border-2 border-emerald-500 rounded-2xl text-emerald-800 shadow-sm relative overflow-hidden">
+                            <div className="absolute -right-4 -top-4 text-6xl opacity-20">✅</div>
+                            <h3 className="text-xl font-black uppercase mb-1 text-emerald-600 flex items-center justify-center gap-2">
+                              ✅ Procesamiento Correcto
+                            </h3>
+                          </div>
+                        )}
+                        
+                        {lastResult === 'incorrect' && (
+                          <div className="mb-5 p-5 bg-rose-50 border-2 border-rose-400 rounded-2xl text-rose-800 shadow-sm">
+                            <h3 className="text-lg font-black uppercase mb-2 text-rose-600 flex items-center justify-center gap-2">
+                              ❌ Error de validación
+                            </h3>
+                            <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Concepto objetivo:</p>
+                            <p className="text-3xl font-black uppercase tracking-widest text-slate-800">{currentWordData.word}</p>
+                            
+                            {/* EXPLICACION AÑADIDA PARA ERROR */}
+                            <div className="mt-4 p-4 bg-white bg-opacity-70 rounded-xl border border-rose-100 text-sm font-medium text-slate-700 text-left">
+                                <span className="text-rose-500 font-bold block mb-1">¿Por qué es {currentWordData.word}?</span> 
+                                {currentWordData.explanation}
+                            </div>
+                          </div>
+                        )}
+
+                        {lastResult === 'skipped' && (
+                          <div className="mb-5 p-5 bg-slate-50 border-2 border-slate-300 rounded-2xl text-slate-700 shadow-sm">
+                            <h3 className="text-lg font-black uppercase mb-2 text-slate-500 flex items-center justify-center gap-2">
+                              ⏭️ Concepto Omitido
+                            </h3>
+                            <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Concepto objetivo:</p>
+                            <p className="text-3xl font-black uppercase tracking-widest text-slate-800">{currentWordData.word}</p>
+
+                            {/* EXPLICACION AÑADIDA PARA OMITIDO */}
+                            <div className="mt-4 p-4 bg-white rounded-xl border border-slate-200 text-sm font-medium text-slate-600 text-left shadow-inner">
+                                <span className="text-slate-500 font-bold block mb-1">Explicación del concepto:</span> 
+                                {currentWordData.explanation}
+                            </div>
+                          </div>
+                        )}
+
+                        <button 
+                          onClick={nextWord}
+                          autoFocus
+                          className="w-full py-4 px-4 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                        >
+                          {currentWordIndex + 1 < currentLevel.words.length ? 'Siguiente Concepto' : 'Finalizar Nivel'} ➡️
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
