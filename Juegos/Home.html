@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú de Juegos - Juegaboratorio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hover-card {
+            transition: all 0.3s ease;
+        }
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen p-4 md:p-8 lg:p-12 selection:bg-indigo-200">
+
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- CABECERA -->
+        <header class="text-center mb-12 animate-[fadeIn_0.5s_ease-out]">
+            <div class="inline-flex items-center justify-center p-4 bg-indigo-100 rounded-full mb-4">
+                <span class="text-4xl">🕹️</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-black text-slate-800 mb-4 tracking-tight">JUEGOS <span class="text-indigo-600">Hub</span></h1>
+            <p class="text-lg text-slate-500 max-w-2xl mx-auto font-medium">Selecciona una categoría y sumérgete en nuestra colección de juegos educativos y de entretenimiento. ¡Aprender jugando nunca fue tan divertido!</p>
+        </header>
+
+        <!-- CONTENEDOR DE CATEGORÍAS -->
+        <div class="grid md:grid-cols-2 gap-8 lg:gap-12">
+            
+            <!-- SECCIÓN: JUEGOS GENERALES -->
+            <section class="bg-white rounded-3xl p-6 md:p-8 border-t-8 border-emerald-500 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-5 text-8xl pointer-events-none">🎮</div>
+                
+                <h2 class="text-2xl md:text-3xl font-black text-emerald-800 mb-6 flex items-center gap-3">
+                    <span class="bg-emerald-100 p-2 rounded-xl text-emerald-600">🎮</span> 
+                    Juegos Generales
+                </h2>
+                
+                <div class="flex flex-col gap-4 relative z-10">
+                    <!-- Enlace 1 -->
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/General/DiceStories.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-4 rounded-2xl bg-emerald-50 border border-emerald-100 hover:border-emerald-300 hover:bg-emerald-100 text-left">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-emerald-900 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
+                                    🎲 Dados de Historias
+                                </h3>
+                            </div>
+                            <span class="text-emerald-400 group-hover:text-emerald-600 transition-colors">➔</span>
+                        </div>
+                    </a>
+
+                    <!-- Enlace 2 -->
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/General/pistasCruzadas.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-4 rounded-2xl bg-emerald-50 border border-emerald-100 hover:border-emerald-300 hover:bg-emerald-100 text-left">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-emerald-900 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
+                                    ✖️ Pistas Cruzadas
+                                </h3>
+                            </div>
+                            <span class="text-emerald-400 group-hover:text-emerald-600 transition-colors">➔</span>
+                        </div>
+                    </a>
+
+                    <!-- Enlace 3 -->
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/General/Pictograma.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-4 rounded-2xl bg-emerald-50 border border-emerald-100 hover:border-emerald-300 hover:bg-emerald-100 text-left">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-emerald-900 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
+                                    🖼️ Adivina el Pictograma
+                                </h3>
+                            </div>
+                            <span class="text-emerald-400 group-hover:text-emerald-600 transition-colors">➔</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: JUEGOS EPIDEMIOLOGÍA -->
+            <section class="bg-white rounded-3xl p-6 md:p-8 border-t-8 border-indigo-500 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-5 text-8xl pointer-events-none">🔬</div>
+                
+                <h2 class="text-2xl md:text-3xl font-black text-indigo-800 mb-6 flex items-center gap-3">
+                    <span class="bg-indigo-100 p-2 rounded-xl text-indigo-600">🔬</span> 
+                    Juegos Epidemiología
+                </h2>
+                
+                <div class="flex flex-col gap-4 relative z-10">
+                    <!-- Enlace 1 -->
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/DarkStoriesEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-4 rounded-2xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
+                                    🕵️‍♂️ Dark Stories
+                                </h3>
+                            </div>
+                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors">➔</span>
+                        </div>
+                    </a>
+
+                    <!-- Enlace 2 -->
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/DiceStoriesEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-4 rounded-2xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
+                                    🎲 EPI Dice Stories
+                                </h3>
+                            </div>
+                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors">➔</span>
+                        </div>
+                    </a>
+
+                    <!-- Enlace 3 -->
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/JustOneEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-4 rounded-2xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
+                                    ☝️ Máquina Analítica
+                                </h3>
+                            </div>
+                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors">➔</span>
+                        </div>
+                    </a>
+
+                    <!-- Enlace 4 -->
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/PalabrasCruzadasEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-4 rounded-2xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
+                                    📝 Pistas Cruzadas
+                                </h3>
+                            </div>
+                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors">➔</span>
+                        </div>
+                    </a>
+
+                    <!-- Enlace 5 -->
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/PictogramaEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-4 rounded-2xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
+                                    🖼️ EPI Pictograma 
+                                </h3>
+                            </div>
+                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors">➔</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- PIE DE PÁGINA -->
+        <footer class="mt-12 text-center text-slate-400 text-sm">
+            <p>Laboratorio de Juegos &copy; 2024. Todos los enlaces dirigen a versiones alojadas en GitHub Pages.</p>
+        </footer>
+
+    </div>
+
+</body>
+</html>
