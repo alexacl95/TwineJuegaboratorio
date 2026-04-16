@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adivina el Pictograma</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hide { display: none !important; }
+        /* Ocultar flechas en inputs numéricos */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-sky-50 text-slate-800 font-sans min-h-screen flex flex-col items-center">
+
+    <div id="app" class="w-full max-w-3xl mx-auto p-4 flex-grow flex flex-col">
+        
+        <!-- PANTALLA DE CONFIGURACIÓN -->
+        <div id="setup-screen" class="flex-grow flex flex-col items-center justify-center fade-in">
+            <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-lg border border-sky-100">
+                <div class="text-center mb-8">
+                    <h1 class="text-4xl font-black text-sky-600 mb-2">Adivina el Pictograma</h1>
+                    <p class="text-slate-500 font-medium">Nivel Experto: 3 Emojis. ¡Adivina el concepto!</p>
+                </div>
+
+                <!-- Categoría -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-700 mb-3">1. Selecciona una Categoría</label>
+                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-2">
+                        <button class="cat-btn border-2 border-rose-500 bg-rose-50 text-rose-700 rounded-xl py-2 font-bold text-sm transition" data-cat="peliculas">🎬 Películas</button>
+                        <button class="cat-btn border-2 border-slate-200 bg-white text-slate-600 rounded-xl py-2 font-bold text-sm hover:border-emerald-300 transition" data-cat="cuentos">📖 Cuentos</button>
+                        <button class="cat-btn border-2 border-slate-200 bg-white text-slate-600 rounded-xl py-2 font-bold text-sm hover:border-amber-300 transition" data-cat="eventos">🎉 Eventos</button>
+                        <button class="cat-btn border-2 border-slate-200 bg-white text-slate-600 rounded-xl py-2 font-bold text-sm hover:border-purple-300 transition" data-cat="conceptos">💡 Conceptos</button>
+                        <button class="cat-btn border-2 border-slate-200 bg-white text-slate-600 rounded-xl py-2 font-bold text-sm hover:border-sky-300 transition col-span-2" data-cat="todas">🎲 ¡Mezclar Todas!</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6 mb-8">
+                    <!-- Cantidad de Pistas -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">2. Cantidad de Pistas</label>
+                        <div class="flex items-center border-2 border-slate-300 rounded-xl overflow-hidden focus-within:border-sky-500 transition bg-slate-50">
+                            <button id="btn-rounds-minus" class="hover:bg-slate-200 px-4 py-3 font-bold text-slate-600 transition">-</button>
+                            <input type="number" id="rounds-input" min="3" max="20" value="5" readonly class="w-full text-center text-xl font-black focus:outline-none bg-transparent">
+                            <button id="btn-rounds-plus" class="hover:bg-slate-200 px-4 py-3 font-bold text-slate-600 transition">+</button>
+                        </div>
+                    </div>
+                    <!-- Tiempo de juego -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">3. Tiempo (Minutos)</label>
+                        <div class="flex items-center border-2 border-slate-300 rounded-xl overflow-hidden focus-within:border-sky-500 transition bg-slate-50">
+                            <button id="btn-time-minus" class="hover:bg-slate-200 px-4 py-3 font-bold text-slate-600 transition">-</button>
+                            <input type="number" id="time-input" min="1" max="30" value="3" readonly class="w-full text-center text-xl font-black focus:outline-none bg-transparent">
+                            <button id="btn-time-plus" class="hover:bg-slate-200 px-4 py-3 font-bold text-slate-600 transition">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-start" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-black text-xl py-4 rounded-xl shadow-[0_4px_0_rgb(2,132,199)] hover:shadow-[0_2px_0_rgb(2,132,199)] hover:translate-y-[2px] transition-all">
+                    ¡Comenzar Juego!
+                </button>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE JUEGO -->
+        <div id="game-screen" class="hide flex-grow flex flex-col w-full fade-in">
+            
+            <!-- Cabecera -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm flex justify-between items-center mb-6 border border-slate-200">
+                <div class="flex items-center gap-4">
+                    <div id="timer-display" class="text-2xl font-black text-sky-700 bg-sky-50 border-2 border-sky-200 px-3 py-1 rounded-lg">03:00</div>
+                    <div class="text-sm font-bold text-slate-500">Pista <span id="round-counter" class="text-sky-600">1/5</span></div>
+                </div>
+                <button id="btn-finish" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-4 rounded-lg shadow-[0_4px_0_rgb(225,29,72)] hover:shadow-[0_2px_0_rgb(225,29,72)] hover:translate-y-[2px] transition-all text-sm">
+                    Finalizar
+                </button>
+            </div>
+
+            <!-- Área del Pictograma -->
+            <div class="flex-grow flex flex-col items-center justify-center bg-white rounded-3xl shadow-md border border-slate-200 p-8 text-center relative overflow-hidden">
+                <p class="text-slate-400 font-semibold mb-2 uppercase tracking-wide text-sm">¿Qué significa esto?</p>
+                <div id="emoji-display" class="text-6xl sm:text-7xl md:text-8xl mb-8 tracking-widest drop-shadow-lg">
+                    🍿🎬
+                </div>
+
+                <!-- Input y Adivinar -->
+                <div id="input-section" class="w-full max-w-sm flex flex-col gap-3">
+                    <input type="text" id="guess-input" placeholder="Escribe tu respuesta aquí..." class="w-full border-2 border-slate-300 rounded-xl px-4 py-4 text-xl text-center focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition shadow-inner">
+                    <button id="btn-guess" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xl py-4 rounded-xl shadow-[0_4px_0_rgb(5,150,105)] hover:shadow-[0_2px_0_rgb(5,150,105)] hover:translate-y-[2px] transition-all">
+                        Adivinar
+                    </button>
+                    <!-- BOTÓN ME RINDO -->
+                    <button id="btn-give-up" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold text-lg py-3 rounded-xl mt-2 transition-all">
+                        Me rindo 🏳️
+                    </button>
+                </div>
+
+                <!-- Resultado y Corrección (Oculto por defecto) -->
+                <div id="result-section" class="hide w-full max-w-md flex flex-col gap-4 fade-in">
+                    <div id="result-message" class="text-2xl font-black mb-1">¡Correcto!</div>
+                    <div id="correct-answer-display" class="text-lg text-slate-600 font-medium mb-2">La respuesta era: <span class="font-bold text-slate-800">Cine</span></div>
+                    
+                    <div id="override-box" class="hide bg-amber-50 border-2 border-amber-200 p-4 rounded-xl mb-2">
+                        <p class="text-sm text-amber-800 font-medium mb-3">¿Escribiste un sinónimo o tuviste un error ortográfico pero sabías la respuesta?</p>
+                        <button id="btn-override" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-lg shadow transition">
+                            ¡Lo escribí diferente pero acerté!
+                        </button>
+                    </div>
+
+                    <button id="btn-next" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-black text-xl py-4 rounded-xl shadow-[0_4px_0_rgb(2,132,199)] transition-all">
+                        Siguiente Pista ➡️
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE RESULTADOS -->
+        <div id="results-screen" class="hide flex-grow flex flex-col items-center justify-center fade-in">
+            <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-slate-200 text-center">
+                <h2 class="text-4xl font-black text-sky-600 mb-2">¡Juego Terminado!</h2>
+                <p class="text-slate-500 mb-8 font-medium">Aquí están tus resultados finales</p>
+
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="bg-emerald-50 border-2 border-emerald-300 p-4 rounded-2xl">
+                        <div class="text-4xl font-black text-emerald-600 mb-1" id="res-hits">0</div>
+                        <div class="text-sm font-bold text-emerald-800 uppercase tracking-wider">Aciertos</div>
+                    </div>
+                    <div class="bg-rose-50 border-2 border-rose-300 p-4 rounded-2xl">
+                        <div class="text-4xl font-black text-rose-600 mb-1" id="res-misses">0</div>
+                        <div class="text-sm font-bold text-rose-800 uppercase tracking-wider">Fallos</div>
+                    </div>
+                </div>
+
+                <button id="btn-restart" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-black text-xl py-4 rounded-xl shadow-[0_4px_0_rgb(15,23,42)] hover:translate-y-[2px] transition-all">
+                    Jugar de Nuevo
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- LÓGICA DEL JUEGO -->
+    <script>
+        // --- 1. BASE DE DATOS DE PICTOGRAMAS (NIVEL 3) ---
+        // Exclusivamente agrupaciones de 3 emojis.
+        const database = {
+            peliculas: [
+                { e: "👦🏻⚡👓", w: "Harry Potter" },
+                { e: "🚢🧊💔", w: "Titanic" },
+                { e: "🦁👑🌅", w: "El rey leon" },
+                { e: "🦇👨🏻🌃", w: "Batman" },
+                { e: "👨🏻🕷️🕸️", w: "El hombre araña" },
+                { e: "🏴‍☠️🦜🚢", w: "Piratas del caribe" },
+                { e: "🦖🦕🌴", w: "Jurassic Park" }
+            ],
+            cuentos: [
+                { e: "🍎👸🏻🧙‍♀️", w: "Blancanieves" },
+                { e: "🐺👧🏼🧺", w: "Caperucita roja" },
+                { e: "🐷🐷🐷", w: "Los tres cerditos" },
+                { e: "🧜‍♀️🦀🐟", w: "La sirenita" },
+                { e: "🤥🪵🧚‍♀️", w: "Pinocho" },
+                { e: "👠🎃🕛", w: "Cenicienta" },
+                { e: "🌹👹🏰", w: "La bella y la bestia" }
+            ],
+            eventos: [
+                { e: "🎂🎁🎈", w: "Cumpleaños" },
+                { e: "🎄🎅🎁", w: "Navidad" },
+                { e: "🎃👻🍬", w: "Halloween" },
+                { e: "💍👰🤵", w: "Boda" },
+                { e: "🎓📜👨‍🎓", w: "Graduacion" },
+                { e: "🏖️☀️🌊", w: "Vacaciones" },
+                { e: "🏕️🔥⛺", w: "Campamento" }
+            ],
+            conceptos: [
+                { e: "🕰️⏳🏃‍♂️", w: "Llegar tarde" },
+                { e: "👽🛸🌍", w: "Invasion extraterrestre" },
+                { e: "🧠💡✨", w: "Idea brillante" },
+                { e: "💔😢🌧️", w: "Tristeza" },
+                { e: "🤐🤫🙊", w: "Secreto" },
+                { e: "👁️👄👁️", w: "Sorpresa" },
+                { e: "😴🛌🌌", w: "Sueño" }
+            ]
+        };
+
+        // --- 2. VARIABLES DE ESTADO ---
+        let currentCategory = 'peliculas';
+        let totalRounds = 5;
+        let currentRound = 0;
+        let timeRemaining = 0;
+        let timerInterval = null;
+        let gameQueue = [];
+        let hits = 0;
+        let misses = 0;
+        let currentRoundStatus = 'pending'; // pending, correct, wrong, surrendered, overridden
+
+        // Elementos DOM
+        const screens = {
+            setup: document.getElementById('setup-screen'),
+            game: document.getElementById('game-screen'),
+            results: document.getElementById('results-screen')
+        };
+        const timerDisplay = document.getElementById('timer-display');
+        const roundCounter = document.getElementById('round-counter');
+        const emojiDisplay = document.getElementById('emoji-display');
+        const guessInput = document.getElementById('guess-input');
+        
+        const inputSection = document.getElementById('input-section');
+        const resultSection = document.getElementById('result-section');
+        const resultMessage = document.getElementById('result-message');
+        const correctAnswerDisplay = document.getElementById('correct-answer-display');
+        const overrideBox = document.getElementById('override-box');
+        const btnOverride = document.getElementById('btn-override');
+
+        // --- 3. EVENTOS INICIALES ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Selección de Categoría
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // Reset estilos
+                    document.querySelectorAll('.cat-btn').forEach(b => {
+                        b.className = "cat-btn border-2 border-slate-200 bg-white text-slate-600 rounded-xl py-2 font-bold text-sm hover:border-slate-300 transition" + (b.getAttribute('data-cat') === 'todas' ? ' col-span-2' : '');
+                    });
+                    
+                    const cat = e.target.getAttribute('data-cat');
+                    currentCategory = cat;
+                    
+                    // Aplicar color según la selección
+                    let activeClass = "";
+                    if(cat === 'peliculas') activeClass = "border-rose-500 bg-rose-50 text-rose-700";
+                    else if(cat === 'cuentos') activeClass = "border-emerald-500 bg-emerald-50 text-emerald-700";
+                    else if(cat === 'eventos') activeClass = "border-amber-500 bg-amber-50 text-amber-700";
+                    else if(cat === 'conceptos') activeClass = "border-purple-500 bg-purple-50 text-purple-700";
+                    else if(cat === 'todas') activeClass = "border-sky-500 bg-sky-50 text-sky-700 col-span-2";
+                    
+                    e.target.className = `cat-btn border-2 rounded-xl py-2 font-bold text-sm transition ${activeClass}`;
+                });
+            });
+
+            // Controles Numéricos (+ y -)
+            const setupInputControls = (inputId, btnMinusId, btnPlusId, min, max) => {
+                const input = document.getElementById(inputId);
+                document.getElementById(btnMinusId).addEventListener('click', () => {
+                    if(parseInt(input.value) > min) input.value = parseInt(input.value) - 1;
+                });
+                document.getElementById(btnPlusId).addEventListener('click', () => {
+                    if(parseInt(input.value) < max) input.value = parseInt(input.value) + 1;
+                });
+            };
+            setupInputControls('rounds-input', 'btn-rounds-minus', 'btn-rounds-plus', 1, 30);
+            setupInputControls('time-input', 'btn-time-minus', 'btn-time-plus', 1, 60);
+
+            // Botones de Flujo de Juego
+            document.getElementById('btn-start').addEventListener('click', startGame);
+            document.getElementById('btn-finish').addEventListener('click', endGame);
+            document.getElementById('btn-restart').addEventListener('click', () => showScreen('setup'));
+            
+            // Botones de Lógica
+            document.getElementById('btn-guess').addEventListener('click', checkGuess);
+            document.getElementById('btn-give-up').addEventListener('click', giveUp);
+            guessInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkGuess(); });
+            document.getElementById('btn-next').addEventListener('click', nextRound);
+            btnOverride.addEventListener('click', overrideScore);
+        });
+
+        // --- 4. FUNCIONES DEL JUEGO ---
+        function showScreen(screenName) {
+            Object.values(screens).forEach(screen => screen.classList.add('hide'));
+            screens[screenName].classList.remove('hide');
+        }
+
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Función para quitar tildes y facilitar la comparación
+        function normalizeString(str) {
+            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        }
+
+        function startGame() {
+            totalRounds = parseInt(document.getElementById('rounds-input').value);
+            const minutes = parseInt(document.getElementById('time-input').value);
+            timeRemaining = minutes * 60;
+            hits = 0;
+            misses = 0;
+            currentRound = 0;
+
+            // Construir la lista aleatoria
+            let pool = [];
+            if (currentCategory === 'todas') {
+                for (let cat in database) {
+                    pool = pool.concat(database[cat]);
+                }
+            } else {
+                pool = database[currentCategory];
+            }
+            
+            // Si piden más rondas que palabras, repetimos la lista
+            gameQueue = [];
+            while(gameQueue.length < totalRounds) {
+                gameQueue = gameQueue.concat(shuffleArray(pool));
+            }
+            gameQueue = gameQueue.slice(0, totalRounds);
+
+            // Iniciar interfaz
+            updateTimerDisplay();
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(timerTick, 1000);
+            
+            loadRound();
+            showScreen('game');
+        }
+
+        function loadRound() {
+            currentRound++;
+            roundCounter.textContent = `${currentRound}/${totalRounds}`;
+            currentRoundStatus = 'pending';
+            
+            const currentItem = gameQueue[currentRound - 1];
+            emojiDisplay.textContent = currentItem.e;
+            
+            // Reset UI
+            guessInput.value = '';
+            guessInput.focus();
+            inputSection.classList.remove('hide');
+            resultSection.classList.add('hide');
+            overrideBox.classList.add('hide');
+        }
+
+        function checkGuess() {
+            const userGuess = guessInput.value;
+            if(userGuess.trim() === '') return;
+
+            const currentItem = gameQueue[currentRound - 1];
+            const normalizedUser = normalizeString(userGuess);
+            const normalizedCorrect = normalizeString(currentItem.w);
+
+            inputSection.classList.add('hide');
+            resultSection.classList.remove('hide');
+            correctAnswerDisplay.innerHTML = `La respuesta era: <span class="font-bold text-slate-800">${currentItem.w}</span>`;
+
+            if (normalizedUser === normalizedCorrect) {
+                // Acierto exacto
+                currentRoundStatus = 'correct';
+                resultMessage.textContent = "¡Correcto! 🎉";
+                resultMessage.className = "text-3xl font-black mb-1 text-emerald-600";
+                overrideBox.classList.add('hide');
+            } else {
+                // Fallo
+                currentRoundStatus = 'wrong';
+                resultMessage.textContent = "¡Incorrecto! ❌";
+                resultMessage.className = "text-3xl font-black mb-1 text-rose-600";
+                overrideBox.classList.remove('hide'); // Mostrar opción de corregir
+                btnOverride.textContent = "¡Lo escribí diferente pero acerté!";
+                btnOverride.disabled = false;
+                btnOverride.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function giveUp() {
+            const currentItem = gameQueue[currentRound - 1];
+            currentRoundStatus = 'surrendered';
+
+            inputSection.classList.add('hide');
+            resultSection.classList.remove('hide');
+            
+            resultMessage.textContent = "¡Te rendiste! 🏳️";
+            resultMessage.className = "text-3xl font-black mb-1 text-slate-500";
+            correctAnswerDisplay.innerHTML = `La respuesta era: <span class="font-bold text-slate-800">${currentItem.w}</span>`;
+            
+            // Ocultar la caja de corrección ya que decidieron rendirse
+            overrideBox.classList.add('hide');
+        }
+
+        function overrideScore() {
+            currentRoundStatus = 'overridden';
+            btnOverride.textContent = "¡Puntuación Corregida! ✅";
+            btnOverride.disabled = true;
+            btnOverride.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        function nextRound() {
+            // Contabilizar puntaje
+            if (currentRoundStatus === 'correct' || currentRoundStatus === 'overridden') {
+                hits++;
+            } else if (currentRoundStatus === 'wrong' || currentRoundStatus === 'surrendered') {
+                misses++;
+            }
+
+            if (currentRound < totalRounds) {
+                loadRound();
+            } else {
+                endGame();
+            }
+        }
+
+        // --- 5. TEMPORIZADOR Y FINALIZACIÓN ---
+        function timerTick() {
+            if (timeRemaining > 0) {
+                timeRemaining--;
+                updateTimerDisplay();
+                
+                if (timeRemaining <= 10) {
+                    timerDisplay.classList.remove('text-sky-700', 'bg-sky-50', 'border-sky-200');
+                    timerDisplay.classList.add('text-rose-600', 'bg-rose-50', 'border-rose-200', 'animate-pulse');
+                }
+            } else {
+                clearInterval(timerInterval);
+                alert("¡Se acabó el tiempo!");
+                
+                if(currentRoundStatus === 'pending' && currentRound <= totalRounds){
+                    misses++;
+                } else if(currentRound <= totalRounds) {
+                     if (currentRoundStatus === 'correct' || currentRoundStatus === 'overridden') hits++;
+                     else misses++;
+                }
+
+                endGame(false);
+            }
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+            const s = (timeRemaining % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${m}:${s}`;
+            
+            if(timeRemaining > 10) {
+                timerDisplay.classList.remove('text-rose-600', 'bg-rose-50', 'border-rose-200', 'animate-pulse');
+                timerDisplay.classList.add('text-sky-700', 'bg-sky-50', 'border-sky-200');
+            }
+        }
+
+        function endGame(calculatePending = true) {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            if(calculatePending && currentRoundStatus === 'pending' && currentRound > 0) {
+                misses++; 
+            }
+
+            document.getElementById('res-hits').textContent = hits;
+            document.getElementById('res-misses').textContent = misses;
+            
+            showScreen('results');
+        }
+    </script>
+</body>
+</html>
