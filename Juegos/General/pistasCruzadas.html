@@ -18,7 +18,7 @@
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col items-center">
 
     <!-- Contenedor Principal -->
-    <div id="app" class="w-full max-w-5xl mx-auto p-4 flex-grow flex flex-col">
+    <div id="app" class="w-full max-w-6xl mx-auto p-4 flex-grow flex flex-col">
         
         <!-- PANTALLA DE CONFIGURACIÓN -->
         <div id="setup-screen" class="flex-grow flex flex-col items-center justify-center">
@@ -61,7 +61,7 @@
 
             <!-- Contenedor del Tablero -->
             <div class="flex-grow flex justify-center items-start overflow-x-auto pb-8">
-                <div id="board-container" class="board-grid min-w-max p-2">
+                <div id="board-container" class="board-grid min-w-max p-2 w-full">
                     <!-- El tablero se inyectará aquí con JavaScript -->
                 </div>
             </div>
@@ -259,10 +259,10 @@
             for(let c = 0; c < currentSize; c++) {
                 const letter = String.fromCharCode(65 + c);
                 const colHeader = document.createElement('div');
-                colHeader.className = "bg-amber-100 border-2 border-amber-300 rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm";
+                colHeader.className = "bg-amber-100 border-2 border-amber-300 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm";
                 colHeader.innerHTML = `
                     <span class="text-amber-800 font-black text-xl mb-1">${letter}</span>
-                    <span class="text-amber-900 font-semibold text-sm break-words">${colWords[c]}</span>
+                    <span class="text-amber-900 font-bold text-2xl md:text-3xl break-words leading-tight">${colWords[c]}</span>
                 `;
                 boardContainer.appendChild(colHeader);
             }
@@ -273,10 +273,10 @@
                 
                 // Cabecera de Fila (Número y Palabra)
                 const rowHeader = document.createElement('div');
-                rowHeader.className = "bg-cyan-100 border-2 border-cyan-300 rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[100px] min-w-[120px]";
+                rowHeader.className = "bg-cyan-100 border-2 border-cyan-300 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[120px] min-w-[150px]";
                 rowHeader.innerHTML = `
                     <span class="text-cyan-800 font-black text-xl mb-1">${number}</span>
-                    <span class="text-cyan-900 font-semibold text-sm break-words">${rowWords[r]}</span>
+                    <span class="text-cyan-900 font-bold text-2xl md:text-3xl break-words leading-tight">${rowWords[r]}</span>
                 `;
                 boardContainer.appendChild(rowHeader);
 
@@ -287,7 +287,7 @@
                     
                     const cell = document.createElement('button');
                     cell.id = `cell-${coord}`;
-                    cell.className = "cell-transition rounded-xl border-4 font-black text-2xl w-full h-full min-h-[100px] flex items-center justify-center focus:outline-none shadow-sm cursor-pointer";
+                    cell.className = "cell-transition rounded-xl border-4 font-black text-3xl w-full h-full min-h-[120px] flex items-center justify-center focus:outline-none shadow-sm cursor-pointer";
                     cell.onclick = () => openModal(coord);
                     
                     boardContainer.appendChild(cell);
@@ -324,7 +324,7 @@
             const status = gridState[coord];
             
             // Limpiar clases previas
-            cell.className = "cell-transition rounded-xl border-4 font-black text-2xl w-full h-full min-h-[100px] flex items-center justify-center focus:outline-none shadow-sm cursor-pointer transform hover:scale-105 active:scale-95";
+            cell.className = "cell-transition rounded-xl border-4 font-black text-3xl w-full h-full min-h-[120px] flex items-center justify-center focus:outline-none shadow-sm cursor-pointer transform hover:scale-105 active:scale-95";
 
             if (status === 'unplayed') {
                 cell.classList.add('border-slate-300', 'bg-slate-50', 'text-slate-400', 'border-dashed');
@@ -333,15 +333,15 @@
                 cell.classList.add('border-emerald-500', 'bg-emerald-400', 'text-white');
                 cell.innerHTML = `
                     <div class="flex flex-col items-center">
-                        <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                        <span class="text-sm opacity-80">${coord}</span>
+                        <svg class="w-10 h-10 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        <span class="text-lg opacity-80">${coord}</span>
                     </div>`;
             } else if (status === 'miss') {
                 cell.classList.add('border-red-500', 'bg-red-400', 'text-white');
                 cell.innerHTML = `
                     <div class="flex flex-col items-center">
-                        <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        <span class="text-sm opacity-80">${coord}</span>
+                        <svg class="w-10 h-10 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        <span class="text-lg opacity-80">${coord}</span>
                     </div>`;
             }
         }
