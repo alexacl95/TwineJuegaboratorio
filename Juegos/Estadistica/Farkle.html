@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farkle - Riesgo y Probabilidad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS Grid para los dados */
+        .dice {
+            width: 64px; height: 64px;
+            background-color: white; border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1), inset 0 0 10px rgba(0,0,0,0.05);
+            display: grid; padding: 8px; gap: 4px;
+            grid-template-areas: "a . c" "e g f" "d . b";
+            border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.2s;
+        }
+        .dice:hover { transform: translateY(-2px); box-shadow: 0 6px 8px rgba(0,0,0,0.15); }
+        .dice.locked { background-color: #cbd5e1; border-color: #94a3b8; cursor: not-allowed; opacity: 0.8; transform: none; box-shadow: none; }
+        .dice.selected { background-color: #fef08a; border-color: #eab308; transform: scale(1.05); box-shadow: 0 0 15px rgba(234, 179, 8, 0.5); }
+        .dice.bot-dice { cursor: default; }
+        
+        /* Puntos del dado */
+        .dot { width: 12px; height: 12px; background-color: #334155; border-radius: 50%; justify-self: center; align-self: center; }
+        .dot-center { grid-area: g; } .dot-top-left { grid-area: a; } .dot-top-right { grid-area: c; }
+        .dot-bottom-left { grid-area: d; } .dot-bottom-right { grid-area: b; } .dot-middle-left { grid-area: e; } .dot-middle-right { grid-area: f; }
+
+        /* Animación */
+        .rolling { animation: shake 0.4s ease-in-out infinite alternate; pointer-events: none; }
+        @keyframes shake {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(15deg) scale(1.1); }
+            50% { transform: rotate(0deg) scale(1); }
+            75% { transform: rotate(-15deg) scale(1.1); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+        .hide { display: none !important; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col items-center">
+
+    <div id="app" class="w-full max-w-5xl mx-auto p-4 flex-grow flex flex-col relative">
+
+        <!-- HOME SCREEN -->
+        <div id="home-screen" class="flex-grow flex flex-col items-center justify-center fade-in">
+            <div class="bg-white p-10 rounded-3xl shadow-xl w-full max-w-lg text-center border-t-8 border-indigo-600">
+                <div class="text-7xl mb-4">🎲</div>
+                <h1 class="text-5xl font-black text-indigo-700 mb-4 tracking-tight">FARKLE</h1>
+                <p class="text-slate-500 font-medium mb-8 text-lg">El juego de riesgo, probabilidad y dados.</p>
+                
+                <div class="flex flex-col gap-4">
+                    <button id="btn-go-setup" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xl py-4 rounded-xl shadow-[0_4px_0_rgb(67,56,202)] hover:shadow-[0_2px_0_rgb(67,56,202)] hover:translate-y-[2px] transition-all">
+                        ▶️ Jugar
+                    </button>
+                    <button id="btn-go-tutorial" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-lg py-4 rounded-xl shadow transition-all">
+                        📖 Instrucciones
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TUTORIAL SCREEN -->
+        <div id="tutorial-screen" class="hide flex-grow flex flex-col items-center justify-center fade-in w-full">
+            <div class="w-full max-w-2xl flex justify-start mb-4">
+                <button id="btn-back-tut" class="text-slate-600 hover:text-indigo-600 font-bold transition flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
+                    ⬅️ Volver al Menú
+                </button>
+            </div>
+            
+            <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-2xl border border-slate-200 relative">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h2 class="text-2xl font-black text-indigo-600">Cómo Jugar Farkle</h2>
+                    <span id="tut-step-counter" class="text-sm font-bold bg-indigo-100 text-indigo-700 py-1 px-3 rounded-full">Paso 1/5</span>
+                </div>
+                
+                <div id="tut-content" class="min-h-[250px] flex flex-col justify-center mb-8 text-lg text-slate-700">
+                </div>
+
+                <div class="flex justify-between gap-4">
+                    <button id="btn-tut-prev" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 font-bold rounded-lg transition opacity-50 cursor-not-allowed">Anterior</button>
+                    <button id="btn-tut-close" class="hide px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition">¡Entendido! Ir al Menú</button>
+                    <button id="btn-tut-next" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition">Siguiente ➔</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETUP SCREEN -->
+        <div id="setup-screen" class="hide flex-grow flex flex-col items-center justify-center fade-in">
+            <div class="w-full max-w-md flex justify-start mb-4">
+                <button id="btn-back-setup" class="text-slate-600 hover:text-indigo-600 font-bold transition flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
+                    ⬅️ Volver al Menú
+                </button>
+            </div>
+            
+            <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md text-center border border-slate-200">
+                <h2 class="text-3xl font-black text-slate-800 mb-2">Configuración</h2>
+                <p class="text-slate-500 font-medium mb-8">Personaliza tu partida de Farkle.</p>
+
+                <div class="mb-4 text-left">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Modo de Juego</label>
+                    <select id="game-mode-input" class="w-full border-2 border-slate-300 rounded-xl px-4 py-3 text-xl font-bold focus:outline-none focus:border-indigo-500 transition cursor-pointer bg-slate-50">
+                        <option value="bot" selected>Contra el Bot</option>
+                        <option value="solo">Solitario (Práctica)</option>
+                    </select>
+                </div>
+
+                <div class="mb-8 text-left">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Puntos Máximos</label>
+                    <select id="score-limit-input" class="w-full border-2 border-slate-300 rounded-xl px-4 py-3 text-xl font-bold focus:outline-none focus:border-indigo-500 transition cursor-pointer bg-slate-50">
+                        <option value="2000">Partida Rápida (2,000 pts)</option>
+                        <option value="5000">Partida Media (5,000 pts)</option>
+                        <option value="10000" selected>Clásico (10,000 pts)</option>
+                    </select>
+                </div>
+
+                <button id="btn-start-game" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xl py-4 rounded-xl shadow-[0_4px_0_rgb(5,150,105)] hover:shadow-[0_2px_0_rgb(5,150,105)] hover:translate-y-[2px] transition-all">
+                    ¡Comenzar Partida!
+                </button>
+            </div>
+        </div>
+
+        <!-- GAME SCREEN -->
+        <div id="game-screen" class="hide w-full flex-col items-center fade-in gap-4 mt-2">
+            
+            <!-- Barra superior del juego -->
+            <div class="w-full max-w-4xl flex justify-start mb-1">
+                <button id="btn-back-game" class="text-slate-600 hover:text-rose-600 font-bold transition flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
+                    ⬅️ Abandonar Partida
+                </button>
+            </div>
+
+            <div class="w-full max-w-4xl bg-slate-800 text-white rounded-2xl shadow-lg p-4 flex justify-between items-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-r from-indigo-900 to-rose-900 opacity-50 pointer-events-none"></div>
+                <div class="relative z-10 text-center flex-1">
+                    <div class="text-sm font-bold text-indigo-300 uppercase tracking-widest">Tú</div>
+                    <div id="score-player" class="text-4xl font-black text-white">0</div>
+                </div>
+                <div class="relative z-10 text-center flex-col items-center justify-center px-4">
+                    <div class="text-xs font-bold text-slate-400 mb-1">META</div>
+                    <div id="display-target" class="text-xl font-black bg-slate-700 px-4 py-1 rounded-full">10000</div>
+                </div>
+                <div id="bot-score-container" class="relative z-10 text-center flex-1">
+                    <div class="text-sm font-bold text-rose-300 uppercase tracking-widest">Bot</div>
+                    <div id="score-bot" class="text-4xl font-black text-white">0</div>
+                </div>
+            </div>
+
+            <div class="w-full max-w-4xl flex flex-col lg:flex-row gap-4 items-stretch">
+                
+                <div class="flex-grow bg-white rounded-2xl shadow-md border border-slate-200 p-6 flex flex-col">
+                    <div id="turn-indicator" class="text-center font-black text-2xl text-indigo-600 mb-2 uppercase tracking-wide">
+                        Tu Turno
+                    </div>
+                    
+                    <div id="game-message" class="w-full bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 p-3 mb-6 font-medium text-center rounded-r-lg min-h-[50px] flex items-center justify-center">
+                        Lanza los dados para comenzar tu turno.
+                    </div>
+
+                    <div class="flex justify-between items-center bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
+                        <div class="text-slate-500 font-bold">Acumulado Turno:</div>
+                        <div class="flex items-center gap-3">
+                            <span id="turn-score" class="text-3xl font-black text-emerald-600">0</span>
+                            <span class="text-sm text-slate-400">pts</span>
+                        </div>
+                    </div>
+
+                    <div id="dice-container" class="flex flex-wrap gap-3 justify-center mb-8 min-h-[80px]">
+                        </div>
+
+                    <div id="selection-info" class="text-center font-bold text-slate-600 mb-4 h-6">
+                        Selecciona dados válidos...
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mt-auto mb-6">
+                        <button id="btn-roll" class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow transition">
+                            🎲 Lanzar
+                        </button>
+                        <button id="btn-bank" class="bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow transition">
+                            💰 Plantarse (Guardar)
+                        </button>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-6 flex flex-col">
+                        <h3 class="font-black text-slate-700 mb-3 flex items-center gap-2">
+                            <span>⏳</span> Historial de Rondas
+                        </h3>
+                        <div id="history-table-container" class="h-40 overflow-y-auto border border-slate-200 rounded-lg bg-slate-50">
+                            <table class="w-full text-sm text-left relative bg-white">
+                                <thead class="sticky top-0 bg-slate-100 shadow-sm z-10">
+                                    <tr class="text-slate-500 uppercase font-bold border-b">
+                                        <th class="py-2 px-3 bg-slate-100">Ronda</th>
+                                        <th class="py-2 px-3 bg-slate-100">Tú</th>
+                                        <th id="th-bot" class="py-2 px-3 bg-slate-100">Bot</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="round-history-body" class="text-slate-700">
+                                    <!-- Las filas se inyectan por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="w-full lg:w-72 flex flex-col gap-4 hidden md:flex">
+                    <!-- Tabla de Puntos (Reglas) -->
+                    <div class="bg-slate-50 rounded-2xl shadow-inner border border-slate-200 p-5 h-full">
+                        <h3 class="font-black text-slate-700 mb-4 flex items-center gap-2">
+                            <span>📋</span> Tabla de Puntos
+                        </h3>
+                        <ul class="text-sm text-slate-600 space-y-2 font-medium">
+                            <li class="flex justify-between border-b pb-1"><span>Un [1]</span> <span class="font-bold text-slate-800">100</span></li>
+                            <li class="flex justify-between border-b pb-1"><span>Un [5]</span> <span class="font-bold text-slate-800">50</span></li>
+                            <li class="flex justify-between border-b pb-1"><span>Trío de [1]</span> <span class="font-bold text-slate-800">1000</span></li>
+                            <li class="flex justify-between border-b pb-1"><span>Trío de [2,3,4,5,6]</span> <span class="font-bold text-slate-800">Num x100</span></li>
+                            <li class="flex justify-between border-b pb-1"><span>Cuatro Iguales</span> <span class="font-bold text-slate-800">1000</span></li>
+                            <li class="flex justify-between border-b pb-1"><span>Cinco Iguales</span> <span class="font-bold text-slate-800">2000</span></li>
+                            <li class="flex justify-between border-b pb-1"><span>Seis Iguales</span> <span class="font-bold text-slate-800">3000</span></li>
+                            <li class="flex justify-between"><span>Tres Pares</span> <span class="font-bold text-slate-800">1500</span></li>
+                        </ul>
+                        <div class="mt-6 p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200 font-bold">
+                            FARKLE: Si al lanzar no obtienes ninguno de estos puntajes, pierdes lo acumulado en este turno.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- END SCREEN -->
+        <div id="end-screen" class="hide fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md text-center">
+                <div id="end-emoji" class="text-7xl mb-4">🏆</div>
+                <h2 id="end-title" class="text-4xl font-black mb-2">¡Fin del Juego!</h2>
+                <p id="end-desc" class="text-slate-600 mb-4 font-medium text-lg">Has alcanzado el límite de puntos.</p>
+                
+                <div class="bg-slate-50 rounded-xl p-4 mb-8 border border-slate-200">
+                     <p class="text-slate-700 font-bold mb-2">Resumen de la partida:</p>
+                     <p class="text-sm text-slate-500">Total de rondas jugadas: <span id="end-rounds-total" class="font-black text-slate-800">0</span></p>
+                </div>
+
+                <button id="btn-restart" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg transition text-xl">
+                    Volver al Menú Principal
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- BASE DE DATOS DEL TUTORIAL ---
+        const tutorialSteps = [
+            {
+                title: "¿Qué es Farkle?",
+                content: `<p class="mb-3">Farkle es un juego de dados donde el objetivo es alcanzar un límite de puntos antes que tu oponente.</p><p>En tu turno lanzas <b>6 dados</b>. Para ganar puntos, deben salir números <b>1</b>, números <b>5</b>, o ciertas combinaciones (como tríos o pares).</p>`
+            },
+            {
+                title: "Acumular y Plantarse",
+                content: `<p class="mb-3">Después de lanzar, <b>debes seleccionar</b> los dados que dan puntos. Esos puntos se guardan temporalmente en tu turno.</p><p>Con los dados sobrantes, tienes una decisión de riesgo:</p><ul class="list-disc pl-5 mt-2 space-y-1 text-base"><li><b>Plantarte (Guardar):</b> Aseguras tus puntos y le pasas el turno al rival.</li><li><b>Volver a Lanzar:</b> Lanzas los dados restantes para sumar más puntos.</li></ul>`
+            },
+            {
+                title: "¡Hacer FARKLE!",
+                content: `<div class="bg-red-100 border border-red-300 p-4 rounded-xl text-red-800 text-center font-bold mb-3">Si en un lanzamiento NO sale ninguna combinación válida (ni 1s, ni 5s, ni tríos), has hecho FARKLE.</div><p>Si haces Farkle, pierdes todos los puntos acumulados <b>durante ese turno</b> y pasa al oponente. ¡Ahí está el riesgo!</p>`
+            },
+            {
+                title: "Puntuación Básica",
+                content: `<table class="w-full text-base mb-2"><tr class="border-b"><td>Un <b>1</b></td><td class="text-right font-bold">100 pts</td></tr><tr class="border-b"><td>Un <b>5</b></td><td class="text-right font-bold">50 pts</td></tr><tr class="border-b"><td>Trío de <b>1</b></td><td class="text-right font-bold">1000 pts</td></tr><tr class="border-b"><td>Otros Tríos</td><td class="text-right font-bold">Num x 100</td></tr><tr class="border-b"><td>3 Pares (ej: 2,2, 4,4, 6,6)</td><td class="text-right font-bold">1500 pts</td></tr></table><p class="text-sm italic mt-2 text-slate-500">Nota: Puedes ver la tabla completa durante el juego.</p>`
+            },
+            {
+                title: "Dados Calientes (Hot Dice)",
+                content: `<p class="mb-3">Si logras usar <b>los 6 dados</b> para puntuar (ya sea en un solo tiro o acumulando tiro tras tiro en tu turno), ¡tienes Dados Calientes!</p><p>Esto significa que puedes volver a recoger <b>los 6 dados completos</b> y seguir lanzando para sumar aún más puntos sin perder tu turno.</p>`
+            }
+        ];
+
+        // --- ESTADO DEL JUEGO ---
+        let gameMode = 'bot'; // 'bot' | 'solo'
+        let targetScore = 10000;
+        let playerScore = 0;
+        let botScore = 0;
+        let turnAccumulated = 0;
+        let activePlayer = 'player'; // 'player' | 'bot'
+        
+        let currentRound = 1;
+        let roundHistory = []; // { round: 1, player: 0, bot: 0 }
+        
+        // Estructura de dados: array de objetos { id, value, state: 'pending'|'selected'|'locked' }
+        let diceList = []; 
+        let currentTutStep = 0;
+
+        // --- ELEMENTOS DOM ---
+        const screens = {
+            home: document.getElementById('home-screen'),
+            tutorial: document.getElementById('tutorial-screen'),
+            setup: document.getElementById('setup-screen'),
+            game: document.getElementById('game-screen'),
+            end: document.getElementById('end-screen')
+        };
+        const msgBoard = document.getElementById('game-message');
+        const turnIndicator = document.getElementById('turn-indicator');
+        const diceContainer = document.getElementById('dice-container');
+        const selectionInfo = document.getElementById('selection-info');
+        const turnScoreEl = document.getElementById('turn-score');
+        const btnRoll = document.getElementById('btn-roll');
+        const btnBank = document.getElementById('btn-bank');
+        const historyBody = document.getElementById('round-history-body');
+
+        // --- INICIALIZACIÓN Y NAVEGACIÓN ---
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('btn-go-tutorial').addEventListener('click', startTutorial);
+            document.getElementById('btn-go-setup').addEventListener('click', () => switchScreen('setup'));
+            document.getElementById('btn-start-game').addEventListener('click', startGame);
+            document.getElementById('btn-restart').addEventListener('click', () => switchScreen('home'));
+
+            // Botones de Ir Atrás
+            document.getElementById('btn-back-tut').addEventListener('click', () => switchScreen('home'));
+            document.getElementById('btn-back-setup').addEventListener('click', () => switchScreen('home'));
+            document.getElementById('btn-back-game').addEventListener('click', () => switchScreen('home'));
+
+            // Tutorial
+            document.getElementById('btn-tut-prev').addEventListener('click', () => changeTutStep(-1));
+            document.getElementById('btn-tut-next').addEventListener('click', () => changeTutStep(1));
+            document.getElementById('btn-tut-close').addEventListener('click', () => switchScreen('home'));
+
+            // Acciones In-Game
+            btnRoll.addEventListener('click', handleRollAction);
+            btnBank.addEventListener('click', handleBankAction);
+        });
+
+        function switchScreen(screenName) {
+            Object.values(screens).forEach(s => s.classList.add('hide'));
+            screens[screenName].classList.remove('hide');
+        }
+
+        // --- LÓGICA DEL TUTORIAL ---
+        function startTutorial() {
+            currentTutStep = 0;
+            updateTutorialView();
+            switchScreen('tutorial');
+        }
+
+        function changeTutStep(dir) {
+            currentTutStep += dir;
+            updateTutorialView();
+        }
+
+        function updateTutorialView() {
+            const step = tutorialSteps[currentTutStep];
+            document.querySelector('#tutorial-screen h2').textContent = step.title;
+            document.getElementById('tut-step-counter').textContent = `Paso ${currentTutStep + 1}/${tutorialSteps.length}`;
+            document.getElementById('tut-content').innerHTML = step.content;
+
+            const btnPrev = document.getElementById('btn-tut-prev');
+            const btnNext = document.getElementById('btn-tut-next');
+            const btnClose = document.getElementById('btn-tut-close');
+
+            btnPrev.disabled = currentTutStep === 0;
+            btnPrev.classList.toggle('opacity-50', btnPrev.disabled);
+            btnPrev.classList.toggle('cursor-not-allowed', btnPrev.disabled);
+
+            if (currentTutStep === tutorialSteps.length - 1) {
+                btnNext.classList.add('hide');
+                btnClose.classList.remove('hide');
+            } else {
+                btnNext.classList.remove('hide');
+                btnClose.classList.add('hide');
+            }
+        }
+
+        // --- MOTORES MATEMÁTICOS DE FARKLE ---
+
+        function getDiceHTML(value) {
+            let dots = '';
+            if (value === 1) dots = '<div class="dot dot-center"></div>';
+            else if (value === 2) dots = '<div class="dot dot-top-left"></div><div class="dot dot-bottom-right"></div>';
+            else if (value === 3) dots = '<div class="dot dot-top-left"></div><div class="dot dot-center"></div><div class="dot dot-bottom-right"></div>';
+            else if (value === 4) dots = '<div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div>';
+            else if (value === 5) dots = '<div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-center"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div>';
+            else if (value === 6) dots = '<div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-middle-left"></div><div class="dot dot-middle-right"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div>';
+            return dots;
+        }
+
+        function evaluateExactSelection(values) {
+            if (values.length === 0) return 0;
+            let counts = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0};
+            values.forEach(v => counts[v]++);
+
+            let score = 0;
+            
+            // Regla de 3 pares
+            let pairs = 0;
+            for(let i=1; i<=6; i++) if(counts[i] === 2) pairs++;
+            if (pairs === 3 && values.length === 6) return 1500;
+
+            for(let i=1; i<=6; i++) {
+                let c = counts[i];
+                if (c === 6) { score += 3000; continue; }
+                if (c === 5) { score += 2000; continue; }
+                if (c === 4) { score += 1000; continue; }
+                if (c === 3) { score += (i === 1 ? 1000 : i * 100); continue; }
+                if (c < 3) {
+                    if (i === 1) score += c * 100;
+                    else if (i === 5) score += c * 50;
+                    else if (c > 0) return -1; 
+                }
+            }
+            return score;
+        }
+
+        function checkHasPossibleScore(values) {
+            let counts = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0};
+            values.forEach(v => counts[v]++);
+            if (counts[1] > 0 || counts[5] > 0) return true;
+            for(let i=1; i<=6; i++) if(counts[i] >= 3) return true;
+            
+            // Check 3 pares
+            let pairs = 0;
+            for(let i=1; i<=6; i++) if(counts[i] === 2) pairs++;
+            if(pairs === 3 && values.length === 6) return true;
+
+            return false;
+        }
+
+        function getBotSelection(values) {
+            let selectedIndices = [];
+            let counts = {1:[], 2:[], 3:[], 4:[], 5:[], 6:[]};
+            values.forEach((v, idx) => counts[v].push(idx));
+
+            let pairs = 0;
+            for(let i=1; i<=6; i++) if(counts[i].length === 2) pairs++;
+            if (pairs === 3 && values.length === 6) return [0,1,2,3,4,5]; 
+
+            for(let i=1; i<=6; i++) {
+                if (counts[i].length >= 3) {
+                    selectedIndices.push(...counts[i]); 
+                } else if (i === 1 || i === 5) {
+                    selectedIndices.push(...counts[i]); 
+                }
+            }
+            return selectedIndices;
+        }
+
+        // --- LÓGICA CENTRAL DEL JUEGO ---
+
+        function startGame() {
+            gameMode = document.getElementById('game-mode-input').value;
+            targetScore = parseInt(document.getElementById('score-limit-input').value);
+            document.getElementById('display-target').textContent = targetScore;
+            
+            // Configurar UI según modo
+            if (gameMode === 'solo') {
+                document.getElementById('bot-score-container').classList.add('hidden');
+                document.getElementById('th-bot').classList.add('hidden');
+            } else {
+                document.getElementById('bot-score-container').classList.remove('hidden');
+                document.getElementById('th-bot').classList.remove('hidden');
+            }
+
+            playerScore = 0;
+            botScore = 0;
+            currentRound = 1;
+            roundHistory = [];
+            
+            updateScoreUI();
+            updateHistoryUI();
+            
+            startTurn('player');
+            switchScreen('game');
+        }
+
+        function updateScoreUI() {
+            document.getElementById('score-player').textContent = playerScore;
+            document.getElementById('score-bot').textContent = botScore;
+            turnScoreEl.textContent = turnAccumulated;
+        }
+
+        function updateHistoryUI() {
+            historyBody.innerHTML = '';
+            // Recorremos el historial desde la ronda más reciente a la más antigua
+            [...roundHistory].reverse().forEach(record => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-slate-50 transition-colors';
+                
+                const pScore = record.player !== null ? `+${record.player}` : '-';
+                const bScore = record.bot !== null ? `+${record.bot}` : '-';
+                
+                if (gameMode === 'solo') {
+                    tr.innerHTML = `
+                        <td class="py-2 px-3 font-bold text-slate-800">${record.round}</td>
+                        <td class="py-2 px-3 text-indigo-600">${pScore}</td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td class="py-2 px-3 font-bold text-slate-800">${record.round}</td>
+                        <td class="py-2 px-3 text-indigo-600">${pScore}</td>
+                        <td class="py-2 px-3 text-rose-600">${bScore}</td>
+                    `;
+                }
+                historyBody.appendChild(tr);
+            });
+            
+            // Scroll to top (o a la fila más reciente, que ya está arriba gracias al reverse)
+            const tableContainer = document.getElementById('history-table-container');
+            if(tableContainer) tableContainer.scrollTop = 0;
+        }
+
+        function recordTurnScore(playerType, score) {
+            // Buscamos si ya existe el registro para la ronda actual
+            let currentRecord = roundHistory.find(r => r.round === currentRound);
+            
+            if (!currentRecord) {
+                // Si no existe, lo creamos (esto suele pasar cuando empieza el turno del jugador)
+                currentRecord = { round: currentRound, player: null, bot: null };
+                roundHistory.push(currentRecord);
+            }
+            
+            if (playerType === 'player') {
+                currentRecord.player = score;
+                if (gameMode === 'solo') {
+                    currentRound++; // En modo solitario, la ronda termina con el jugador
+                }
+            } else if (playerType === 'bot') {
+                currentRecord.bot = score;
+                // Cuando el bot termina su turno, la ronda termina. Avanzamos de ronda.
+                currentRound++;
+            }
+            
+            updateHistoryUI();
+        }
+
+        function setGameMessage(text, type='info') {
+            msgBoard.textContent = text;
+            msgBoard.className = 'w-full border-l-4 p-3 mb-6 font-medium text-center rounded-r-lg min-h-[50px] flex items-center justify-center transition-colors ';
+            if(type === 'info') msgBoard.className += 'bg-indigo-50 text-indigo-700 border-indigo-500';
+            else if(type === 'error') msgBoard.className += 'bg-red-50 text-red-700 border-red-500 animate-pulse';
+            else if(type === 'success') msgBoard.className += 'bg-emerald-50 text-emerald-700 border-emerald-500';
+            else if(type === 'warn') msgBoard.className += 'bg-amber-50 text-amber-700 border-amber-500';
+        }
+
+        function startTurn(playerType) {
+            activePlayer = playerType;
+            turnAccumulated = 0;
+            updateScoreUI();
+            resetDice(); 
+            
+            if (activePlayer === 'player') {
+                turnIndicator.textContent = `Ronda ${currentRound} - Tu Turno`;
+                turnIndicator.className = 'text-center font-black text-2xl text-indigo-600 mb-2 uppercase tracking-wide';
+                setGameMessage('Lanza los dados para comenzar.');
+                btnRoll.disabled = false;
+                btnRoll.textContent = '🎲 Lanzar (6)';
+                btnBank.disabled = true;
+                selectionInfo.textContent = 'Esperando lanzamiento...';
+                selectionInfo.className = 'text-center font-bold text-slate-400 mb-4 h-6';
+                renderDice();
+            } else {
+                turnIndicator.textContent = `Ronda ${currentRound} - Turno del Bot`;
+                turnIndicator.className = 'text-center font-black text-2xl text-rose-600 mb-2 uppercase tracking-wide';
+                btnRoll.disabled = true;
+                btnBank.disabled = true;
+                selectionInfo.textContent = 'Bot pensando...';
+                renderDice();
+                setTimeout(botPerformRoll, 1000);
+            }
+        }
+
+        function resetDice() {
+            diceList = [];
+            for(let i=0; i<6; i++) {
+                diceList.push({ id: i, value: 1, state: 'pending' }); 
+            }
+        }
+
+        function renderDice() {
+            diceContainer.innerHTML = '';
+            diceList.forEach(d => {
+                const el = document.createElement('div');
+                el.className = `dice ${d.state} ${activePlayer === 'bot' ? 'bot-dice' : ''}`;
+                el.innerHTML = getDiceHTML(d.value);
+                
+                if(activePlayer === 'player' && d.state !== 'locked') {
+                    el.onclick = () => toggleDiceSelection(d.id);
+                }
+                
+                diceContainer.appendChild(el);
+            });
+            updateActionButtons();
+        }
+
+        // --- INTERACCIÓN DEL JUGADOR ---
+
+        function toggleDiceSelection(id) {
+            if(btnRoll.textContent.includes('Lanzar (6)') && turnAccumulated === 0 && diceList.every(d => d.value === 1)) return; 
+
+            const d = diceList.find(x => x.id === id);
+            if(d.state === 'locked') return;
+
+            d.state = d.state === 'pending' ? 'selected' : 'pending';
+            renderDice();
+        }
+
+        function updateActionButtons() {
+            if (activePlayer !== 'player') return;
+            
+            const allPending = diceList.every(d => d.state === 'pending');
+            
+            const selectedDice = diceList.filter(d => d.state === 'selected').map(d => d.value);
+            const pendingDiceCount = diceList.filter(d => d.state === 'pending').length;
+            
+            if (selectedDice.length > 0) {
+                let score = evaluateExactSelection(selectedDice);
+                if (score > 0) {
+                    selectionInfo.textContent = `Selección Válida: +${score} pts`;
+                    selectionInfo.className = 'text-center font-bold text-emerald-600 mb-4 h-6';
+                    
+                    btnRoll.disabled = false;
+                    btnBank.disabled = false;
+                    
+                    if (pendingDiceCount === 0) {
+                        btnRoll.textContent = '🔥 DADOS CALIENTES (Reroll 6)';
+                    } else {
+                        btnRoll.textContent = `🎲 Lanzar (${pendingDiceCount})`;
+                    }
+                } else {
+                    selectionInfo.textContent = `Selección Inválida - Revisa tus dados`;
+                    selectionInfo.className = 'text-center font-bold text-red-600 mb-4 h-6';
+                    btnRoll.disabled = true;
+                    btnBank.disabled = true;
+                }
+            } else {
+                selectionInfo.textContent = 'Selecciona los dados para sumar puntos...';
+                selectionInfo.className = 'text-center font-bold text-slate-500 mb-4 h-6';
+                
+                if(diceList.some(d => d.state === 'locked') || turnAccumulated > 0 || !btnRoll.textContent.includes('(6)')) {
+                    btnRoll.disabled = true; 
+                    btnBank.disabled = true;
+                }
+            }
+        }
+
+        function handleRollAction() {
+            const selectedDice = diceList.filter(d => d.state === 'selected');
+            
+            if (selectedDice.length > 0) {
+                const vals = selectedDice.map(d => d.value);
+                turnAccumulated += evaluateExactSelection(vals);
+                turnScoreEl.textContent = turnAccumulated;
+                
+                selectedDice.forEach(d => d.state = 'locked');
+            }
+
+            if (diceList.every(d => d.state === 'locked')) {
+                setGameMessage('🔥 ¡DADOS CALIENTES! Recuperas los 6 dados para seguir sumando.', 'success');
+                diceList.forEach(d => d.state = 'pending'); 
+            }
+
+            performRollVisuals(() => {
+                let newRollVals = [];
+                diceList.forEach(d => {
+                    if (d.state === 'pending') {
+                        d.value = Math.floor(Math.random() * 6) + 1;
+                        newRollVals.push(d.value);
+                    }
+                });
+                
+                renderDice();
+
+                if (!checkHasPossibleScore(newRollVals)) {
+                    setGameMessage('💥 ¡FARKLE! Ningún dado puntúa. Pierdes el acumulado y el turno.', 'error');
+                    selectionInfo.textContent = '';
+                    btnRoll.disabled = true;
+                    btnBank.disabled = true;
+                    
+                    // Registrar puntuación fallida en el historial
+                    recordTurnScore('player', 0);
+                    
+                    setTimeout(() => { 
+                        if (gameMode === 'solo') startTurn('player');
+                        else startTurn('bot'); 
+                    }, 3000);
+                } else {
+                    setGameMessage('Selecciona los dados válidos para continuar o plantarte.', 'info');
+                    btnRoll.textContent = `🎲 Lanzar (${diceList.filter(d=>d.state==='pending').length})`;
+                }
+            });
+        }
+
+        function handleBankAction() {
+            const selectedDice = diceList.filter(d => d.state === 'selected');
+            if (selectedDice.length > 0) {
+                const vals = selectedDice.map(d => d.value);
+                turnAccumulated += evaluateExactSelection(vals);
+            }
+
+            playerScore += turnAccumulated;
+            
+            // Registrar puntuación exitosa en el historial
+            recordTurnScore('player', turnAccumulated);
+            updateScoreUI();
+            
+            if (playerScore >= targetScore) {
+                endGame('Tú');
+                return;
+            }
+
+            setGameMessage(`Te plantaste y aseguraste ${turnAccumulated} pts.`, 'success');
+            btnRoll.disabled = true;
+            btnBank.disabled = true;
+            
+            setTimeout(() => { 
+                if (gameMode === 'solo') startTurn('player');
+                else startTurn('bot'); 
+            }, 2000);
+        }
+
+        function performRollVisuals(callback) {
+            btnRoll.disabled = true;
+            btnBank.disabled = true;
+            const diceDivs = Array.from(diceContainer.children);
+            
+            diceList.forEach((d, i) => {
+                if (d.state === 'pending') {
+                    diceDivs[i].classList.add('rolling');
+                }
+            });
+
+            setTimeout(() => {
+                diceDivs.forEach(div => div.classList.remove('rolling'));
+                callback();
+            }, 600);
+        }
+
+        // --- INTELIGENCIA DEL BOT ---
+
+        function botPerformRoll() {
+            if (diceList.every(d => d.state === 'locked')) {
+                diceList.forEach(d => d.state = 'pending');
+                setGameMessage('El bot sacó Dados Calientes y vuelve a tirar los 6.', 'warn');
+            }
+
+            performRollVisuals(() => {
+                let newRollVals = [];
+                let pendingIndices = [];
+                diceList.forEach((d, i) => {
+                    if (d.state === 'pending') {
+                        d.value = Math.floor(Math.random() * 6) + 1;
+                        newRollVals.push(d.value);
+                        pendingIndices.push(i);
+                    }
+                });
+                renderDice();
+
+                setTimeout(() => botEvaluateRoll(newRollVals, pendingIndices), 1000);
+            });
+        }
+
+        function botEvaluateRoll(newRollVals, pendingIndices) {
+            if (!checkHasPossibleScore(newRollVals)) {
+                setGameMessage('🤖💥 ¡FARKLE del Bot! Pierde su acumulado.', 'success');
+                
+                // Registrar puntuación fallida del bot
+                recordTurnScore('bot', 0);
+                
+                setTimeout(() => { startTurn('player'); }, 3000);
+                return;
+            }
+
+            const selectionInSubArray = getBotSelection(newRollVals); 
+            
+            const valsToScore = [];
+            selectionInSubArray.forEach(subIdx => {
+                const globalIdx = pendingIndices[subIdx];
+                diceList[globalIdx].state = 'selected';
+                valsToScore.push(diceList[globalIdx].value);
+            });
+            renderDice();
+
+            const scoreGained = evaluateExactSelection(valsToScore);
+            turnAccumulated += scoreGained;
+            turnScoreEl.textContent = turnAccumulated;
+            setGameMessage(`El bot selecciona dados y suma +${scoreGained} pts.`, 'info');
+
+            diceList.forEach(d => { if(d.state === 'selected') d.state = 'locked'; });
+
+            setTimeout(botDecideNextAction, 1500);
+        }
+
+        function botDecideNextAction() {
+            const pendingCount = diceList.filter(d => d.state === 'pending').length;
+            
+            let shouldBank = false;
+            
+            if (botScore + turnAccumulated >= targetScore) {
+                shouldBank = true; 
+            } else if (pendingCount === 0) {
+                shouldBank = false; 
+            } else if (turnAccumulated >= 400 || pendingCount <= 2) {
+                shouldBank = true; 
+            }
+
+            if (shouldBank) {
+                botScore += turnAccumulated;
+                
+                // Registrar puntuación exitosa del bot
+                recordTurnScore('bot', turnAccumulated);
+                updateScoreUI();
+                setGameMessage(`El bot se planta asegurando ${turnAccumulated} pts.`, 'warn');
+                
+                if (botScore >= targetScore) {
+                    setTimeout(() => endGame('Bot'), 1500);
+                } else {
+                    setTimeout(() => startTurn('player'), 2000);
+                }
+            } else {
+                setGameMessage('El bot decide arriesgar y vuelve a tirar...', 'info');
+                setTimeout(botPerformRoll, 1500);
+            }
+        }
+
+        function endGame(winner) {
+            switchScreen('end');
+            const title = document.getElementById('end-title');
+            const desc = document.getElementById('end-desc');
+            const emoji = document.getElementById('end-emoji');
+            
+            document.getElementById('end-rounds-total').textContent = roundHistory.length;
+
+            if (gameMode === 'solo') {
+                emoji.textContent = '🎯';
+                title.textContent = '¡Meta Alcanzada!';
+                title.className = 'text-4xl font-black mb-2 text-emerald-500';
+                desc.textContent = `Lograste llegar a los ${targetScore} puntos en ${roundHistory.length} rondas.`;
+            } else {
+                if (winner === 'Tú') {
+                    emoji.textContent = '🎉';
+                    title.textContent = '¡Felicidades, Ganaste!';
+                    title.className = 'text-4xl font-black mb-2 text-emerald-500';
+                    desc.textContent = `Lograste llegar a los ${targetScore} puntos dominando las probabilidades.`;
+                } else {
+                    emoji.textContent = '🤖';
+                    title.textContent = 'El Bot ha ganado';
+                    title.className = 'text-4xl font-black mb-2 text-rose-500';
+                    desc.textContent = `El bot alcanzó los ${targetScore} puntos primero. ¡Mejor suerte la próxima vez!`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
