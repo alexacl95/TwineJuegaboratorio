@@ -17,19 +17,20 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen p-4 md:p-8 lg:p-12 selection:bg-indigo-200">
 
-    <div class="max-w-6xl mx-auto">
+    <div class="max-w-7xl mx-auto">
         
         <!-- CABECERA -->
         <header class="text-center mb-12 animate-[fadeIn_0.5s_ease-out]">
             <div class="inline-flex items-center justify-center p-4 bg-indigo-100 rounded-full mb-4">
                 <span class="text-4xl">🕹️</span>
             </div>
-            <h1 class="text-4xl md:text-5xl font-black text-slate-800 mb-4 tracking-tight">JUEGOS <span class="text-indigo-600">Hub</span></h1>
+            <h1 class="text-4xl md:text-5xl font-black text-slate-800 mb-4 tracking-tight">Juegaboratorio <span class="text-indigo-600">Hub</span></h1>
             <p class="text-lg text-slate-500 max-w-2xl mx-auto font-medium">Selecciona una categoría y sumérgete en nuestra colección de juegos educativos y de entretenimiento. ¡Aprender jugando nunca fue tan divertido!</p>
         </header>
 
         <!-- CONTENEDOR DE CATEGORÍAS -->
-        <div class="grid md:grid-cols-2 gap-8 lg:gap-12">
+        <!-- Cambiado a lg:grid-cols-3 para acomodar las 3 secciones -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
             
             <!-- SECCIÓN: JUEGOS GENERALES -->
             <section class="bg-white rounded-3xl p-6 md:p-8 border-t-8 border-emerald-500 shadow-lg relative overflow-hidden">
@@ -46,7 +47,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-xl font-bold text-emerald-900 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
-                                    🎲 Dados de Historias
+                                    🎲 Dice Stories
                                 </h3>
                             </div>
                             <span class="text-emerald-400 group-hover:text-emerald-600 transition-colors">➔</span>
@@ -70,7 +71,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-xl font-bold text-emerald-900 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
-                                    🖼️ Adivina el Pictograma
+                                    🖼️ Pictograma
                                 </h3>
                             </div>
                             <span class="text-emerald-400 group-hover:text-emerald-600 transition-colors">➔</span>
@@ -85,7 +86,7 @@
                 
                 <h2 class="text-2xl md:text-3xl font-black text-indigo-800 mb-6 flex items-center gap-3">
                     <span class="bg-indigo-100 p-2 rounded-xl text-indigo-600">🔬</span> 
-                    Juegos Epidemiología
+                    Epidemiología
                 </h2>
                 
                 <div class="flex flex-col gap-4 relative z-10">
@@ -106,7 +107,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-xl font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
-                                    🎲 EPI Dice Stories
+                                    🎲 Dice Stories Epi
                                 </h3>
                             </div>
                             <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors">➔</span>
@@ -118,7 +119,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-xl font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
-                                    ☝️ Máquina Analítica
+                                    ☝️ Just One
                                 </h3>
                             </div>
                             <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors">➔</span>
@@ -130,7 +131,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-xl font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
-                                    📝 Pistas Cruzadas
+                                    📝 Palabras Cruzadas
                                 </h3>
                             </div>
                             <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors">➔</span>
@@ -146,6 +147,42 @@
                                 </h3>
                             </div>
                             <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors">➔</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: JUEGOS ESTADÍSTICA -->
+            <section class="bg-white rounded-3xl p-6 md:p-8 border-t-8 border-amber-500 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-5 text-8xl pointer-events-none">📊</div>
+                
+                <h2 class="text-2xl md:text-3xl font-black text-amber-800 mb-6 flex items-center gap-3">
+                    <span class="bg-amber-100 p-2 rounded-xl text-amber-600">📊</span> 
+                    Estadística
+                </h2>
+                
+                <div class="flex flex-col gap-4 relative z-10">
+                    <!-- Enlace 1 -->
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Estadistica/CarreraDeLos12.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-4 rounded-2xl bg-amber-50 border border-amber-100 hover:border-amber-300 hover:bg-amber-100 text-left">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-amber-900 group-hover:text-amber-700 transition-colors flex items-center gap-2">
+                                    🏁 Carrera de los 12
+                                </h3>
+                            </div>
+                            <span class="text-amber-400 group-hover:text-amber-600 transition-colors">➔</span>
+                        </div>
+                    </a>
+
+                    <!-- Enlace 2 -->
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Estadistica/Farkle.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-4 rounded-2xl bg-amber-50 border border-amber-100 hover:border-amber-300 hover:bg-amber-100 text-left">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-amber-900 group-hover:text-amber-700 transition-colors flex items-center gap-2">
+                                    🎲 Farkle
+                                </h3>
+                            </div>
+                            <span class="text-amber-400 group-hover:text-amber-600 transition-colors">➔</span>
                         </div>
                     </a>
                 </div>
