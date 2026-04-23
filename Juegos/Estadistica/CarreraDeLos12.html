@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>La Carrera de los 12 - Distribución y Probabilidad</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -46,6 +46,12 @@
         .dot-middle-left { grid-area: e; }
         .dot-middle-right { grid-area: f; }
 
+        /* Ajuste de dados para pantallas muy pequeñas */
+        @media (max-width: 380px) {
+            .dice { width: 50px; height: 50px; padding: 6px; border-radius: 8px; }
+            .dot { width: 10px; height: 10px; }
+        }
+
         /* Animación para el lanzamiento */
         .rolling {
             animation: shake 0.4s ease-in-out infinite alternate;
@@ -64,33 +70,36 @@
         .cell-empty { background-color: #f1f5f9; border: 1px solid #e2e8f0; } /* Slate 100 */
 
         .transition-fill { transition: background-color 0.3s ease; }
+        
+        /* Suavizar fuentes en móviles */
+        body { -webkit-font-smoothing: antialiased; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col items-center p-4">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col items-center px-2 py-4 sm:p-4">
 
     <!-- Cabecera -->
-    <header class="w-full max-w-6xl text-center mb-6 mt-4">
-        <h1 class="text-3xl md:text-5xl font-black text-indigo-700 mb-3">La Carrera de los 12 🏁</h1>
-        <p class="text-slate-600 font-medium max-w-2xl mx-auto">Comprende la distribución normal compitiendo. Lanza los dados, <strong>suma el resultado</strong> y selecciona la columna correcta en tu tablero para avanzar.</p>
+    <header class="w-full max-w-6xl text-center mb-4 sm:mb-6 mt-2 sm:mt-4">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-indigo-700 mb-2 sm:mb-3">La Carrera de los 12 🏁</h1>
+        <p class="text-sm sm:text-base md:text-lg text-slate-600 font-medium max-w-2xl mx-auto px-2">Comprende la distribución normal compitiendo. Lanza los dados, <strong>suma el resultado</strong> y selecciona la columna correcta en tu tablero para avanzar.</p>
     </header>
 
     <!-- PANTALLA DE CONFIGURACIÓN (SETUP) -->
-    <div id="setup-screen" class="w-full max-w-lg bg-white rounded-3xl shadow-xl border border-slate-200 p-8 text-center mt-4 animate-[fadeIn_0.5s_ease-out]">
-        <div class="mb-4 text-6xl">⚙️</div>
-        <h2 class="text-3xl font-black text-slate-800 mb-2">Configuración</h2>
-        <p class="text-slate-500 font-medium mb-8">Elige el tamaño de la cuadrícula antes de correr.</p>
+    <div id="setup-screen" class="w-full max-w-sm sm:max-w-lg bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-slate-200 p-6 sm:p-8 text-center mt-2 sm:mt-4 animate-[fadeIn_0.5s_ease-out]">
+        <div class="mb-3 sm:mb-4 text-5xl sm:text-6xl">⚙️</div>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-800 mb-2">Configuración</h2>
+        <p class="text-sm sm:text-base text-slate-500 font-medium mb-6 sm:mb-8">Elige el tamaño de la cuadrícula antes de correr.</p>
 
-        <div class="mb-8">
-            <label class="block text-lg font-bold text-slate-700 mb-4">¿Cuántos bloques para ganar?</label>
-            <div class="flex items-center justify-center border-2 border-slate-300 rounded-xl overflow-hidden focus-within:border-indigo-500 transition max-w-xs mx-auto bg-slate-50">
-                <button id="btn-height-minus" class="hover:bg-slate-200 px-6 py-4 font-black text-slate-600 text-xl transition">-</button>
-                <input type="number" id="height-input" min="3" max="25" value="7" readonly class="w-full text-center text-3xl font-black focus:outline-none bg-transparent text-indigo-700">
-                <button id="btn-height-plus" class="hover:bg-slate-200 px-6 py-4 font-black text-slate-600 text-xl transition">+</button>
+        <div class="mb-6 sm:mb-8">
+            <label class="block text-base sm:text-lg font-bold text-slate-700 mb-3 sm:mb-4">¿Cuántos bloques para ganar?</label>
+            <div class="flex items-center justify-center border-2 border-slate-300 rounded-xl overflow-hidden focus-within:border-indigo-500 transition max-w-[200px] sm:max-w-xs mx-auto bg-slate-50">
+                <button id="btn-height-minus" class="hover:bg-slate-200 px-4 py-3 sm:px-6 sm:py-4 font-black text-slate-600 text-lg sm:text-xl transition">-</button>
+                <input type="number" id="height-input" min="3" max="25" value="7" readonly class="w-full text-center text-2xl sm:text-3xl font-black focus:outline-none bg-transparent text-indigo-700">
+                <button id="btn-height-plus" class="hover:bg-slate-200 px-4 py-3 sm:px-6 sm:py-4 font-black text-slate-600 text-lg sm:text-xl transition">+</button>
             </div>
-            <p class="text-sm text-slate-400 mt-3">Recomendado: entre 7 y 15 bloques.</p>
+            <p class="text-xs sm:text-sm text-slate-400 mt-2 sm:mt-3">Recomendado: entre 7 y 15 bloques.</p>
         </div>
 
-        <button id="btn-start" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xl py-4 rounded-xl shadow-[0_4px_0_rgb(67,56,202)] hover:shadow-[0_2px_0_rgb(67,56,202)] hover:translate-y-[2px] transition-all">
+        <button id="btn-start" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg sm:text-xl py-3 sm:py-4 rounded-xl shadow-[0_4px_0_rgb(67,56,202)] hover:shadow-[0_2px_0_rgb(67,56,202)] hover:translate-y-[2px] transition-all">
             ¡Comenzar Carrera!
         </button>
     </div>
@@ -98,92 +107,92 @@
     <!-- PANTALLA DE JUEGO (Oculta al inicio) -->
     <div id="game-screen" class="hidden w-full flex-col items-center">
         <!-- Panel de Mensajes -->
-        <div id="message-board" class="w-full max-w-2xl bg-white border-2 border-indigo-200 rounded-xl p-4 text-center shadow-sm mb-6 text-xl font-bold text-indigo-600 transition-colors">
+        <div id="message-board" class="w-full max-w-2xl bg-white border-2 border-indigo-200 rounded-xl p-3 sm:p-4 text-center shadow-sm mb-4 sm:mb-6 text-sm sm:text-xl font-bold text-indigo-600 transition-colors">
             ¡Bienvenido! Haz clic en "Lanzar Dados" para comenzar.
         </div>
 
         <!-- Contenedor Principal (Jugador vs Bot) -->
-        <div id="game-container" class="w-full max-w-6xl flex flex-col lg:flex-row gap-8 items-start justify-center">
+        <div id="game-container" class="w-full max-w-6xl flex flex-col lg:flex-row gap-4 sm:gap-8 items-start justify-center">
             
             <!-- SECCIÓN DEL JUGADOR -->
-            <div class="w-full lg:w-1/2 bg-white rounded-2xl shadow-lg border border-slate-200 p-6 flex flex-col items-center">
-                <div class="flex justify-between items-center w-full mb-4">
-                    <h2 class="text-2xl font-black text-indigo-600">Tú (Jugador)</h2>
-                    <span id="player-goal" class="text-sm font-bold bg-indigo-100 text-indigo-700 py-1 px-3 rounded-full">Meta: 7</span>
+            <div class="w-full lg:w-1/2 bg-white rounded-xl sm:rounded-2xl shadow-lg border border-slate-200 p-4 sm:p-6 flex flex-col items-center">
+                <div class="flex justify-between items-center w-full mb-3 sm:mb-4">
+                    <h2 class="text-xl sm:text-2xl font-black text-indigo-600">Tú (Jugador)</h2>
+                    <span id="player-goal" class="text-xs sm:text-sm font-bold bg-indigo-100 text-indigo-700 py-1 px-2 sm:px-3 rounded-full">Meta: 7</span>
                 </div>
                 
                 <!-- Zona de dados jugador -->
-                <div class="flex flex-col items-center mb-6 h-32 justify-center">
-                    <div id="player-dice-container" class="flex gap-4 mb-4">
+                <div class="flex flex-col items-center mb-4 sm:mb-6 h-auto sm:h-32 justify-center">
+                    <div id="player-dice-container" class="flex gap-3 sm:gap-4 mb-3 sm:mb-4">
                         <div id="p-die-1" class="dice"><div class="dot dot-center"></div></div>
                         <div id="p-die-2" class="dice"><div class="dot dot-center"></div></div>
                     </div>
-                    <button id="btn-roll" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-xl shadow-[0_4px_0_rgb(67,56,202)] hover:shadow-[0_2px_0_rgb(67,56,202)] hover:translate-y-[2px] transition-all">
+                    <button id="btn-roll" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-lg sm:rounded-xl shadow-[0_4px_0_rgb(67,56,202)] hover:shadow-[0_2px_0_rgb(67,56,202)] hover:translate-y-[2px] transition-all text-sm sm:text-base">
                         🎲 Lanzar Dados
                     </button>
                 </div>
 
                 <!-- Tablero Jugador -->
-                <div id="player-grid" class="flex gap-1 md:gap-2 justify-center w-full overflow-x-auto pb-2">
+                <div id="player-grid" class="flex gap-[2px] sm:gap-1 md:gap-2 justify-center w-full overflow-x-auto pb-2">
                     <!-- Se inyecta por JS -->
                 </div>
-                <p class="text-sm text-slate-500 mt-3 font-semibold text-center">↑ Selecciona la columna que coincida con tu suma ↑</p>
+                <p class="text-xs sm:text-sm text-slate-500 mt-2 sm:mt-3 font-semibold text-center">↑ Selecciona la columna con tu suma ↑</p>
             </div>
 
             <!-- SECCIÓN DEL BOT -->
-            <div class="w-full lg:w-1/2 bg-slate-100 rounded-2xl shadow-inner border border-slate-200 p-6 flex flex-col items-center">
-                <div class="flex justify-between items-center w-full mb-4">
-                    <h2 class="text-2xl font-black text-rose-600">El Bot</h2>
-                    <span id="bot-goal" class="text-sm font-bold bg-rose-100 text-rose-700 py-1 px-3 rounded-full">Meta: 7</span>
+            <div class="w-full lg:w-1/2 bg-slate-100 rounded-xl sm:rounded-2xl shadow-inner border border-slate-200 p-4 sm:p-6 flex flex-col items-center">
+                <div class="flex justify-between items-center w-full mb-3 sm:mb-4">
+                    <h2 class="text-xl sm:text-2xl font-black text-rose-600">El Bot</h2>
+                    <span id="bot-goal" class="text-xs sm:text-sm font-bold bg-rose-100 text-rose-700 py-1 px-2 sm:px-3 rounded-full">Meta: 7</span>
                 </div>
                 
                 <!-- Zona de dados bot -->
-                <div class="flex flex-col items-center mb-6 h-32 justify-center">
-                    <div id="bot-dice-container" class="flex gap-4 mb-4 opacity-50">
+                <div class="flex flex-col items-center mb-4 sm:mb-6 h-auto sm:h-32 justify-center">
+                    <div id="bot-dice-container" class="flex gap-3 sm:gap-4 mb-3 sm:mb-4 opacity-50">
                         <div id="b-die-1" class="dice"><div class="dot dot-center"></div></div>
                         <div id="b-die-2" class="dice"><div class="dot dot-center"></div></div>
                     </div>
-                    <div id="bot-status" class="py-3 px-8 font-bold text-slate-500">
+                    <div id="bot-status" class="py-2 sm:py-3 px-4 sm:px-8 font-bold text-slate-500 text-sm sm:text-base text-center">
                         Esperando su turno...
                     </div>
                 </div>
 
                 <!-- Tablero Bot -->
-                <div id="bot-grid" class="flex gap-1 md:gap-2 justify-center w-full overflow-x-auto pb-2">
+                <div id="bot-grid" class="flex gap-[2px] sm:gap-1 md:gap-2 justify-center w-full overflow-x-auto pb-2">
                     <!-- Se inyecta por JS -->
                 </div>
-                <p class="text-sm text-slate-400 mt-3 font-semibold text-center">El bot juega automáticamente</p>
+                <p class="text-xs sm:text-sm text-slate-400 mt-2 sm:mt-3 font-semibold text-center">El bot juega automáticamente</p>
             </div>
 
         </div>
 
         <!-- Contenedor Resultados Combinados (Oculto al inicio) -->
-        <div id="combined-container" class="hidden w-full max-w-4xl bg-white rounded-2xl shadow-xl border-4 border-purple-300 p-6 flex-col items-center animate-[fadeIn_0.5s_ease-out] mt-6">
-            <h2 class="text-3xl font-black text-purple-700 mb-2">Distribución Total Conjunta</h2>
-            <p class="text-slate-600 font-medium mb-6 text-center">Al juntar los datos de ambos tableros, el tamaño de la muestra aumenta y la forma de la "Campana de Gauss" se vuelve más clara.</p>
+        <div id="combined-container" class="hidden w-full max-w-4xl bg-white rounded-xl sm:rounded-2xl shadow-xl border-4 border-purple-300 p-4 sm:p-6 flex-col items-center animate-[fadeIn_0.5s_ease-out] mt-4 sm:mt-6">
+            <h2 class="text-2xl sm:text-3xl font-black text-purple-700 mb-2 text-center">Distribución Total Conjunta</h2>
+            <p class="text-xs sm:text-base text-slate-600 font-medium mb-4 sm:mb-6 text-center">Al juntar los datos de ambos tableros, el tamaño de la muestra aumenta y la forma de la "Campana de Gauss" se vuelve más clara.</p>
             
             <!-- Leyenda -->
-            <div class="flex gap-6 mb-6">
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 bg-indigo-600 rounded-sm"></div>
-                    <span class="font-bold text-slate-700">Tus lanzamientos</span>
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-6 mb-4 sm:mb-6">
+                <div class="flex items-center justify-center gap-2">
+                    <div class="w-3 h-3 sm:w-4 sm:h-4 bg-indigo-600 rounded-sm"></div>
+                    <span class="font-bold text-slate-700 text-sm sm:text-base">Tus lanzamientos</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 bg-rose-600 rounded-sm"></div>
-                    <span class="font-bold text-slate-700">Lanzamientos del Bot</span>
+                <div class="flex items-center justify-center gap-2">
+                    <div class="w-3 h-3 sm:w-4 sm:h-4 bg-rose-600 rounded-sm"></div>
+                    <span class="font-bold text-slate-700 text-sm sm:text-base">Lanzamientos del Bot</span>
                 </div>
             </div>
 
             <!-- Tablero Combinado -->
-            <div id="combined-grid" class="flex gap-1 md:gap-3 justify-center w-full overflow-x-auto pb-2">
+            <div id="combined-grid" class="flex gap-[2px] sm:gap-1 md:gap-3 justify-center w-full overflow-x-auto pb-2">
                 <!-- Se inyecta por JS -->
             </div>
 
-            <div class="mt-8 w-full flex flex-col sm:flex-row gap-4 justify-center">
-                <button id="btn-restart-combined" class="w-full sm:w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg transition text-xl">
+            <div class="mt-6 sm:mt-8 w-full flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+                <button id="btn-restart-combined" class="w-full sm:w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 sm:py-4 rounded-xl shadow-lg transition text-base sm:text-xl">
                     Volver a Jugar (Mismo tamaño)
                 </button>
-                <button id="btn-go-setup-combined" class="w-full sm:w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-4 rounded-xl shadow transition text-xl">
+                <button id="btn-go-setup-combined" class="w-full sm:w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 sm:py-4 rounded-xl shadow transition text-base sm:text-xl">
                     ⚙️ Cambiar Configuración
                 </button>
             </div>
@@ -191,20 +200,20 @@
     </div>
 
     <!-- MODAL DE FIN DE JUEGO -->
-    <div id="winner-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md text-center transform transition-transform scale-100">
-            <div id="winner-emoji" class="text-7xl mb-4 drop-shadow-md">🏆</div>
-            <h3 id="winner-text" class="text-3xl font-black text-slate-800 mb-2">¡Has Ganado!</h3>
-            <p id="winner-desc" class="text-slate-600 mb-8 font-medium">El número X ha llegado primero a la cima de la campana.</p>
+    <div id="winner-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-md text-center transform transition-transform scale-100">
+            <div id="winner-emoji" class="text-6xl sm:text-7xl mb-3 sm:mb-4 drop-shadow-md">🏆</div>
+            <h3 id="winner-text" class="text-2xl sm:text-3xl font-black text-slate-800 mb-2">¡Has Ganado!</h3>
+            <p id="winner-desc" class="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 font-medium">El número X ha llegado primero a la cima de la campana.</p>
             
-            <div class="flex flex-col gap-3">
-                <button id="btn-show-combined" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-xl shadow-lg transition text-lg flex items-center justify-center gap-2">
+            <div class="flex flex-col gap-2 sm:gap-3">
+                <button id="btn-show-combined" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 sm:py-4 rounded-lg sm:rounded-xl shadow-lg transition text-base sm:text-lg flex items-center justify-center gap-2">
                     📊 Ver Distribución Conjunta
                 </button>
-                <button id="btn-restart" class="w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold py-3 rounded-xl transition text-lg">
+                <button id="btn-restart" class="w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold py-2 sm:py-3 rounded-lg sm:rounded-xl transition text-base sm:text-lg">
                     Jugar de Nuevo
                 </button>
-                <button id="btn-go-setup" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2 rounded-xl transition text-sm mt-2">
+                <button id="btn-go-setup" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2 rounded-lg sm:rounded-xl transition text-xs sm:text-sm mt-1 sm:mt-2">
                     Volver a Configuración
                 </button>
             </div>
@@ -289,13 +298,13 @@
             for (let i = 2; i <= 12; i++) {
                 // Columna contenedora
                 const colWrapper = document.createElement('div');
-                colWrapper.className = 'flex flex-col items-center gap-1 md:gap-2';
+                colWrapper.className = 'flex flex-col items-center gap-1 sm:gap-2';
 
                 // Pila (Stack) dinámica según MAX_HEIGHT
                 const stack = document.createElement('div');
-                // Asignamos una altura dinámica en base a MAX_HEIGHT (ej. ~1.5rem o 24px por bloque)
-                stack.className = 'flex flex-col-reverse gap-[2px] w-6 md:w-8 bg-slate-100 rounded-t-lg p-1 border-x border-t border-slate-200';
-                stack.style.height = `${MAX_HEIGHT * 1.5}rem`;
+                // Uso de clases responsivas para el ancho de la columna
+                stack.className = 'flex flex-col-reverse gap-[1px] sm:gap-[2px] w-[22px] sm:w-6 md:w-8 bg-slate-100 rounded-t-sm md:rounded-t-lg p-[2px] sm:p-1 border-x border-t border-slate-200';
+                stack.style.height = `calc(${MAX_HEIGHT} * 1.5rem)`;
                 stack.id = `${containerId}-col-${i}`;
 
                 for (let j = 0; j < MAX_HEIGHT; j++) {
@@ -308,10 +317,10 @@
                 const axisElement = document.createElement(isInteractive ? 'button' : 'div');
                 axisElement.innerText = i;
                 if (isInteractive) {
-                    axisElement.className = 'w-full py-2 bg-indigo-100 text-indigo-800 font-black rounded-lg border-b-4 border-indigo-300 hover:bg-indigo-200 hover:translate-y-[2px] hover:border-b-2 transition-all cursor-pointer';
+                    axisElement.className = 'w-full py-1 md:py-2 bg-indigo-100 text-indigo-800 font-bold md:font-black rounded-md md:rounded-lg border-b-2 md:border-b-4 border-indigo-300 hover:bg-indigo-200 hover:translate-y-[2px] hover:border-b transition-all cursor-pointer text-xs sm:text-sm md:text-base';
                     axisElement.onclick = () => handleColumnClick(i);
                 } else {
-                    axisElement.className = 'w-full py-2 bg-slate-300 text-slate-700 font-black rounded-lg text-center border-b-4 border-slate-400';
+                    axisElement.className = 'w-full py-1 md:py-2 bg-slate-300 text-slate-700 font-bold md:font-black rounded-md md:rounded-lg text-center border-b-2 md:border-b-4 border-slate-400 text-xs sm:text-sm md:text-base';
                 }
 
                 colWrapper.appendChild(stack);
@@ -348,7 +357,7 @@
             pDie1.classList.add('rolling');
             pDie2.classList.add('rolling');
             messageBoard.textContent = 'Lanzando dados...';
-            messageBoard.className = 'w-full max-w-2xl bg-indigo-50 border-2 border-indigo-200 rounded-xl p-4 text-center shadow-sm mb-6 text-xl font-bold text-indigo-500';
+            messageBoard.className = 'w-full max-w-2xl bg-indigo-50 border-2 border-indigo-200 rounded-xl p-3 sm:p-4 text-center shadow-sm mb-4 sm:mb-6 text-sm sm:text-xl font-bold text-indigo-500';
 
             setTimeout(() => {
                 pDie1.classList.remove('rolling');
@@ -360,8 +369,8 @@
                 currentDiceSum = result.sum;
 
                 gameState = 'WAITING_SELECTION';
-                messageBoard.innerHTML = `¡Suma los dados! Selecciona el botón <span class="text-3xl mx-2 bg-yellow-200 px-2 rounded">❓</span> en tu eje X.`;
-                messageBoard.className = 'w-full max-w-2xl bg-amber-50 border-2 border-amber-300 rounded-xl p-4 text-center shadow-sm mb-6 text-xl font-bold text-amber-600';
+                messageBoard.innerHTML = `¡Suma los dados! Selecciona el botón <span class="text-xl sm:text-3xl mx-1 sm:mx-2 bg-yellow-200 px-1 sm:px-2 rounded">❓</span> en tu eje X.`;
+                messageBoard.className = 'w-full max-w-2xl bg-amber-50 border-2 border-amber-300 rounded-xl p-3 sm:p-4 text-center shadow-sm mb-4 sm:mb-6 text-sm sm:text-xl font-bold text-amber-600';
             }, 600);
         }
 
@@ -379,12 +388,12 @@
 
                 gameState = 'BOT_TURN';
                 messageBoard.textContent = `¡Correcto! Agregaste al ${num}. Turno del Bot...`;
-                messageBoard.className = 'w-full max-w-2xl bg-emerald-50 border-2 border-emerald-300 rounded-xl p-4 text-center shadow-sm mb-6 text-xl font-bold text-emerald-600';
+                messageBoard.className = 'w-full max-w-2xl bg-emerald-50 border-2 border-emerald-300 rounded-xl p-3 sm:p-4 text-center shadow-sm mb-4 sm:mb-6 text-sm sm:text-xl font-bold text-emerald-600';
                 
                 setTimeout(botPlay, 1000);
             } else {
-                messageBoard.innerHTML = `Esa no es la suma. Cuenta bien los puntos (pista: son <span class="text-2xl">${currentDiceSum}</span>). ¡Intenta en el eje X de nuevo!`;
-                messageBoard.className = 'w-full max-w-2xl bg-red-50 border-2 border-red-300 rounded-xl p-4 text-center shadow-sm mb-6 text-xl font-bold text-red-600 animate-pulse';
+                messageBoard.innerHTML = `Esa no es la suma. Cuenta bien (pista: son <span class="text-lg sm:text-2xl">${currentDiceSum}</span>). ¡Intenta de nuevo!`;
+                messageBoard.className = 'w-full max-w-2xl bg-red-50 border-2 border-red-300 rounded-xl p-3 sm:p-4 text-center shadow-sm mb-4 sm:mb-6 text-sm sm:text-xl font-bold text-red-600 animate-pulse';
             }
         }
 
@@ -425,7 +434,7 @@
                     btnRoll.disabled = false;
                     btnRoll.classList.remove('opacity-50', 'cursor-not-allowed');
                     messageBoard.textContent = '¡Tu turno! Haz clic en Lanzar Dados.';
-                    messageBoard.className = 'w-full max-w-2xl bg-white border-2 border-indigo-200 rounded-xl p-4 text-center shadow-sm mb-6 text-xl font-bold text-indigo-600';
+                    messageBoard.className = 'w-full max-w-2xl bg-white border-2 border-indigo-200 rounded-xl p-3 sm:p-4 text-center shadow-sm mb-4 sm:mb-6 text-sm sm:text-xl font-bold text-indigo-600';
                 }, 1000);
 
             }, 600);
@@ -465,17 +474,17 @@
             if (winner === 'player') {
                 emoji.textContent = '🎉';
                 title.textContent = '¡Tú Ganas!';
-                title.className = 'text-4xl font-black text-emerald-600 mb-2';
-                desc.innerHTML = `Fuiste el primero en llevar la columna del <strong>${winningNumber}</strong> a la cima (${MAX_HEIGHT} bloques).`;
+                title.className = 'text-3xl sm:text-4xl font-black text-emerald-600 mb-2';
+                desc.innerHTML = `Llevaste la columna del <strong>${winningNumber}</strong> a la cima (${MAX_HEIGHT} bloques).`;
                 messageBoard.textContent = '¡Felicidades! Has ganado la carrera.';
-                messageBoard.className = 'w-full max-w-2xl bg-emerald-100 border-2 border-emerald-400 rounded-xl p-4 text-center shadow-sm mb-6 text-xl font-bold text-emerald-700';
+                messageBoard.className = 'w-full max-w-2xl bg-emerald-100 border-2 border-emerald-400 rounded-xl p-3 sm:p-4 text-center shadow-sm mb-4 sm:mb-6 text-sm sm:text-xl font-bold text-emerald-700';
             } else {
                 emoji.textContent = '🤖';
                 title.textContent = 'El Bot Gana';
-                title.className = 'text-4xl font-black text-rose-600 mb-2';
-                desc.innerHTML = `El bot logró llevar la columna del <strong>${winningNumber}</strong> a la cima primero (${MAX_HEIGHT} bloques). Recuerda, el 7 es el número más probable en la campana de Gauss.`;
+                title.className = 'text-3xl sm:text-4xl font-black text-rose-600 mb-2';
+                desc.innerHTML = `El bot llevó el <strong>${winningNumber}</strong> a la cima (${MAX_HEIGHT} bloques). El 7 es el más probable.`;
                 messageBoard.textContent = 'El bot ha ganado esta vez.';
-                messageBoard.className = 'w-full max-w-2xl bg-rose-100 border-2 border-rose-400 rounded-xl p-4 text-center shadow-sm mb-6 text-xl font-bold text-rose-700';
+                messageBoard.className = 'w-full max-w-2xl bg-rose-100 border-2 border-rose-400 rounded-xl p-3 sm:p-4 text-center shadow-sm mb-4 sm:mb-6 text-sm sm:text-xl font-bold text-rose-700';
             }
 
             modal.classList.remove('hidden');
@@ -501,11 +510,11 @@
 
             for (let i = 2; i <= 12; i++) {
                 const colWrapper = document.createElement('div');
-                colWrapper.className = 'flex flex-col items-center gap-1 md:gap-2';
+                colWrapper.className = 'flex flex-col items-center gap-[2px] sm:gap-1 md:gap-2';
 
                 const stack = document.createElement('div');
-                stack.className = 'flex flex-col-reverse gap-[2px] w-8 md:w-12 bg-slate-100 rounded-t-lg p-1 border-x border-t border-slate-200';
-                stack.style.height = `${maxCombinedHeight * 1.5}rem`;
+                stack.className = 'flex flex-col-reverse gap-[1px] sm:gap-[2px] w-5 sm:w-8 md:w-12 bg-slate-100 rounded-t-sm md:rounded-t-lg p-[2px] sm:p-1 border-x border-t border-slate-200';
+                stack.style.height = `calc(${maxCombinedHeight} * 1.5rem)`;
 
                 const pCount = playerProgress[i];
                 const bCount = botProgress[i];
@@ -527,7 +536,7 @@
 
                 const axisElement = document.createElement('div');
                 axisElement.innerText = i;
-                axisElement.className = 'w-full py-2 bg-purple-100 text-purple-800 font-black rounded-lg text-center border-b-4 border-purple-400';
+                axisElement.className = 'w-full py-1 md:py-2 bg-purple-100 text-purple-800 font-bold md:font-black rounded-md md:rounded-lg text-center border-b-2 md:border-b-4 border-purple-400 text-xs sm:text-sm md:text-base';
 
                 colWrapper.appendChild(stack);
                 colWrapper.appendChild(axisElement);
@@ -559,7 +568,7 @@
             btnRoll.disabled = false;
             btnRoll.classList.remove('opacity-50', 'cursor-not-allowed');
             messageBoard.textContent = `¡Carrera de ${MAX_HEIGHT} bloques! Lanza los dados para comenzar.`;
-            messageBoard.className = 'w-full max-w-2xl bg-white border-2 border-indigo-200 rounded-xl p-4 text-center shadow-sm mb-6 text-xl font-bold text-indigo-600';
+            messageBoard.className = 'w-full max-w-2xl bg-white border-2 border-indigo-200 rounded-xl p-3 sm:p-4 text-center shadow-sm mb-4 sm:mb-6 text-sm sm:text-xl font-bold text-indigo-600';
         }
 
         // Arrancar

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pistas Cruzadas: Epidemiología (Modo Docente)</title>
     
     <!-- Tailwind CSS -->
@@ -14,7 +14,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        body { background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; color: #1e293b; }
+        body { background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; color: #1e293b; -webkit-font-smoothing: antialiased; }
         
         @keyframes popIn { 
             0% { transform: scale(0.8); opacity: 0; } 
@@ -39,8 +39,9 @@
         .grid-cell:hover:not(.filled):not(.axis-label) { background-color: #e2e8f0; cursor: pointer; }
         .grid-cell.selected { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); z-index: 10; }
         
+        /* Ocultar barra de desplazamiento y habilitar scroll suave táctil */
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
     </style>
 </head>
 <body>
@@ -269,33 +270,33 @@
 
             if (gameState === 'setup') {
                 return (
-                    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
-                        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-2xl w-full text-center animate-pop">
-                            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                    <div className="min-h-screen flex items-center justify-center p-3 sm:p-4 bg-slate-100 w-full">
+                        <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-xl max-w-2xl w-full text-center animate-pop">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 text-blue-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
                             </div>
-                            <h1 className="text-3xl md:text-4xl font-black text-slate-800 mb-2 uppercase tracking-tight">Pistas Cruzadas</h1>
-                            <p className="text-blue-600 font-bold mb-6 tracking-widest uppercase text-sm bg-blue-50 py-1 px-4 rounded-full inline-block">Módulo Docente</p>
+                            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-800 mb-2 uppercase tracking-tight">Pistas Cruzadas</h1>
+                            <p className="text-blue-600 font-bold mb-4 sm:mb-6 tracking-widest uppercase text-xs sm:text-sm bg-blue-50 py-1 px-3 sm:px-4 rounded-full inline-block">Módulo Docente</p>
                             
-                            <p className="text-slate-500 mb-8 text-sm md:text-base px-4">
+                            <p className="text-slate-500 mb-6 sm:mb-8 text-xs sm:text-sm md:text-base px-2 sm:px-4 leading-relaxed">
                                 Proyecta el juego. El sistema generará una palabra clave. La clase debe debatir y decirte qué columna y fila se intersectan para formar ese concepto.
                             </p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-left">
                                 {levelsData.map(lvl => (
                                     <button 
                                         key={lvl.id}
                                         onClick={() => startGame(lvl.id)}
-                                        className={`p-4 rounded-xl font-bold transition-all flex flex-col justify-between group border-2 ${
+                                        className={`p-3 sm:p-4 rounded-xl font-bold transition-all flex flex-col justify-between group border-2 ${
                                             lvl.unit === 'Finalizador' 
-                                            ? 'bg-slate-800 border-slate-800 text-white hover:bg-slate-900 md:col-span-2 items-center text-center' 
+                                            ? 'bg-slate-800 border-slate-800 text-white hover:bg-slate-900 sm:col-span-2 items-center text-center' 
                                             : 'bg-white border-slate-200 text-slate-700 hover:border-blue-400 hover:shadow-md'
                                         }`}
                                     >
-                                        <span className={`text-xs uppercase tracking-widest mb-1 ${lvl.unit === 'Finalizador' ? 'text-amber-400' : 'text-blue-500'}`}>
+                                        <span className={`text-[10px] sm:text-xs uppercase tracking-widest mb-1 ${lvl.unit === 'Finalizador' ? 'text-amber-400' : 'text-blue-500'}`}>
                                             Nivel {lvl.id} • {lvl.unit}
                                         </span>
-                                        <span className={lvl.unit === 'Finalizador' ? 'text-xl' : 'text-lg'}>{lvl.title}</span>
+                                        <span className={lvl.unit === 'Finalizador' ? 'text-lg sm:text-xl' : 'text-base sm:text-lg'}>{lvl.title}</span>
                                     </button>
                                 ))}
                             </div>
@@ -307,27 +308,27 @@
             if (gameState === 'end') {
                 const evalResult = getScoreEvaluation();
                 return (
-                    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
-                        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center animate-pop">
-                            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Evaluación del Grupo</h2>
-                            <h1 className="text-3xl font-black text-slate-800 mb-6">{evalResult.rank}</h1>
+                    <div className="min-h-screen flex items-center justify-center p-3 sm:p-4 bg-slate-100 w-full">
+                        <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-xl max-w-md w-full text-center animate-pop">
+                            <h2 className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Evaluación del Grupo</h2>
+                            <h1 className="text-2xl sm:text-3xl font-black text-slate-800 mb-6">{evalResult.rank}</h1>
                             
-                            <div className="flex justify-center gap-4 mb-8">
-                                <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex-1">
-                                    <div className="text-3xl font-black text-green-600 mb-1">{score.correct}</div>
-                                    <div className="text-xs font-bold text-green-800 uppercase">Acertadas</div>
+                            <div className="flex flex-row justify-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                                <div className="bg-green-50 border border-green-200 rounded-2xl p-3 sm:p-4 flex-1">
+                                    <div className="text-2xl sm:text-3xl font-black text-green-600 mb-1">{score.correct}</div>
+                                    <div className="text-[10px] sm:text-xs font-bold text-green-800 uppercase">Acertadas</div>
                                 </div>
-                                <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex-1">
-                                    <div className="text-3xl font-black text-red-600 mb-1">{score.incorrect}</div>
-                                    <div className="text-xs font-bold text-red-800 uppercase">Falladas</div>
+                                <div className="bg-red-50 border border-red-200 rounded-2xl p-3 sm:p-4 flex-1">
+                                    <div className="text-2xl sm:text-3xl font-black text-red-600 mb-1">{score.incorrect}</div>
+                                    <div className="text-[10px] sm:text-xs font-bold text-red-800 uppercase">Falladas</div>
                                 </div>
                             </div>
                             
-                            <p className="text-slate-600 mb-8 font-medium italic bg-slate-50 p-4 rounded-xl border border-slate-100">"{evalResult.text}"</p>
+                            <p className="text-slate-600 mb-6 sm:mb-8 font-medium italic bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100 text-sm sm:text-base">"{evalResult.text}"</p>
 
                             <button 
                                 onClick={() => setGameState('setup')}
-                                className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md"
+                                className="w-full py-3 sm:py-4 px-4 sm:px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md text-sm sm:text-base"
                             >
                                 Volver al Menú de Módulos
                             </button>
@@ -341,169 +342,155 @@
             const currentCardData = currentCardId ? currentLevel.cards[currentCardId] : null;
 
             return (
-                <div className="min-h-screen bg-slate-50 p-4 md:p-8 flex flex-col items-center">
+                <div className="min-h-screen bg-slate-50 p-2 sm:p-4 md:p-8 flex flex-col items-center w-full">
                     
                     {/* Header: Información */}
-                    <div className="w-full max-w-6xl flex flex-wrap justify-between items-center mb-8 bg-white p-4 rounded-2xl shadow-sm border border-slate-200 gap-4">
-                        <div className="flex items-center gap-3">
+                    <div className="w-full max-w-6xl flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-8 bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 gap-3 sm:gap-4">
+                        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                             <button 
                                 onClick={() => { if(window.confirm('¿Volver al menú de módulos?')) setGameState('setup') }}
-                                className="p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-lg transition-colors border border-slate-100"
+                                className="p-2 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 rounded-lg transition-colors border border-slate-100 flex-shrink-0"
                             >
                                 🏠
                             </button>
-                            <div>
-                                <h1 className="font-bold text-slate-800 text-lg leading-tight">Nivel {currentLevel.id}: {currentLevel.title}</h1>
-                                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">{currentLevel.unit}</p>
+                            <div className="flex-1 text-center sm:text-left">
+                                <h1 className="font-bold text-slate-800 text-base sm:text-lg leading-tight truncate">Nivel {currentLevel.id}: {currentLevel.title}</h1>
+                                <p className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-wider">{currentLevel.unit}</p>
                             </div>
                         </div>
                         
-                        <div className="flex gap-4">
-                            <div className="bg-green-100 text-green-800 px-4 py-1.5 rounded-lg font-black flex items-center gap-2">
+                        <div className="flex gap-2 sm:gap-4 w-full sm:w-auto justify-center">
+                            <div className="bg-green-100 text-green-800 px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg font-black flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
                                 ✓ {score.correct}
                             </div>
-                            <div className="bg-red-100 text-red-800 px-4 py-1.5 rounded-lg font-black flex items-center gap-2">
+                            <div className="bg-red-100 text-red-800 px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg font-black flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
                                 ✗ {score.incorrect}
                             </div>
                         </div>
                     </div>
 
-                    <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-8">
+                    <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-4 sm:gap-8">
                         
                         {/* PANEL DERECHO (Pasa arriba en móviles): LA PALABRA CLAVE Y EXPLICACIÓN */}
-                        <div className="w-full lg:w-96 flex flex-col gap-6 order-1 lg:order-2">
+                        <div className="w-full lg:w-96 flex flex-col gap-4 sm:gap-6 order-1 lg:order-2">
                             
                             {/* Panel del Moderador */}
-                            <div className="bg-slate-800 p-6 md:p-8 rounded-3xl shadow-xl text-white relative overflow-hidden flex-grow flex flex-col border border-slate-700">
-                                <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <div className="bg-slate-800 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-xl text-white relative overflow-hidden flex-grow flex flex-col border border-slate-700">
+                                <h3 className="text-[10px] sm:text-xs font-bold text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> Concepto Generado
                                 </h3>
                                 
                                 {currentCardData ? (
-                                    <>
-                                        <div className="bg-white text-slate-900 rounded-2xl p-6 text-center shadow-inner mt-4 mb-6">
-                                            <span className="text-3xl md:text-4xl font-black uppercase tracking-tight break-words">
+                                    <React.Fragment>
+                                        <div className="bg-white text-slate-900 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center shadow-inner mt-2 sm:mt-4 mb-4 sm:mb-6">
+                                            <span className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight break-words">
                                                 {currentCardData.word}
                                             </span>
                                         </div>
 
                                         {!isChecking ? (
-                                            <div className="bg-slate-700/50 p-4 rounded-xl border border-slate-600 text-sm text-slate-300">
+                                            <div className="bg-slate-700/50 p-3 sm:p-4 rounded-xl border border-slate-600 text-xs sm:text-sm text-slate-300 leading-relaxed">
                                                 Pregunta al grupo: <strong>"¿Qué Fila y qué Columna deben cruzarse para formar el concepto de arriba?"</strong> <br/><br/>
                                                 <span className="text-blue-300 font-medium">Haz clic en la celda de la grilla que la clase elija.</span>
                                             </div>
                                         ) : (
                                             <div className="flex flex-col animate-slide flex-grow">
                                                 {/* Feedback Title */}
-                                                <div className={`text-center py-3 rounded-xl font-black uppercase tracking-widest mb-4 border-2 ${
+                                                <div className={`text-center py-2 sm:py-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4 border-2 ${
                                                     feedback === 'correct' ? 'bg-green-900/30 text-green-400 border-green-500/50' : 'bg-red-900/30 text-red-400 border-red-500/50'
                                                 }`}>
                                                     {feedback === 'correct' ? '✅ ¡Intersección Correcta!' : '❌ Análisis Erróneo'}
                                                 </div>
                                                 
                                                 {/* Explicación Pedagógica */}
-                                                <div className="bg-slate-900 rounded-xl p-5 border border-slate-700 shadow-inner text-sm text-slate-300 leading-relaxed flex-grow">
-                                                    <span className="text-slate-400 font-bold block mb-2 uppercase text-xs tracking-wider">Justificación Teórica:</span>
+                                                <div className="bg-slate-900 rounded-xl p-4 sm:p-5 border border-slate-700 shadow-inner text-xs sm:text-sm text-slate-300 leading-relaxed flex-grow">
+                                                    <span className="text-slate-400 font-bold block mb-1 sm:mb-2 uppercase text-[10px] sm:text-xs tracking-wider">Justificación Teórica:</span>
                                                     {currentCardData.explanation}
                                                 </div>
 
                                                 <button 
                                                     onClick={nextTurn}
-                                                    className="w-full mt-6 py-4 rounded-xl font-bold uppercase tracking-widest transition-all bg-blue-600 hover:bg-blue-500 text-white shadow-lg"
+                                                    className="w-full mt-4 sm:mt-6 py-3 sm:py-4 rounded-xl font-bold uppercase text-xs sm:text-sm tracking-widest transition-all bg-blue-600 hover:bg-blue-500 text-white shadow-lg"
                                                 >
                                                     {clueCards.length > 1 ? 'Siguiente Palabra ➔' : 'Ver Evaluación Final'}
                                                 </button>
                                             </div>
                                         )}
-                                    </>
+                                    </React.Fragment>
                                 ) : (
-                                    <div className="flex-grow flex items-center justify-center text-slate-500">
+                                    <div className="flex-grow flex items-center justify-center text-slate-500 text-sm">
                                         Procesando datos...
                                     </div>
                                 )}
                                 
-                                <div className="absolute bottom-4 right-6 opacity-20 text-5xl font-black pointer-events-none">
+                                <div className="absolute bottom-2 right-4 sm:bottom-4 sm:right-6 opacity-20 text-3xl sm:text-5xl font-black pointer-events-none">
                                     {clueCards.length}
                                 </div>
                             </div>
                         </div>
 
-                        {/* PANEL IZQUIERDO: La Grilla de Selección */}
+                        {/* PANEL IZQUIERDO: La Grilla de Selección (Adaptada con scroll en móviles) */}
                         <div className="flex-1 overflow-x-auto pb-4 no-scrollbar order-2 lg:order-1">
-                            <div className="min-w-[500px] bg-white p-6 rounded-3xl shadow-lg border border-slate-200 inline-block w-full">
-                                <div 
-                                    className="grid gap-3" 
-                                    style={{ 
-                                        gridTemplateColumns: `120px repeat(3, 1fr)`,
-                                        gridTemplateRows: `100px repeat(3, 120px)`
-                                    }}
-                                >
-                                    {/* Esquina */}
-                                    <div className="flex items-center justify-center p-2">
-                                        <div className="text-xs font-bold text-slate-300 uppercase tracking-widest rotate-[-45deg]">Epidemiología</div>
-                                    </div>
+                            <div className="min-w-[340px] sm:min-w-[500px] bg-white p-3 sm:p-6 rounded-2xl sm:rounded-3xl shadow-lg border border-slate-200 inline-block w-full">
+                                
+                                <div className="grid grid-cols-4 gap-1 sm:gap-2">
+                                    
+                                    {/* Esquina superior izquierda vacía */}
+                                    <div></div>
 
-                                    {/* Cabeceras de Columnas */}
-                                    {currentLevel.cols.map((word, idx) => (
-                                        <div key={`col-${idx}`} className="relative bg-indigo-50 border-b-4 border-indigo-200 rounded-2xl flex flex-col items-center justify-center p-3 text-center shadow-sm">
-                                            <span className="absolute top-2 left-3 text-indigo-200 font-black text-2xl">{letters[idx]}</span>
-                                            <span className="font-bold text-indigo-900 text-sm md:text-base z-10 leading-tight">{word}</span>
+                                    {/* Cabeceras de Columnas (Letras) */}
+                                    {currentLevel.cols.map((colWord, c) => (
+                                        <div key={`col-${c}`} className="bg-blue-50 border border-blue-100 rounded-lg sm:rounded-xl p-1 sm:p-2 flex flex-col items-center justify-center text-center">
+                                            <span className="text-blue-800 font-black text-sm sm:text-lg mb-0 sm:mb-1">{String.fromCharCode(65 + c)}</span>
+                                            <span className="text-blue-900 font-bold text-[10px] sm:text-xs leading-tight px-1">{colWord}</span>
                                         </div>
                                     ))}
 
-                                    {/* Filas */}
-                                    {currentLevel.rows.map((rowWord, rowIdx) => (
-                                        <React.Fragment key={`row-${rowIdx}`}>
+                                    {/* Filas: Cabecera (Número) + Celdas Interactivas */}
+                                    {currentLevel.rows.map((rowWord, r) => (
+                                        <React.Fragment key={`row-${r}`}>
                                             {/* Cabecera de Fila */}
-                                            <div className="relative bg-teal-50 border-r-4 border-teal-200 rounded-2xl flex flex-col items-center justify-center p-3 text-center shadow-sm">
-                                                <span className="absolute top-2 left-3 text-teal-200 font-black text-2xl">{rowIdx + 1}</span>
-                                                <span className="font-bold text-teal-900 text-sm md:text-base z-10 leading-tight">{rowWord}</span>
+                                            <div className="bg-blue-50 border border-blue-100 rounded-lg sm:rounded-xl p-1 sm:p-2 flex flex-col items-center justify-center text-center">
+                                                <span className="text-blue-800 font-black text-sm sm:text-lg mb-0 sm:mb-1">{r + 1}</span>
+                                                <span className="text-blue-900 font-bold text-[10px] sm:text-xs leading-tight px-1">{rowWord}</span>
                                             </div>
 
-                                            {/* Celdas Interactivas */}
-                                            {currentLevel.cols.map((colWord, colIdx) => {
-                                                const cellId = `${letters[colIdx]}${rowIdx + 1}`;
-                                                const isClickedThisTurn = clickedCell === cellId;
-                                                const status = placedCards[cellId]; 
+                                            {/* Celdas de la cuadrícula */}
+                                            {currentLevel.cols.map((_, c) => {
+                                                const cellId = `${String.fromCharCode(65 + c)}${r + 1}`;
+                                                const isPlaced = placedCards[cellId];
+                                                const isSelected = clickedCell === cellId;
                                                 
-                                                let cellClasses = "grid-cell rounded-2xl border-2 border-slate-200 flex items-center justify-center relative ";
-                                                
-                                                if (status === undefined) {
-                                                    cellClasses += "bg-slate-50 border-dashed hover:border-blue-400 hover:bg-blue-50";
-                                                } else {
-                                                    cellClasses += "filled border-solid ";
-                                                    if (status === true) {
-                                                        cellClasses += isClickedThisTurn ? "bg-green-100 border-green-500 shadow-md" : "bg-green-50 border-green-200";
-                                                    }
-                                                    if (status === false) {
-                                                        cellClasses += isClickedThisTurn ? "bg-red-100 border-red-500 shadow-md" : "bg-red-50 border-red-200 opacity-60";
-                                                    }
-                                                }
+                                                let cellClasses = "grid-cell rounded-lg sm:rounded-xl border-2 sm:border-4 flex flex-col items-center justify-center h-14 sm:h-20 md:h-24 relative overflow-hidden ";
+                                                let content = <span className="font-black text-sm sm:text-xl text-slate-300">{cellId}</span>;
 
-                                                // Contenido de la celda
-                                                let content = <span className="text-slate-300 font-bold text-xl">{cellId}</span>;
-                                                
-                                                if (status === true) {
+                                                if (isPlaced === true) {
+                                                    cellClasses += "bg-green-100 border-green-500 filled";
                                                     content = (
-                                                        <div className={`text-center ${isClickedThisTurn ? 'animate-pop' : ''}`}>
-                                                            <div className="text-green-600 font-black text-2xl mb-1">{cellId}</div>
-                                                            <div className="text-[10px] font-bold text-green-700 uppercase tracking-widest">Resuelto</div>
+                                                        <div className="flex flex-col items-center animate-pop">
+                                                            <span className="text-lg sm:text-3xl mb-0 sm:mb-1">✅</span>
+                                                            <span className="text-green-700 font-bold text-[10px] sm:text-xs leading-none">{cellId}</span>
                                                         </div>
                                                     );
-                                                } else if (status === false) {
+                                                } else if (isPlaced === false) {
+                                                    cellClasses += "bg-red-50 border-red-300 filled";
                                                     content = (
-                                                        <div className={`text-center ${isClickedThisTurn ? 'animate-shake' : ''}`}>
-                                                            <div className="text-red-400 font-black text-2xl line-through">{cellId}</div>
+                                                        <div className="flex flex-col items-center opacity-70">
+                                                            <span className="text-base sm:text-2xl mb-0 sm:mb-1 line-through text-red-400 font-black">{cellId}</span>
                                                         </div>
                                                     );
+                                                } else {
+                                                    cellClasses += "border-slate-200 border-dashed bg-slate-50";
+                                                    if (isSelected) {
+                                                        cellClasses += " selected";
+                                                    }
                                                 }
 
                                                 return (
                                                     <div 
-                                                        key={`cell-${rowIdx}-${colIdx}`} 
+                                                        key={`cell-${r}-${c}`}
                                                         className={cellClasses}
-                                                        onClick={() => handleCellClick(rowIdx, colIdx)}
-                                                        title={`Intersección: ${colWord} + ${rowWord}`}
+                                                        onClick={() => handleCellClick(r, c)}
                                                     >
                                                         {content}
                                                     </div>

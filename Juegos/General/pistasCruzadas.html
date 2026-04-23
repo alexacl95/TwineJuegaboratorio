@@ -2,45 +2,60 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pistas Cruzadas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Estilos personalizados para mejorar la apariencia en dispositivos móviles */
+        body { -webkit-font-smoothing: antialiased; }
         .board-grid {
             display: grid;
-            gap: 0.5rem;
+            gap: 0.25rem;
+        }
+        @media (min-width: 640px) {
+            .board-grid { gap: 0.5rem; }
         }
         .hide { display: none !important; }
         .cell-transition { transition: all 0.2s ease-in-out; }
+        
+        /* Ocultar flechas en inputs numéricos */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        /* Scroll suave táctil en móviles */
+        .scroll-smooth-mobile {
+            -webkit-overflow-scrolling: touch;
+        }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col items-center">
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col items-center px-2 py-4 sm:p-4">
 
     <!-- Contenedor Principal -->
-    <div id="app" class="w-full max-w-6xl mx-auto p-4 flex-grow flex flex-col">
+    <div id="app" class="w-full max-w-6xl mx-auto flex-grow flex flex-col">
         
         <!-- PANTALLA DE CONFIGURACIÓN -->
-        <div id="setup-screen" class="flex-grow flex flex-col items-center justify-center">
-            <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-200">
-                <h1 class="text-3xl font-bold text-center text-indigo-600 mb-2">Pistas Cruzadas</h1>
-                <p class="text-center text-slate-500 mb-8">Configura tu partida local</p>
+        <div id="setup-screen" class="flex-grow flex flex-col items-center justify-center w-full">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-xl w-full max-w-[95%] sm:max-w-md border border-slate-200">
+                <h1 class="text-2xl sm:text-3xl font-black text-center text-indigo-600 mb-2">Pistas Cruzadas</h1>
+                <p class="text-center text-slate-500 mb-6 sm:mb-8 text-sm sm:text-base">Configura tu partida local</p>
 
-                <div class="mb-6">
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Tamaño del Tablero</label>
-                    <div class="grid grid-cols-3 gap-3">
-                        <button class="size-btn border-2 border-indigo-500 bg-indigo-50 text-indigo-700 rounded-xl py-2 font-bold" data-size="3">3x3</button>
-                        <button class="size-btn border-2 border-slate-200 bg-white text-slate-600 rounded-xl py-2 font-bold hover:border-indigo-300" data-size="4">4x4</button>
-                        <button class="size-btn border-2 border-slate-200 bg-white text-slate-600 rounded-xl py-2 font-bold hover:border-indigo-300" data-size="5">5x5</button>
+                <div class="mb-5 sm:mb-6">
+                    <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-2">Tamaño del Tablero</label>
+                    <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                        <button class="size-btn border-2 border-indigo-500 bg-indigo-50 text-indigo-700 rounded-xl py-2 font-bold text-sm sm:text-base transition-colors" data-size="3">3x3</button>
+                        <button class="size-btn border-2 border-slate-200 bg-white text-slate-600 rounded-xl py-2 font-bold hover:border-indigo-300 text-sm sm:text-base transition-colors" data-size="4">4x4</button>
+                        <button class="size-btn border-2 border-slate-200 bg-white text-slate-600 rounded-xl py-2 font-bold hover:border-indigo-300 text-sm sm:text-base transition-colors" data-size="5">5x5</button>
                     </div>
                 </div>
 
-                <div class="mb-8">
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Tiempo de Juego (Minutos)</label>
-                    <input type="number" id="time-input" min="1" max="60" value="5" class="w-full border-2 border-slate-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition">
+                <div class="mb-6 sm:mb-8">
+                    <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-2">Tiempo de Juego (Minutos)</label>
+                    <input type="number" id="time-input" min="1" max="60" value="5" class="w-full border-2 border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-base sm:text-lg focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition bg-slate-50 text-center font-bold text-indigo-700">
                 </div>
 
-                <button id="btn-start" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg py-4 rounded-xl shadow-lg transform transition hover:-translate-y-1">
+                <button id="btn-start" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black text-base sm:text-lg py-3 sm:py-4 rounded-xl shadow-lg transform transition hover:-translate-y-1">
                     ¡Comenzar Juego!
                 </button>
             </div>
@@ -49,46 +64,46 @@
         <!-- PANTALLA DE JUEGO -->
         <div id="game-screen" class="hide flex-grow flex flex-col w-full">
             <!-- Cabecera del Juego -->
-            <div class="bg-white p-4 rounded-2xl shadow-md flex justify-between items-center mb-6 border border-slate-200">
-                <div class="flex items-center gap-4">
-                    <div id="timer-display" class="text-3xl font-mono font-bold text-slate-800 bg-slate-100 px-4 py-2 rounded-lg border border-slate-300">05:00</div>
-                    <div class="text-sm font-semibold text-slate-500 hidden sm:block">Tiempo Restante</div>
+            <div class="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-md flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 border border-slate-200 gap-3 sm:gap-4">
+                <div class="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-center">
+                    <div id="timer-display" class="text-2xl sm:text-3xl font-mono font-black text-slate-800 bg-slate-100 px-3 sm:px-4 py-1 sm:py-2 rounded-lg border-2 border-slate-300">05:00</div>
+                    <div class="text-[10px] sm:text-sm font-bold text-slate-500 uppercase tracking-wide hidden sm:block">Tiempo Restante</div>
                 </div>
-                <button id="btn-finish" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg shadow transition">
+                <button id="btn-finish" class="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white font-bold py-2 sm:py-2.5 px-4 sm:px-6 rounded-lg shadow transition text-sm sm:text-base">
                     Finalizar Partida
                 </button>
             </div>
 
             <!-- Contenedor del Tablero -->
-            <div class="flex-grow flex justify-center items-start overflow-x-auto pb-8">
-                <div id="board-container" class="board-grid min-w-max p-2 w-full">
+            <div class="flex-grow flex justify-start sm:justify-center items-start overflow-x-auto scroll-smooth-mobile pb-6 pt-1 px-1">
+                <div id="board-container" class="board-grid min-w-max p-1 sm:p-2 w-full">
                     <!-- El tablero se inyectará aquí con JavaScript -->
                 </div>
             </div>
         </div>
 
         <!-- PANTALLA DE RESULTADOS -->
-        <div id="results-screen" class="hide flex-grow flex flex-col items-center justify-center">
-            <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-200 text-center">
-                <h2 class="text-4xl font-black text-indigo-600 mb-2">¡Fin del Juego!</h2>
-                <p class="text-slate-500 mb-8 font-medium">Aquí están los resultados de sus pistas</p>
+        <div id="results-screen" class="hide flex-grow flex flex-col items-center justify-center w-full">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-xl w-full max-w-[95%] sm:max-w-md border border-slate-200 text-center">
+                <h2 class="text-3xl sm:text-4xl font-black text-indigo-600 mb-2">¡Fin del Juego!</h2>
+                <p class="text-sm sm:text-base text-slate-500 mb-6 sm:mb-8 font-medium">Aquí están los resultados de sus pistas</p>
 
-                <div class="grid grid-cols-2 gap-4 mb-8">
-                    <div class="bg-emerald-100 border-2 border-emerald-400 p-4 rounded-xl">
-                        <div class="text-3xl font-bold text-emerald-600 mb-1" id="res-hits">0</div>
-                        <div class="text-sm font-semibold text-emerald-800 uppercase tracking-wider">Aciertos</div>
+                <div class="grid grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    <div class="bg-emerald-50 border-2 border-emerald-300 p-3 sm:p-4 rounded-xl sm:rounded-2xl">
+                        <div class="text-3xl sm:text-4xl font-black text-emerald-600 mb-1" id="res-hits">0</div>
+                        <div class="text-[10px] sm:text-sm font-bold text-emerald-800 uppercase tracking-wider">Aciertos</div>
                     </div>
-                    <div class="bg-red-100 border-2 border-red-400 p-4 rounded-xl">
-                        <div class="text-3xl font-bold text-red-600 mb-1" id="res-misses">0</div>
-                        <div class="text-sm font-semibold text-red-800 uppercase tracking-wider">Fallos</div>
+                    <div class="bg-red-50 border-2 border-red-300 p-3 sm:p-4 rounded-xl sm:rounded-2xl">
+                        <div class="text-3xl sm:text-4xl font-black text-red-600 mb-1" id="res-misses">0</div>
+                        <div class="text-[10px] sm:text-sm font-bold text-red-800 uppercase tracking-wider">Fallos</div>
                     </div>
                 </div>
 
-                <div class="text-slate-600 mb-8 font-medium" id="res-unplayed">
+                <div class="text-xs sm:text-base text-slate-600 mb-6 sm:mb-8 font-medium bg-slate-50 p-2 sm:p-3 rounded-lg border border-slate-200" id="res-unplayed">
                     Faltaron 0 pistas por jugar.
                 </div>
 
-                <button id="btn-restart" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg py-4 rounded-xl shadow-lg transition">
+                <button id="btn-restart" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-black text-base sm:text-xl py-3 sm:py-4 rounded-xl shadow-[0_4px_0_rgb(15,23,42)] hover:translate-y-[2px] transition-all">
                     Jugar de Nuevo
                 </button>
             </div>
@@ -97,22 +112,22 @@
     </div>
 
     <!-- MODAL DE ACCIÓN (Acierto/Fallo) -->
-    <div id="action-modal" class="hide fixed inset-0 bg-slate-900 bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm transform scale-100 transition-transform">
-            <h3 class="text-xl font-bold text-center text-slate-800 mb-6">¿Qué pasó en la posición <span id="modal-coord" class="text-indigo-600 font-black">A1</span>?</h3>
-            <div class="flex flex-col gap-3">
-                <button id="btn-mark-hit" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow transition flex items-center justify-center gap-2">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+    <div id="action-modal" class="hide fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 w-full max-w-[90%] sm:max-w-sm transform scale-100 transition-transform">
+            <h3 class="text-lg sm:text-xl font-bold text-center text-slate-800 mb-4 sm:mb-6">¿Qué pasó en la posición <span id="modal-coord" class="text-indigo-600 font-black text-2xl sm:text-3xl">A1</span>?</h3>
+            <div class="flex flex-col gap-2 sm:gap-3">
+                <button id="btn-mark-hit" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 sm:py-4 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm sm:text-base">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                     ¡Acertamos!
                 </button>
-                <button id="btn-mark-miss" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl shadow transition flex items-center justify-center gap-2">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <button id="btn-mark-miss" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 sm:py-4 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm sm:text-base">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
                     Fallamos
                 </button>
-                <button id="btn-mark-clear" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl shadow transition mt-2">
-                    Limpiar Casilla (No Jugada)
+                <button id="btn-mark-clear" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 sm:py-4 rounded-xl shadow transition mt-1 sm:mt-2 text-sm sm:text-base">
+                    Limpiar Casilla
                 </button>
-                <button id="btn-modal-cancel" class="text-slate-500 font-semibold py-2 mt-2 hover:text-slate-800 transition">
+                <button id="btn-modal-cancel" class="text-slate-500 font-bold py-2 mt-1 sm:mt-2 hover:text-slate-800 transition text-xs sm:text-sm">
                     Cancelar
                 </button>
             </div>
@@ -247,8 +262,8 @@
             // Limpiar contenedor
             boardContainer.innerHTML = '';
             
-            // Configurar columnas de la grilla (Esquina vacía + columnas)
-            boardContainer.style.gridTemplateColumns = `auto repeat(${currentSize}, 1fr)`;
+            // Configurar columnas de la grilla adaptativas
+            boardContainer.style.gridTemplateColumns = `auto repeat(${currentSize}, minmax(70px, 1fr))`;
 
             // 1. Fila Superior (Cabeceras de Columnas)
             // Esquina superior izquierda vacía
@@ -259,10 +274,10 @@
             for(let c = 0; c < currentSize; c++) {
                 const letter = String.fromCharCode(65 + c);
                 const colHeader = document.createElement('div');
-                colHeader.className = "bg-amber-100 border-2 border-amber-300 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm";
+                colHeader.className = "bg-indigo-50 border border-indigo-200 rounded-lg sm:rounded-xl p-1 sm:p-3 flex flex-col items-center justify-center text-center shadow-sm min-w-[70px] sm:min-w-[120px] overflow-hidden";
                 colHeader.innerHTML = `
-                    <span class="text-amber-800 font-black text-xl mb-1">${letter}</span>
-                    <span class="text-amber-900 font-bold text-2xl md:text-3xl break-words leading-tight">${colWords[c]}</span>
+                    <span class="text-indigo-800 font-black text-base sm:text-xl mb-0 sm:mb-1 leading-none">${letter}</span>
+                    <span class="text-indigo-900 font-bold text-[10px] sm:text-sm md:text-base break-words leading-tight mt-1 px-1">${colWords[c]}</span>
                 `;
                 boardContainer.appendChild(colHeader);
             }
@@ -273,10 +288,10 @@
                 
                 // Cabecera de Fila (Número y Palabra)
                 const rowHeader = document.createElement('div');
-                rowHeader.className = "bg-cyan-100 border-2 border-cyan-300 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[120px] min-w-[150px]";
+                rowHeader.className = "bg-cyan-50 border border-cyan-200 rounded-lg sm:rounded-xl p-1 sm:p-3 flex flex-col items-center justify-center text-center shadow-sm h-full min-h-[60px] sm:min-h-[100px] min-w-[80px] sm:min-w-[140px] overflow-hidden";
                 rowHeader.innerHTML = `
-                    <span class="text-cyan-800 font-black text-xl mb-1">${number}</span>
-                    <span class="text-cyan-900 font-bold text-2xl md:text-3xl break-words leading-tight">${rowWords[r]}</span>
+                    <span class="text-cyan-800 font-black text-base sm:text-xl mb-0 sm:mb-1 leading-none">${number}</span>
+                    <span class="text-cyan-900 font-bold text-[10px] sm:text-sm md:text-base break-words leading-tight mt-1 px-1">${rowWords[r]}</span>
                 `;
                 boardContainer.appendChild(rowHeader);
 
@@ -287,7 +302,7 @@
                     
                     const cell = document.createElement('button');
                     cell.id = `cell-${coord}`;
-                    cell.className = "cell-transition rounded-xl border-4 font-black text-3xl w-full h-full min-h-[120px] flex items-center justify-center focus:outline-none shadow-sm cursor-pointer";
+                    cell.className = "cell-transition rounded-lg sm:rounded-xl border-2 sm:border-4 font-black text-base sm:text-2xl w-full h-full min-h-[60px] sm:min-h-[100px] flex items-center justify-center focus:outline-none shadow-sm cursor-pointer";
                     cell.onclick = () => openModal(coord);
                     
                     boardContainer.appendChild(cell);
@@ -324,7 +339,7 @@
             const status = gridState[coord];
             
             // Limpiar clases previas
-            cell.className = "cell-transition rounded-xl border-4 font-black text-3xl w-full h-full min-h-[120px] flex items-center justify-center focus:outline-none shadow-sm cursor-pointer transform hover:scale-105 active:scale-95";
+            cell.className = "cell-transition rounded-lg sm:rounded-xl border-2 sm:border-4 font-black text-base sm:text-2xl w-full h-full min-h-[60px] sm:min-h-[100px] flex items-center justify-center focus:outline-none shadow-sm cursor-pointer transform hover:scale-105 active:scale-95";
 
             if (status === 'unplayed') {
                 cell.classList.add('border-slate-300', 'bg-slate-50', 'text-slate-400', 'border-dashed');
@@ -332,16 +347,16 @@
             } else if (status === 'hit') {
                 cell.classList.add('border-emerald-500', 'bg-emerald-400', 'text-white');
                 cell.innerHTML = `
-                    <div class="flex flex-col items-center">
-                        <svg class="w-10 h-10 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                        <span class="text-lg opacity-80">${coord}</span>
+                    <div class="flex flex-col items-center justify-center">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 mb-0 sm:mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        <span class="text-[10px] sm:text-sm opacity-90 font-bold leading-none mt-1">${coord}</span>
                     </div>`;
             } else if (status === 'miss') {
                 cell.classList.add('border-red-500', 'bg-red-400', 'text-white');
                 cell.innerHTML = `
-                    <div class="flex flex-col items-center">
-                        <svg class="w-10 h-10 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        <span class="text-lg opacity-80">${coord}</span>
+                    <div class="flex flex-col items-center justify-center">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 mb-0 sm:mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        <span class="text-[10px] sm:text-sm opacity-90 font-bold leading-none mt-1">${coord}</span>
                     </div>`;
             }
         }
