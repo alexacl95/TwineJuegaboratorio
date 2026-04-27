@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Operadores Lógicos: AND, OR y NOT</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { 
+            background-color: #f8fafc; 
+            font-family: system-ui, -apple-system, sans-serif; 
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop { animation: popIn 0.2s ease-out forwards; }
+
+        /* Estilos para los cables del circuito */
+        .wire { transition: stroke 0.3s ease; }
+        .wire-active { stroke: #10b981; filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.6)); }
+        .wire-inactive { stroke: #cbd5e1; }
+        
+        /* Efecto de bombilla encendida */
+        .bulb-on { 
+            fill: #fef08a; 
+            stroke: #eab308; 
+            filter: drop-shadow(0 0 15px rgba(234, 179, 8, 0.8)); 
+        }
+        .bulb-off { 
+            fill: #f1f5f9; 
+            stroke: #94a3b8; 
+        }
+
+        /* Ocultar barra de scroll en contenedores pequeños */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- CONSTANTES PARA BLOQUES LÓGICOS ---
+        const COLORS = [
+            { id: 'rojo', hex: '#ef4444', label: 'Rojos' }, 
+            { id: 'azul', hex: '#3b82f6', label: 'Azules' }, 
+            { id: 'amarillo', hex: '#eab308', label: 'Amarillos' }
+        ];
+        const SHAPES = [
+            { id: 'circulo', label: 'Círculos' }, 
+            { id: 'cuadrado', label: 'Cuadrados' }, 
+            { id: 'triangulo', label: 'Triángulos' }
+        ];
+
+        // --- COMPONENTE: INTERRUPTOR (TOGGLE) ---
+        const Switch = ({ label, active, onChange }) => (
+            <div className="flex flex-col items-center gap-2">
+                <span className="font-bold text-sm md:text-base text-slate-600">{label}</span>
+                <button 
+                    onClick={onChange}
+                    className={`relative w-16 h-8 rounded-full transition-colors duration-300 focus:outline-none shadow-inner ${active ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                >
+                    <div className={`absolute top-1 left-1 bg-white w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center text-[10px] font-black ${active ? 'translate-x-8 text-emerald-500' : 'translate-x-0 text-slate-400'}`}>
+                        {active ? 'V' : 'F'}
+                    </div>
+                </button>
+                <span className={`text-xs font-black uppercase tracking-wider ${active ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    {active ? 'Verdadero' : 'Falso'}
+                </span>
+            </div>
+        );
+
+        // --- COMPONENTE: BLOQUE LÓGICO SVG ---
+        const LogicalBlock = ({ block, onClick }) => {
+            return (
+                <div 
+                    onClick={() => onClick(block.id)} 
+                    className="cursor-pointer transform hover:scale-110 hover:-translate-y-1 transition-all flex justify-center items-center p-3 bg-white rounded-xl shadow-sm border-2 border-slate-200 hover:border-indigo-400 hover:shadow-md animate-pop"
+                >
+                    <svg width="40" height="40" viewBox="0 0 24 24" className="drop-shadow-sm">
+                        {block.shape.id === 'circulo' && <circle cx="12" cy="12" r="10" fill={block.color.hex} />}
+                        {block.shape.id === 'cuadrado' && <rect x="2" y="2" width="20" height="20" rx="4" fill={block.color.hex} />}
+                        {block.shape.id === 'triangulo' && <polygon points="12,2 22,22 2,22" fill={block.color.hex} strokeLinejoin="round" strokeWidth="2" stroke={block.color.hex} />}
+                    </svg>
+                </div>
+            )
+        };
+
+        // --- COMPONENTE PRINCIPAL ---
+        function App() {
+            const [activeTab, setActiveTab] = useState('explanation'); // Inicia por defecto en el simulador
+            
+            // Estado para la explicación gráfica
+            const [gateMode, setGateMode] = useState('AND'); // 'AND' | 'OR' | 'NOT'
+            const [inputA, setInputA] = useState(false);
+            const [inputB, setInputB] = useState(false);
+
+            // Estado para los ejercicios
+            const [answersAND, setAnswersAND] = useState([null, null, null, null]);
+            const [answersOR, setAnswersOR] = useState([null, null, null, null]);
+            const [answersNOT, setAnswersNOT] = useState([null, null]);
+            const [exerciseStatus, setExerciseStatus] = useState(null);
+
+            // Estado para el Modo de Bloques Lógicos (Frascos)
+            const [blocks, setBlocks] = useState([]);
+            const [blockRule, setBlockRule] = useState(null);
+            const [blockFeedback, setBlockFeedback] = useState(null);
+            const [blockOpMode, setBlockOpMode] = useState('AND');
+            const [expectedCount, setExpectedCount] = useState(0); // Para saber si es un conjunto vacío
+
+            // --- LÓGICA DEL SIMULADOR GRÁFICO ---
+            let output = false;
+            if (gateMode === 'AND') output = inputA && inputB;
+            else if (gateMode === 'OR') output = inputA || inputB;
+            else if (gateMode === 'NOT') output = !inputA; 
+
+            const getExplanationText = () => {
+                if (gateMode === 'AND') {
+                    if (inputA && inputB) return "¡Excelente! Ambas condiciones son Verdaderas, por lo tanto, la compuerta AND deja pasar la energía y el resultado es VERDADERO.";
+                    if (!inputA && !inputB) return "Ambas condiciones son Falsas. La compuerta AND requiere que TODAS las condiciones se cumplan. El resultado es FALSO.";
+                    return "Solo una condición es Verdadera. La compuerta AND es estricta: si falta aunque sea una condición, el resultado completo es FALSO.";
+                } else if (gateMode === 'OR') {
+                    if (!inputA && !inputB) return "Ambas condiciones son Falsas. Como ninguna se cumple, la compuerta OR no tiene de dónde sacar energía. El resultado es FALSO.";
+                    if (inputA && inputB) return "¡Sobrado! Ambas condiciones son Verdaderas. La compuerta OR solo necesitaba una, pero con dos también funciona. El resultado es VERDADERO.";
+                    return "¡Muy bien! Una de las condiciones es Verdadera. La compuerta OR es flexible: con que al menos UNA se cumpla, el resultado es VERDADERO.";
+                } else if (gateMode === 'NOT') {
+                    if (inputA) return "La condición de entrada es Verdadera. La compuerta NOT actúa como un inversor: niega la señal entrante. Por lo tanto, el resultado es FALSO.";
+                    return "La condición de entrada es Falsa. La compuerta NOT invierte la señal vacía en energía positiva, transformando lo Falso en Verdadero. El resultado es VERDADERO.";
+                }
+            };
+
+            // --- LÓGICA DE EJERCICIOS ---
+            const truthTableData = [
+                { a: true, b: true, and: true, or: true },
+                { a: true, b: false, and: false, or: true },
+                { a: false, b: true, and: false, or: true },
+                { a: false, b: false, and: false, or: false }
+            ];
+            const truthTableDataNOT = [
+                { a: true, not: false },
+                { a: false, not: true }
+            ];
+
+            const handleAnswerSelect = (gate, index, value) => {
+                setExerciseStatus(null);
+                if (gate === 'AND') {
+                    const newAns = [...answersAND]; newAns[index] = value; setAnswersAND(newAns);
+                } else if (gate === 'OR') {
+                    const newAns = [...answersOR]; newAns[index] = value; setAnswersOR(newAns);
+                } else if (gate === 'NOT') {
+                    const newAns = [...answersNOT]; newAns[index] = value; setAnswersNOT(newAns);
+                }
+            };
+
+            const verifyExercises = () => {
+                if (answersAND.includes(null) || answersOR.includes(null) || answersNOT.includes(null)) {
+                    alert("Por favor, completa todas las filas de las tres tablas antes de verificar."); return;
+                }
+                let allCorrect = true;
+                truthTableData.forEach((row, i) => {
+                    if (answersAND[i] !== row.and) allCorrect = false;
+                    if (answersOR[i] !== row.or) allCorrect = false;
+                });
+                truthTableDataNOT.forEach((row, i) => {
+                    if (answersNOT[i] !== row.not) allCorrect = false;
+                });
+                setExerciseStatus(allCorrect ? 'success' : 'error');
+            };
+
+            // --- LÓGICA DE BLOQUES LÓGICOS (ACTUALIZADA PARA MEZCLAR FORMAS Y COLORES) ---
+            const initBlocksGame = (op = blockOpMode) => {
+                setBlockOpMode(op);
+                setBlockFeedback(null);
+                
+                // Combinar todos los atributos en un solo arreglo
+                const allAttributes = [
+                    ...COLORS.map(c => ({...c, type: 'color'})),
+                    ...SHAPES.map(s => ({...s, type: 'shape'}))
+                ];
+
+                // Elegir dos atributos al azar que sean diferentes entre sí
+                const attr1 = allAttributes[Math.floor(Math.random() * allAttributes.length)];
+                let attr2 = allAttributes[Math.floor(Math.random() * allAttributes.length)];
+                while (attr1.id === attr2.id) {
+                    attr2 = allAttributes[Math.floor(Math.random() * allAttributes.length)];
+                }
+
+                setBlockRule({ operator: op, cond1: attr1, cond2: attr2 });
+
+                // Generar 12 bloques aleatorios
+                let newBlocks = [];
+                for(let i = 0; i < 12; i++) {
+                    newBlocks.push({
+                        id: i,
+                        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                        shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
+                        inJar: false
+                    });
+                }
+
+                // Forzar que exista al menos 1 bloque válido (Si la lógica lo permite)
+                // Ej: Si es AND y nos piden "Rojos AND Azules" es imposible forzarlo, el resultado es vacío.
+                if (op === 'AND' && attr1.type !== attr2.type) {
+                    newBlocks[0].color = attr1.type === 'color' ? COLORS.find(c=>c.id===attr1.id) : COLORS.find(c=>c.id===attr2.id);
+                    newBlocks[0].shape = attr1.type === 'shape' ? SHAPES.find(s=>s.id===attr1.id) : SHAPES.find(s=>s.id===attr2.id);
+                } else if (op === 'OR') {
+                    if (attr1.type === 'color') newBlocks[0].color = COLORS.find(c=>c.id===attr1.id);
+                    else newBlocks[0].shape = SHAPES.find(s=>s.id===attr1.id);
+                } else if (op === 'NOT') {
+                    // Nos aseguramos que al menos uno NO cumpla la condición 1
+                    if (attr1.type === 'color') newBlocks[0].color = COLORS.find(c=>c.id!==attr1.id);
+                    else newBlocks[0].shape = SHAPES.find(s=>s.id!==attr1.id);
+                }
+                
+                // Mezclar orden visual de los bloques
+                newBlocks.sort(() => Math.random() - 0.5);
+                setBlocks(newBlocks);
+                setExpectedCount(0); // Se recalculará en la verificación
+            };
+
+            // Iniciar bloques la primera vez que se abre la pestaña
+            useEffect(() => {
+                if (activeTab === 'blocks' && !blockRule) initBlocksGame();
+            }, [activeTab]);
+
+            const toggleBlockJar = (id) => {
+                setBlockFeedback(null);
+                setBlocks(blocks.map(b => b.id === id ? { ...b, inJar: !b.inJar } : b));
+            };
+
+            const evalCond = (block, cond) => {
+                if (cond.type === 'color') return block.color.id === cond.id;
+                if (cond.type === 'shape') return block.shape.id === cond.id;
+            };
+
+            const verifyBlocksJar = () => {
+                let isCorrect = true;
+                let hasAddedSomething = false;
+                let validBlocks = 0;
+
+                blocks.forEach(b => {
+                    let shouldBeInJar = false;
+                    const val1 = evalCond(b, blockRule.cond1);
+                    const val2 = evalCond(b, blockRule.cond2);
+
+                    if (blockRule.operator === 'AND') {
+                        shouldBeInJar = val1 && val2;
+                    } else if (blockRule.operator === 'OR') {
+                        shouldBeInJar = val1 || val2;
+                    } else if (blockRule.operator === 'NOT') {
+                        shouldBeInJar = !val1; // El operador NOT solo evalúa la primera condición visualmente
+                    }
+
+                    if (shouldBeInJar) validBlocks++;
+                    if (b.inJar) hasAddedSomething = true;
+                    if (b.inJar !== shouldBeInJar) isCorrect = false;
+                });
+
+                setExpectedCount(validBlocks);
+
+                // Si hay bloques que pertenecen al frasco pero no metieron ninguno
+                if (!hasAddedSomething && validBlocks > 0) {
+                    alert("Aún no has metido ningún bloque válido en el frasco.");
+                    return;
+                }
+
+                setBlockFeedback(isCorrect ? 'success' : 'error');
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    
+                    {/* ENCABEZADO */}
+                    <header className="bg-indigo-700 text-white p-4 md:p-6 shadow-md text-center shrink-0">
+                        <h1 className="text-2xl md:text-4xl font-black tracking-tight mb-1 md:mb-2">Compuertas Lógicas</h1>
+                        <p className="text-sm md:text-base text-indigo-200 font-medium">Comprende cómo toman decisiones las máquinas</p>
+                    </header>
+
+                    {/* NAVEGACIÓN (TABS) */}
+                    <div className="flex justify-center bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm shrink-0 overflow-x-auto no-scrollbar">
+                        <div className="flex w-full max-w-5xl min-w-max">
+                            <button 
+                                onClick={() => setActiveTab('explanation')}
+                                className={`px-4 sm:px-6 py-3 text-sm md:text-base font-bold transition-colors border-b-4 ${activeTab === 'explanation' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:text-indigo-600 hover:bg-slate-50'}`}
+                            >
+                                🔍 Simulador Gráfico
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('exercise')}
+                                className={`px-4 sm:px-6 py-3 text-sm md:text-base font-bold transition-colors border-b-4 ${activeTab === 'exercise' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:text-indigo-600 hover:bg-slate-50'}`}
+                            >
+                                📝 Ejercicios de Tablas
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('blocks')}
+                                className={`px-4 sm:px-6 py-3 text-sm md:text-base font-bold transition-colors border-b-4 ${activeTab === 'blocks' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:text-indigo-600 hover:bg-slate-50'}`}
+                            >
+                                🪣 Bloques Lógicos
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* CONTENIDO PRINCIPAL */}
+                    <main className="flex-grow p-4 md:p-6 flex justify-center items-start overflow-y-auto">
+                        <div className="w-full max-w-5xl">
+                            
+                            {/* --- PESTAÑA 1: SIMULADOR --- */}
+                            {activeTab === 'explanation' && (
+                                <div className="animate-fade-in space-y-6">
+                                    <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-slate-200">
+                                        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                                            <div className="text-center md:text-left">
+                                                <h2 className="text-2xl font-black text-slate-800">Simulador de Lógica</h2>
+                                                <p className="text-slate-500 text-sm">Prueba encendiendo y apagando las condiciones.</p>
+                                            </div>
+                                            
+                                            {/* Selector de Compuerta */}
+                                            <div className="flex flex-wrap justify-center gap-2 bg-slate-100 p-2 rounded-xl">
+                                                <button onClick={() => setGateMode('AND')} className={`px-4 sm:px-6 py-2 rounded-lg font-black transition-all ${gateMode === 'AND' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
+                                                    AND (Y)
+                                                </button>
+                                                <button onClick={() => setGateMode('OR')} className={`px-4 sm:px-6 py-2 rounded-lg font-black transition-all ${gateMode === 'OR' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
+                                                    OR (O)
+                                                </button>
+                                                <button onClick={() => setGateMode('NOT')} className={`px-4 sm:px-6 py-2 rounded-lg font-black transition-all ${gateMode === 'NOT' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
+                                                    NOT (NO)
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Área Gráfica del Circuito */}
+                                        <div className="relative bg-slate-50 rounded-2xl p-4 md:p-8 border border-slate-200 mb-8 overflow-hidden min-h-[220px] flex items-center">
+                                            <div className="flex items-center justify-between relative z-10 w-full">
+                                                
+                                                {/* Entradas */}
+                                                <div className="flex flex-col gap-12 justify-center h-full w-32 relative">
+                                                    <Switch label="Condición A" active={inputA} onChange={() => setInputA(!inputA)} />
+                                                    {gateMode !== 'NOT' && (
+                                                        <Switch label="Condición B" active={inputB} onChange={() => setInputB(!inputB)} />
+                                                    )}
+                                                </div>
+
+                                                {/* Compuerta SVG */}
+                                                <div className="relative flex flex-col items-center">
+                                                    <svg className="absolute w-32 h-40 -left-28 -top-4 pointer-events-none" style={{zIndex:-1}}>
+                                                        {gateMode === 'NOT' ? (
+                                                            <path d="M 0 30 C 50 30, 50 70, 110 70" fill="none" strokeWidth="6" className={`wire ${inputA ? 'wire-active' : 'wire-inactive'}`} />
+                                                        ) : (
+                                                            <React.Fragment>
+                                                                <path d="M 0 30 C 50 30, 50 70, 110 70" fill="none" strokeWidth="6" className={`wire ${inputA ? 'wire-active' : 'wire-inactive'}`} />
+                                                                <path d="M 0 130 C 50 130, 50 90, 110 90" fill="none" strokeWidth="6" className={`wire ${inputB ? 'wire-active' : 'wire-inactive'}`} />
+                                                            </React.Fragment>
+                                                        )}
+                                                    </svg>
+                                                    
+                                                    <div className={`w-24 h-24 rounded-2xl flex flex-col items-center justify-center font-black text-2xl text-white shadow-xl z-10 transition-colors duration-300 ${gateMode === 'AND' ? 'bg-indigo-600' : gateMode === 'OR' ? 'bg-amber-500' : 'bg-purple-600'}`}>
+                                                        {gateMode}
+                                                        <span className="text-[10px] uppercase font-bold opacity-80 tracking-widest mt-1">Compuerta</span>
+                                                    </div>
+
+                                                    <svg className="absolute w-24 h-8 -right-24 top-8 pointer-events-none" style={{zIndex:-1}}>
+                                                        <line x1="0" y1="16" x2="100" y2="16" fill="none" strokeWidth="6" className={`wire ${output ? 'wire-active' : 'wire-inactive'}`} />
+                                                    </svg>
+                                                </div>
+
+                                                {/* Salida (Bombilla) */}
+                                                <div className="flex flex-col items-center gap-2 pr-4 md:pr-8 w-32">
+                                                    <span className="font-bold text-sm md:text-base text-slate-600">Resultado</span>
+                                                    <svg viewBox="0 0 24 24" className={`w-16 h-16 transition-all duration-300 ${output ? 'bulb-on' : 'bulb-off'}`} strokeWidth="1.5">
+                                                        <path d="M9 18h6m-5 3h4m-7-9a4 4 0 118 0c0 1.5-1 2.5-1 4v1H9v-1c0-1.5-1-2.5-1-4z" strokeLinecap="round" strokeLinejoin="round"/>
+                                                    </svg>
+                                                    <span className={`text-sm md:text-base font-black uppercase tracking-wider ${output ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                                        {output ? 'Verdadero' : 'Falso'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className={`p-5 rounded-xl border-l-4 transition-colors duration-300 ${output ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-slate-100 border-slate-400 text-slate-600'}`}>
+                                            <h3 className="font-black mb-2 flex items-center gap-2">
+                                                <span>{output ? '💡' : '🔌'}</span> Análisis de la Máquina:
+                                            </h3>
+                                            <p className="text-sm md:text-base leading-relaxed">
+                                                {getExplanationText()}
+                                            </p>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- PESTAÑA 2: EJERCICIOS --- */}
+                            {activeTab === 'exercise' && (
+                                <div className="animate-fade-in space-y-8">
+                                    <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-slate-200">
+                                        <div className="mb-6 text-center">
+                                            <h2 className="text-2xl md:text-3xl font-black text-slate-800 mb-2">Tablas de Verdad</h2>
+                                            <p className="text-slate-500 text-sm md:text-base">Completa la columna de 'Resultado' analizando si la condición final es Verdadera (V) o Falsa (F).</p>
+                                        </div>
+
+                                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                                            
+                                            {/* TABLA AND */}
+                                            <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                                                <div className="bg-indigo-600 text-white font-black p-4 text-center text-lg">
+                                                    Operador AND (Y)
+                                                </div>
+                                                <table className="w-full text-center">
+                                                    <thead className="bg-slate-100 text-slate-600 text-xs md:text-sm uppercase">
+                                                        <tr>
+                                                            <th className="p-3 border-b border-slate-200">Cond. A</th>
+                                                            <th className="p-3 border-b border-slate-200">Cond. B</th>
+                                                            <th className="p-3 border-b border-slate-200 text-indigo-700">Resultado</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="text-sm md:text-base font-bold text-slate-700">
+                                                        {truthTableData.map((row, i) => (
+                                                            <tr key={`and-${i}`} className={`border-b border-slate-100 ${exerciseStatus === 'error' && answersAND[i] !== row.and ? 'bg-rose-50' : ''}`}>
+                                                                <td className="p-3">{row.a ? 'V' : 'F'}</td>
+                                                                <td className="p-3">{row.b ? 'V' : 'F'}</td>
+                                                                <td className="p-2">
+                                                                    <div className="flex justify-center gap-1">
+                                                                        <button onClick={() => handleAnswerSelect('AND', i, true)} className={`w-8 h-8 rounded-md transition-colors ${answersAND[i] === true ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>V</button>
+                                                                        <button onClick={() => handleAnswerSelect('AND', i, false)} className={`w-8 h-8 rounded-md transition-colors ${answersAND[i] === false ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>F</button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            {/* TABLA OR */}
+                                            <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                                                <div className="bg-amber-500 text-white font-black p-4 text-center text-lg">
+                                                    Operador OR (O)
+                                                </div>
+                                                <table className="w-full text-center">
+                                                    <thead className="bg-slate-100 text-slate-600 text-xs md:text-sm uppercase">
+                                                        <tr>
+                                                            <th className="p-3 border-b border-slate-200">Cond. A</th>
+                                                            <th className="p-3 border-b border-slate-200">Cond. B</th>
+                                                            <th className="p-3 border-b border-slate-200 text-amber-600">Resultado</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="text-sm md:text-base font-bold text-slate-700">
+                                                        {truthTableData.map((row, i) => (
+                                                            <tr key={`or-${i}`} className={`border-b border-slate-100 ${exerciseStatus === 'error' && answersOR[i] !== row.or ? 'bg-rose-50' : ''}`}>
+                                                                <td className="p-3">{row.a ? 'V' : 'F'}</td>
+                                                                <td className="p-3">{row.b ? 'V' : 'F'}</td>
+                                                                <td className="p-2">
+                                                                    <div className="flex justify-center gap-1">
+                                                                        <button onClick={() => handleAnswerSelect('OR', i, true)} className={`w-8 h-8 rounded-md transition-colors ${answersOR[i] === true ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>V</button>
+                                                                        <button onClick={() => handleAnswerSelect('OR', i, false)} className={`w-8 h-8 rounded-md transition-colors ${answersOR[i] === false ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>F</button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            {/* TABLA NOT */}
+                                            <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm lg:col-span-1 md:col-span-2 lg:mx-0 mx-auto w-full lg:w-auto max-w-md lg:max-w-none">
+                                                <div className="bg-purple-600 text-white font-black p-4 text-center text-lg">
+                                                    Operador NOT (NO)
+                                                </div>
+                                                <table className="w-full text-center h-full">
+                                                    <thead className="bg-slate-100 text-slate-600 text-xs md:text-sm uppercase">
+                                                        <tr>
+                                                            <th className="p-3 border-b border-slate-200">Cond. A</th>
+                                                            <th className="p-3 border-b border-slate-200 text-purple-700">Resultado</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="text-sm md:text-base font-bold text-slate-700">
+                                                        {truthTableDataNOT.map((row, i) => (
+                                                            <tr key={`not-${i}`} className={`border-b border-slate-100 ${exerciseStatus === 'error' && answersNOT[i] !== row.not ? 'bg-rose-50' : ''}`}>
+                                                                <td className="p-3">{row.a ? 'V' : 'F'}</td>
+                                                                <td className="p-2">
+                                                                    <div className="flex justify-center gap-1">
+                                                                        <button onClick={() => handleAnswerSelect('NOT', i, true)} className={`w-8 h-8 rounded-md transition-colors ${answersNOT[i] === true ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>V</button>
+                                                                        <button onClick={() => handleAnswerSelect('NOT', i, false)} className={`w-8 h-8 rounded-md transition-colors ${answersNOT[i] === false ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>F</button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                        <tr className="border-b border-slate-100 hidden lg:table-row"><td colSpan="2" className="p-3 text-transparent">-</td></tr>
+                                                        <tr className="hidden lg:table-row"><td colSpan="2" className="p-3 text-transparent">-</td></tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                        </div>
+
+                                        <div className="mt-8 flex flex-col items-center">
+                                            {exerciseStatus === 'success' && (
+                                                <div className="mb-6 p-4 bg-emerald-100 text-emerald-800 border-2 border-emerald-400 rounded-xl font-black text-center w-full max-w-md animate-fade-in text-lg">
+                                                    🎉 ¡Felicidades! Todas las tablas están correctas.
+                                                </div>
+                                            )}
+                                            {exerciseStatus === 'error' && (
+                                                <div className="mb-6 p-4 bg-rose-100 text-rose-800 border-2 border-rose-400 rounded-xl font-bold text-center w-full max-w-md animate-fade-in">
+                                                    ❌ Hay errores. Revisa las filas marcadas en rojo e intenta de nuevo.
+                                                </div>
+                                            )}
+
+                                            <button onClick={verifyExercises} className="w-full md:w-auto px-10 py-4 bg-slate-800 hover:bg-slate-900 text-white font-black rounded-xl shadow-lg transition-transform transform hover:-translate-y-1 text-lg">
+                                                Verificar Respuestas
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- PESTAÑA 3: BLOQUES LÓGICOS (AGRUPACIÓN POR FRASCOS) --- */}
+                            {activeTab === 'blocks' && blockRule && (
+                                <div className="animate-fade-in space-y-6">
+                                    
+                                    <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-slate-200">
+                                        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                                            <div className="text-center md:text-left">
+                                                <h2 className="text-2xl font-black text-slate-800 flex items-center justify-center md:justify-start gap-2">
+                                                    🪣 Agrupación en Frascos
+                                                </h2>
+                                                <p className="text-slate-500 text-sm">Clasifica los bloques geométricos basándote en la regla del operador.</p>
+                                            </div>
+                                            
+                                            {/* Selector de Compuerta de Frascos */}
+                                            <div className="flex flex-wrap justify-center gap-2 bg-slate-100 p-2 rounded-xl">
+                                                <button onClick={() => initBlocksGame('AND')} className={`px-4 sm:px-6 py-2 rounded-lg font-black transition-all ${blockOpMode === 'AND' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>AND (Y)</button>
+                                                <button onClick={() => initBlocksGame('OR')} className={`px-4 sm:px-6 py-2 rounded-lg font-black transition-all ${blockOpMode === 'OR' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>OR (O)</button>
+                                                <button onClick={() => initBlocksGame('NOT')} className={`px-4 sm:px-6 py-2 rounded-lg font-black transition-all ${blockOpMode === 'NOT' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>NOT (NO)</button>
+                                            </div>
+                                        </div>
+
+                                        {/* REGLA ACTUAL */}
+                                        <div className={`p-4 rounded-2xl border-2 mb-6 text-center shadow-sm ${blockOpMode === 'AND' ? 'bg-indigo-50 border-indigo-200 text-indigo-900' : blockOpMode === 'OR' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-purple-50 border-purple-200 text-purple-900'}`}>
+                                            <span className="text-xs uppercase font-bold tracking-widest opacity-60 block mb-1">Regla del Frasco</span>
+                                            <span className="text-lg md:text-2xl font-black">
+                                                {blockOpMode === 'AND' && <>Bloques que sean <span className="underline">{blockRule.cond1.label}</span> <strong>AND (Y)</strong> <span className="underline">{blockRule.cond2.label}</span></>}
+                                                {blockOpMode === 'OR' && <>Bloques que sean <span className="underline">{blockRule.cond1.label}</span> <strong>OR (O)</strong> <span className="underline">{blockRule.cond2.label}</span></>}
+                                                {blockOpMode === 'NOT' && <>Bloques que <strong>NOT (NO)</strong> sean <span className="underline">{blockRule.cond1.label}</span></>}
+                                            </span>
+                                        </div>
+
+                                        {/* ZONAS DE BLOQUES */}
+                                        <div className="grid md:grid-cols-2 gap-6">
+                                            
+                                            {/* ZONA 1: DISPONIBLES */}
+                                            <div className="bg-slate-100 p-4 rounded-2xl border border-slate-200 min-h-[250px]">
+                                                <h3 className="font-bold text-slate-500 text-sm uppercase tracking-wider mb-4 text-center">Bloques Disponibles</h3>
+                                                <div className="flex flex-wrap gap-3 justify-center items-center">
+                                                    {blocks.filter(b => !b.inJar).map(block => (
+                                                        <LogicalBlock key={block.id} block={block} onClick={toggleBlockJar} />
+                                                    ))}
+                                                    {blocks.filter(b => !b.inJar).length === 0 && (
+                                                        <span className="text-slate-400 italic text-sm mt-10">No hay más bloques.</span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* ZONA 2: EL FRASCO */}
+                                            <div className="bg-white p-4 rounded-2xl border-4 border-dashed border-slate-300 min-h-[250px] relative shadow-inner">
+                                                <h3 className="font-bold text-slate-500 text-sm uppercase tracking-wider mb-4 text-center">El Frasco (Seleccionados)</h3>
+                                                <div className="flex flex-wrap gap-3 justify-center items-center z-10 relative">
+                                                    {blocks.filter(b => b.inJar).map(block => (
+                                                        <LogicalBlock key={block.id} block={block} onClick={toggleBlockJar} />
+                                                    ))}
+                                                    {blocks.filter(b => b.inJar).length === 0 && (
+                                                        <span className="text-slate-400 italic text-sm mt-10 text-center w-full">Haz clic en los bloques<br/>para meterlos al frasco.</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* CONTROLES Y FEEDBACK */}
+                                        <div className="mt-8 flex flex-col items-center">
+                                            {blockFeedback === 'success' && expectedCount > 0 && (
+                                                <div className="mb-6 p-4 bg-emerald-100 text-emerald-800 border-2 border-emerald-400 rounded-xl font-black text-center w-full max-w-md animate-fade-in text-lg">
+                                                    🎉 ¡Excelente clasificación! El frasco contiene los elementos correctos.
+                                                </div>
+                                            )}
+                                            {blockFeedback === 'success' && expectedCount === 0 && (
+                                                <div className="mb-6 p-4 bg-emerald-100 text-emerald-800 border-2 border-emerald-400 rounded-xl font-black text-center w-full max-w-md animate-fade-in text-lg">
+                                                    🎉 ¡Excelente clasificación! ¡Te diste cuenta que ningún bloque cumple esta regla (Conjunto vacío)!
+                                                </div>
+                                            )}
+                                            {blockFeedback === 'error' && (
+                                                <div className="mb-6 p-4 bg-rose-100 text-rose-800 border-2 border-rose-400 rounded-xl font-bold text-center w-full max-w-md animate-fade-in">
+                                                    ❌ Clasificación incorrecta. Revisa si falta algún bloque o si metiste uno equivocado.
+                                                </div>
+                                            )}
+
+                                            <div className="flex gap-4 w-full md:w-auto justify-center">
+                                                <button onClick={() => initBlocksGame()} className="px-6 py-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors">
+                                                    🔄 Nueva Regla
+                                                </button>
+                                                <button onClick={verifyBlocksJar} className="px-10 py-4 bg-slate-800 hover:bg-slate-900 text-white font-black rounded-xl shadow-lg transition-transform transform hover:-translate-y-1 text-lg">
+                                                    Verificar Frasco
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
