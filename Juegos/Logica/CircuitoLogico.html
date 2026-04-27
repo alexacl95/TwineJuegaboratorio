@@ -32,7 +32,7 @@
             background-size: 24px 24px; 
         }
 
-        /* Line styles for the tree */
+        /* Estilos del grafo y conexiones */
         .tree-line {
             transition: stroke 0.3s ease, stroke-width 0.3s ease;
         }
@@ -57,6 +57,7 @@
             border-color: #ef4444;
             background-color: #fef2f2; /* red-50 */
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+            z-index: 25;
         }
 
         .node-box.current {
@@ -96,7 +97,7 @@
                 },
                 4: { 
                     title: 'Estación 4', operator: 'OR', conditions: ['Pelo', 'Nada'], question: '¿Tiene pelo OR sabe nadar?',
-                    paths: { yes: 5, no: 'error' } 
+                    paths: { yes: 5, no: 'roca' } 
                 },
                 5: { 
                     title: 'Estación 5', operator: '', conditions: ['¿De Colombia?'], question: '¿Es propio de Colombia?',
@@ -109,24 +110,23 @@
                 'aguila': { animal: 'Águila', eco: 'Páramos', emoji: '🦅', isLoop: false },
                 'nutria': { animal: 'Nutria', eco: 'Ríos', emoji: '🦦', isLoop: false },
                 'hipopotamo': { animal: 'Hipopótamo', eco: 'Sabana', emoji: '🦛', isLoop: false },
-                'error': { animal: 'Inválido', eco: 'Sin clasificar', emoji: '❌', isError: true, isLoop: false }
+                'roca': { animal: 'Una Roca', eco: 'Jardín Zen', emoji: '🪨', isError: false, isLoop: false, isRock: true }
             }
         };
 
-        // --- COMPONENTES DEL GRAFO ---
-        // Coordenadas más juntas y compactadas para aprovechar el espacio
+        // --- COMPONENTES DEL GRAFO JERÁRQUICO (ORTOGONAL) ---
         const points = {
-            1: [50, 12],   
-            2: [28, 38],   
-            4: [72, 38],   
-            3: [15, 64],   
-            'dragon': [42, 64], 
-            5: [60, 64],   
-            'error': [85, 64],
-            'pato': [6, 90],
-            'aguila': [24, 90],
-            'nutria': [50, 90],
-            'hipopotamo': [70, 90]
+            1: [50, 10],   
+            2: [25, 35],   
+            4: [75, 35],   
+            3: [12, 60],   
+            'dragon': [38, 60], 
+            5: [62, 60],   
+            'roca': [88, 60],
+            'pato': [4, 85],
+            'aguila': [20, 85],
+            'nutria': [54, 85],
+            'hipopotamo': [70, 85]
         };
 
         const pathLabels = [
@@ -137,49 +137,67 @@
             { from: 3, to: 'pato', label: "SÍ" },
             { from: 3, to: 'aguila', label: "NO" },
             { from: 4, to: 5, label: "SÍ" },
-            { from: 4, to: 'error', label: "NO" },
+            { from: 4, to: 'roca', label: "NO" },
             { from: 5, to: 'nutria', label: "SÍ" },
             { from: 5, to: 'hipopotamo', label: "NO" }
         ];
 
-        const SVGConnections = ({ history, isLooping }) => {
-            const isPathActive = (from, to) => {
+        const SVGConnections = ({ history, unlockedHistories, isLooping }) => {
+            const isPathInCurrent = (from, to) => {
                 for (let i = 0; i < history.length - 1; i++) {
                     if (String(history[i]) === String(from) && String(history[i+1]) === String(to)) return true;
                 }
                 return false;
             };
 
-            const drawLine = (from, to, type="normal") => {
+            const isPathInUnlocked = (from, to) => {
+                for (const h of unlockedHistories) {
+                    for (let i = 0; i < h.length - 1; i++) {
+                        if (String(h[i]) === String(from) && String(h[i+1]) === String(to)) return true;
+                    }
+                }
+                return false;
+            };
+
+            const drawCircuitLine = (from, to, type="normal") => {
                 if (!points[from] || !points[to]) return null;
                 
-                const [x1, y1] = points[from];
-                const [x2, y2] = points[to];
-                
-                const active = isPathActive(from, to);
-                const color = active ? "#ef4444" : "#94a3b8"; // Rojo o un gris más oscuro
-                const width = active ? "4" : "3"; // Líneas más gruesas
+                const activeCurrent = isPathInCurrent(from, to);
+                const activeUnlocked = isPathInUnlocked(from, to);
+                const visible = activeCurrent || activeUnlocked;
 
+                if (!visible) return null;
+
+                const color = activeCurrent ? "#ef4444" : "#fca5a5"; // Rojo intenso para actual, rosado para pasado
+                const width = activeCurrent ? "4" : "3"; 
+
+                // Línea de Bucle (Dragón conectando DIRECTAMENTE con el inicio)
                 if (type === "loop") {
+                    const loopClass = (activeCurrent && isLooping) ? "loop-active tree-line" : "tree-line opacity-60";
+                    const [x1, y1] = points[from];
+                    const [x2, y2] = points[to];
                     return (
                         <line 
                             key={`loop-${from}-${to}`}
-                            x1={`${x1}%`} y1={`${y1}%`} x2={`${x2}%`} y2={`${y2}%`}
-                            stroke={color} strokeWidth={width}
-                            strokeDasharray="8,8"
-                            className={active ? "loop-active tree-line" : "tree-line"}
-                            markerEnd={active ? "url(#arrowhead-active)" : "url(#arrowhead-inactive)"}
+                            x1={`${x1}%`} y1={`${y1}%`} x2={`${x2}%`} y2={`${y2}%`} 
+                            stroke={color} strokeWidth={width} 
+                            strokeDasharray="8,8" 
+                            className={loopClass} 
+                            markerEnd={activeCurrent ? "url(#arrowhead-active)" : "url(#arrowhead-past)"} 
                         />
                     );
                 }
 
+                // Línea Jerárquica Ortogonal
+                const [x1, y1] = points[from];
+                const [x2, y2] = points[to];
+                const midY = (y1 + y2) / 2;
                 return (
-                    <line 
-                        key={`line-${from}-${to}`}
-                        x1={`${x1}%`} y1={`${y1}%`} x2={`${x2}%`} y2={`${y2}%`} 
-                        stroke={color} strokeWidth={width}
-                        className="tree-line"
-                    />
+                    <g key={`line-${from}-${to}`} className="animate-fade-in">
+                        <line x1={`${x1}%`} y1={`${y1}%`} x2={`${x1}%`} y2={`${midY}%`} stroke={color} strokeWidth={width} className="tree-line" />
+                        <line x1={`${x1}%`} y1={`${midY}%`} x2={`${x2}%`} y2={`${midY}%`} stroke={color} strokeWidth={width} className="tree-line" />
+                        <line x1={`${x2}%`} y1={`${midY}%`} x2={`${x2}%`} y2={`${y2}%`} stroke={color} strokeWidth={width} className="tree-line" markerEnd={activeCurrent ? "url(#arrowhead-active)" : "url(#arrowhead-past)"} />
+                    </g>
                 );
             };
 
@@ -190,37 +208,43 @@
                             <marker id="arrowhead-active" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
                                 <polygon points="0 0, 8 3, 0 6" fill="#ef4444" />
                             </marker>
-                            <marker id="arrowhead-inactive" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-                                <polygon points="0 0, 8 3, 0 6" fill="#94a3b8" />
+                            <marker id="arrowhead-past" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                                <polygon points="0 0, 8 3, 0 6" fill="#fca5a5" />
                             </marker>
                         </defs>
                         
-                        {drawLine(1, 2)}
-                        {drawLine(1, 4)}
-                        {drawLine(2, 3)}
-                        {drawLine(2, 'dragon')}
-                        {drawLine(3, 'pato')}
-                        {drawLine(3, 'aguila')}
-                        {drawLine(4, 5)}
-                        {drawLine(4, 'error')}
-                        {drawLine(5, 'nutria')}
-                        {drawLine(5, 'hipopotamo')}
-                        {drawLine('dragon', 1, "loop")}
+                        {/* Renderizado de Trazos Ortogonales Dinámicos */}
+                        {drawCircuitLine(1, 2)}
+                        {drawCircuitLine(1, 4)}
+                        {drawCircuitLine(2, 3)}
+                        {drawCircuitLine(2, 'dragon')}
+                        {drawCircuitLine(3, 'pato')}
+                        {drawCircuitLine(3, 'aguila')}
+                        {drawCircuitLine(4, 5)}
+                        {drawCircuitLine(4, 'roca')}
+                        {drawCircuitLine(5, 'nutria')}
+                        {drawCircuitLine(5, 'hipopotamo')}
+                        {drawCircuitLine('dragon', 1, "loop")}
                     </svg>
 
-                    {/* Rótulos SÍ/NO */}
+                    {/* Rótulos SÍ/NO dinámicos */}
                     {pathLabels.map(({from, to, label}) => {
+                        const activeCurrent = isPathInCurrent(from, to);
+                        const activeUnlocked = isPathInUnlocked(from, to);
+                        const visible = activeCurrent || activeUnlocked;
+                        
+                        if (!visible) return null;
+
                         const [x1, y1] = points[from];
                         const [x2, y2] = points[to];
                         const midX = (x1 + x2) / 2;
                         const midY = (y1 + y2) / 2;
-                        const active = isPathActive(from, to);
 
                         return (
                             <div 
                                 key={`label-${from}-${to}`}
-                                className={`absolute z-10 px-2 py-1 rounded-md text-xs md:text-sm font-black border transition-colors shadow-sm ${
-                                    active ? 'bg-red-100 text-red-700 border-red-300' : 'bg-white text-slate-500 border-slate-300'
+                                className={`absolute z-10 px-2 py-0.5 rounded-md text-xs md:text-sm font-black border shadow-sm animate-fade-in ${
+                                    activeCurrent ? 'bg-red-100 text-red-700 border-red-300' : 'bg-red-50 text-red-400 border-red-200 opacity-90'
                                 }`}
                                 style={{ top: `${midY}%`, left: `${midX}%`, transform: 'translate(-50%, -50%)' }}
                             >
@@ -239,11 +263,12 @@
             const [history, setHistory] = useState([1]); 
             const [finalResult, setFinalResult] = useState(null);
             
+            // Memoria de elementos y rutas desbloqueadas globalmente
             const [unlockedAnimals, setUnlockedAnimals] = useState([]);
+            const [unlockedHistories, setUnlockedHistories] = useState([]);
             
             const scrollContainerRef = useRef(null);
 
-            // Centrar mapa
             useEffect(() => {
                 if (gameState === 'playing' && scrollContainerRef.current) {
                     const container = scrollContainerRef.current;
@@ -271,15 +296,16 @@
                     setCurrentNode(nextNode);
                     const resultData = LOGIC_FLOW.results[nextNode];
                     
-                    setUnlockedAnimals(prev => {
-                        if (!prev.includes(nextNode)) {
-                            return [...prev, nextNode];
-                        }
-                        return prev;
+                    // Registrar el animal como desbloqueado
+                    setUnlockedAnimals(prev => prev.includes(nextNode) ? prev : [...prev, nextNode]);
+                    
+                    // Registrar la ruta como desbloqueada en la memoria visual
+                    setUnlockedHistories(prev => {
+                        const exists = prev.some(h => h.join(',') === newHistory.join(','));
+                        return exists ? prev : [...prev, newHistory];
                     });
 
                     if (resultData.isLoop) {
-                        // Cambiamos a estado looping, pero ahora no regresará automáticamente
                         setGameState('looping');
                     } else {
                         setFinalResult(resultData);
@@ -291,7 +317,6 @@
             };
 
             const handleContinueLoop = () => {
-                // Función para el botón del bucle que permite continuar manualmente
                 setHistory(prev => [...prev, 1]);
                 setCurrentNode(1);
                 setGameState('playing');
@@ -339,33 +364,44 @@
                 );
             }
 
-            const isNodeVisited = (id) => history.includes(id);
             const isNodeCurrent = (id) => currentNode === id;
             
-            // Cajas de Estaciones (Sin opacidad, sin título "Estación X")
+            // Cajas de Estaciones (Revelación Dinámica con memoria de rutas previas)
             const renderStation = (id, top, left) => {
                 const node = LOGIC_FLOW.nodes[id];
                 if (!node) return null;
                 
-                const visited = isNodeVisited(id);
+                const inCurrentPath = history.includes(id);
+                const inUnlockedPath = unlockedHistories.some(h => h.includes(id));
                 const current = isNodeCurrent(id);
                 
-                let boxClass = `node-box bg-white border-2 rounded-xl px-2 py-1.5 md:px-3 md:py-2 text-center shadow-md w-[120px] md:w-[150px] `;
-                if (current) boxClass += "current ";
-                else if (visited) boxClass += "active text-red-700 ";
-                else boxClass += "border-slate-300 "; // Quitamos la opacidad
+                if (!inCurrentPath && !inUnlockedPath && !current) return null; // No se ha descubierto nunca
+
+                let boxClass = `node-box border-2 rounded-xl px-2 py-1.5 md:px-3 md:py-2 text-center shadow-md w-[120px] md:w-[150px] animate-fade-in `;
+                
+                if (current) {
+                    boxClass += "bg-white current ";
+                } else if (inCurrentPath) {
+                    boxClass += "bg-fef2f2 border-red-500 text-red-700 active ";
+                } else if (inUnlockedPath) {
+                    boxClass += "bg-red-50 border-red-300 text-red-500 opacity-90 "; // Rutas descubiertas anteriormente
+                }
 
                 return (
                     <div key={`station-${id}`} className={boxClass} style={{ top: `${top}%`, left: `${left}%` }}>
                         {node.operator && (
                             <div className="flex justify-center mb-1">
-                                <span className={`text-[10px] md:text-xs font-black px-1.5 py-0.5 rounded leading-none ${visited ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-500'}`}>
+                                <span className={`text-[10px] md:text-xs font-black px-1.5 py-0.5 rounded leading-none ${
+                                    inCurrentPath ? 'bg-red-100 text-red-800' : 'bg-red-50 text-red-500 opacity-80'
+                                }`}>
                                     {node.conditions.join(` ${node.operator} `)}
                                 </span>
                             </div>
                         )}
                         {!node.operator && (
-                            <div className={`text-sm md:text-base font-black leading-tight ${visited ? 'text-red-800' : 'text-slate-600'}`}>
+                            <div className={`text-sm md:text-base font-black leading-tight ${
+                                inCurrentPath ? 'text-red-800' : 'text-red-500 opacity-80'
+                            }`}>
                                 {node.conditions[0]}
                             </div>
                         )}
@@ -373,40 +409,38 @@
                 );
             };
 
-            // Cajas de Resultados (Sin opacidad para los no descubiertos)
+            // Cajas de Resultados (Revelación Dinámica)
             const renderResultBox = (id, top, left) => {
                 const result = LOGIC_FLOW.results[id];
-                const visited = isNodeVisited(id);
+                const inCurrentPath = history.includes(id);
                 const isUnlocked = unlockedAnimals.includes(id);
                 
-                if (!visited && !isUnlocked) {
-                    return (
-                        <div 
-                            key={`result-${id}`}
-                            className="node-box bg-slate-100 border-2 border-dashed border-slate-300 rounded-xl w-[70px] h-[70px] md:w-[90px] md:h-[90px] flex items-center justify-center"
-                            style={{ top: `${top}%`, left: `${left}%` }}
-                        >
-                            <span className="text-2xl md:text-3xl text-slate-300 font-bold">❓</span>
-                        </div>
-                    );
+                if (!inCurrentPath && !isUnlocked) {
+                    return null; // Oculto hasta descubrirlo
                 }
 
                 const isError = result.isError || result.isLoop;
-                const boxAppearance = !visited ? "scale-95 z-10 bg-slate-50" : "scale-105 z-30 shadow-2xl bg-white"; // Sin opacidad
+                
+                // Si está desbloqueado pero no estamos pasando por él AHORA
+                const boxAppearance = !inCurrentPath 
+                    ? "opacity-60 scale-95 z-10 bg-slate-50 border-slate-300" 
+                    : `scale-105 z-30 shadow-2xl bg-white ${isError ? 'border-red-600 shadow-red-200' : 'border-emerald-500 shadow-emerald-200'}`;
 
                 return (
                     <div 
                         key={`result-${id}`}
-                        className={`node-box border-4 rounded-xl px-1 py-2 md:p-3 text-center shadow-lg w-[95px] md:w-[130px] animate-fade-in ${
-                            isError ? 'border-red-600 shadow-red-200' : 'border-emerald-500 shadow-emerald-200'
-                        } ${boxAppearance}`}
+                        className={`node-box border-4 rounded-xl px-1 py-2 md:p-3 text-center shadow-lg w-[95px] md:w-[130px] animate-fade-in ${boxAppearance}`}
                         style={{ top: `${top}%`, left: `${left}%` }}
                     >
                         <div className="text-4xl md:text-5xl mb-1 leading-none">{result.emoji}</div>
-                        <div className={`font-black text-xs md:text-base leading-tight tracking-tight ${isError ? 'text-red-700' : 'text-emerald-700'}`}>
+                        <div className={`font-black text-xs md:text-base leading-tight tracking-tight ${
+                            !inCurrentPath ? 'text-slate-500' : (isError ? 'text-red-700' : 'text-emerald-700')
+                        }`}>
                             {result.animal}
                         </div>
-                        <div className="text-[9px] md:text-xs text-slate-500 font-bold uppercase mt-1 leading-tight">
+                        <div className={`text-[9px] md:text-xs font-bold uppercase mt-1 leading-tight ${
+                            !inCurrentPath ? 'text-slate-400' : 'text-slate-500'
+                        }`}>
                             {result.eco}
                         </div>
                     </div>
@@ -441,24 +475,24 @@
                         </button>
                     </div>
 
-                    {/* ÁREA DEL TABLERO GRÁFICO (MÁS COMPACTA Y CON SCROLL) */}
+                    {/* ÁREA DEL TABLERO GRÁFICO */}
                     <div ref={scrollContainerRef} className="flex-grow overflow-auto bg-slate-50 scroll-smooth-mobile relative">
-                        <div className="relative bg-grid-pattern min-w-[700px] w-full h-[400px] md:h-full mx-auto" style={{ minHeight: '400px' }}>
-                            <SVGConnections history={history} isLooping={gameState === 'looping'} />
+                        <div className="relative bg-grid-pattern min-w-[1000px] w-full h-[400px] md:h-full mx-auto" style={{ minHeight: '400px' }}>
+                            <SVGConnections history={history} unlockedHistories={unlockedHistories} isLooping={gameState === 'looping'} />
                             
-                            {renderStation(1, 10, 50)}
-                            {renderStation(2, 35, 25)}
-                            {renderStation(4, 35, 75)}
-                            {renderStation(3, 60, 14)}
-                            {renderStation(5, 60, 64)}
+                            {renderStation(1, points[1][1], points[1][0])}
+                            {renderStation(2, points[2][1], points[2][0])}
+                            {renderStation(4, points[4][1], points[4][0])}
+                            {renderStation(3, points[3][1], points[3][0])}
+                            {renderStation(5, points[5][1], points[5][0])}
                             
-                            {renderResultBox('dragon', 60, 36)}
-                            {renderResultBox('error', 60, 86)}
+                            {renderResultBox('dragon', points['dragon'][1], points['dragon'][0])}
+                            {renderResultBox('roca', points['roca'][1], points['roca'][0])}
 
-                            {renderResultBox('pato', 85, 6)}
-                            {renderResultBox('aguila', 85, 22)}
-                            {renderResultBox('nutria', 85, 56)}
-                            {renderResultBox('hipopotamo', 85, 72)}
+                            {renderResultBox('pato', points['pato'][1], points['pato'][0])}
+                            {renderResultBox('aguila', points['aguila'][1], points['aguila'][0])}
+                            {renderResultBox('nutria', points['nutria'][1], points['nutria'][0])}
+                            {renderResultBox('hipopotamo', points['hipopotamo'][1], points['hipopotamo'][0])}
                         </div>
                     </div>
 
@@ -508,32 +542,37 @@
                             <div className="max-w-2xl mx-auto w-full text-center animate-fade-in">
                                 <div className="text-4xl md:text-5xl mb-1 md:mb-2">{finalResult.emoji}</div>
                                 <h3 className={`text-xs md:text-sm font-bold uppercase tracking-wider mb-1 ${finalResult.isError ? 'text-red-500' : 'text-slate-500'}`}>
-                                    {finalResult.isError ? 'Clasificación Fallida' : 'Clasificación Exitosa'}
+                                    {finalResult.isRock ? 'Clasificación... ¿Exitosa?' : (finalResult.isError ? 'Clasificación Fallida' : 'Clasificación Exitosa')}
                                 </h3>
                                 <p className={`text-xl md:text-3xl font-black mb-1 md:mb-2 ${finalResult.isError ? 'text-red-600' : 'text-emerald-600'}`}>
-                                    Animal: {finalResult.animal}
+                                    {finalResult.isRock ? 'Felicidades, eres: ' : 'Animal: '} {finalResult.animal}
                                 </p>
                                 <p className="text-sm md:text-base text-slate-700 font-medium mb-3 md:mb-5">
                                     Ecosistema: <span className="font-bold uppercase">{finalResult.eco}</span>
+                                    {finalResult.isRock && <span className="block mt-3 text-xs sm:text-sm text-slate-500 font-normal italic">No vuela, no nada, no tiene plumas, ni pelo... ¡Definitivamente es una roca! 🪨 Una mascota excelente y de bajo mantenimiento.</span>}
                                 </p>
                                 
                                 {!finalResult.isError && (
-                                    <div className="mb-4 bg-slate-50 border border-slate-100 rounded-xl p-2 md:p-3 max-w-xs mx-auto">
+                                    <div className="mb-4 bg-slate-50 border border-slate-100 rounded-xl p-2 md:p-3 max-w-sm mx-auto">
                                         <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-widest mb-1.5">Descubrimientos</p>
                                         <div className="flex justify-center gap-2 mb-1">
-                                            {['pato', 'aguila', 'nutria', 'hipopotamo', 'dragon'].map(animalKey => {
+                                            {['pato', 'aguila', 'nutria', 'hipopotamo', 'dragon', 'roca'].map(animalKey => {
                                                 const isUnlocked = unlockedAnimals.includes(animalKey);
                                                 const animalData = LOGIC_FLOW.results[animalKey];
                                                 return (
                                                     <div 
                                                         key={animalKey} 
                                                         className={`w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center text-base md:text-xl transition-all ${isUnlocked ? 'bg-indigo-100 shadow-sm' : 'bg-slate-200 grayscale filter'}`} 
+                                                        title={isUnlocked ? animalData.animal : 'Desconocido'}
                                                     >
                                                         {animalData.emoji}
                                                     </div>
                                                 );
                                             })}
                                         </div>
+                                        <p className="text-[10px] md:text-xs font-bold text-indigo-600 mt-2">
+                                            {unlockedAnimals.filter(a => ['pato', 'aguila', 'nutria', 'hipopotamo', 'dragon', 'roca'].includes(a)).length} de 6 finales descubiertos
+                                        </p>
                                     </div>
                                 )}
                                 
@@ -541,7 +580,7 @@
                                     onClick={startGame}
                                     className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-[0_4px_0_rgb(67,56,202)] hover:translate-y-[2px] hover:shadow-[0_2px_0_rgb(67,56,202)] font-black px-6 py-2 md:py-3 rounded-xl transition-all text-sm md:text-base w-full sm:w-auto"
                                 >
-                                    {unlockedAnimals.length >= 5 ? '🔄 Volver a jugar' : '🔍 Desbloquear otro animal'}
+                                    {unlockedAnimals.length >= 6 ? '🔄 Volver a jugar' : '🔍 Desbloquear otro animal'}
                                 </button>
                             </div>
                         )}
