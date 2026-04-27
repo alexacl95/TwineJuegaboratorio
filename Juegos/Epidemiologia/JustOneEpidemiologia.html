@@ -180,10 +180,14 @@
           
           const inputRef = useRef(null);
 
-          // Iniciar un nivel específico
+          // Iniciar un nivel específico con aleatorización
           const startLevel = (levelId) => {
             const level = levelsData.find(l => l.id === levelId);
-            setCurrentLevel(level);
+            
+            // Se hace una copia de las palabras y se ordenan aleatoriamente
+            const shuffledWords = [...level.words].sort(() => 0.5 - Math.random());
+            
+            setCurrentLevel({ ...level, words: shuffledWords });
             setCurrentWordIndex(0);
             setScore(0);
             setGuess('');
@@ -218,6 +222,12 @@
           const handleSkip = () => {
             setLastResult('skipped');
             setGameState('feedback');
+          };
+
+          // BOTÓN: Validar respuesta manual si la escribió similar
+          const handleOverrideCorrect = () => {
+            setScore(s => s + 1);
+            setLastResult('correct');
           };
 
           const nextWord = () => {
@@ -316,7 +326,6 @@
             );
           }
 
-          // Variables de acceso rápido para la pantalla de juego
           const currentWordData = currentLevel.words[currentWordIndex];
           const isPlaying = gameState === 'playing';
 
@@ -328,7 +337,7 @@
               <div className="w-full max-w-3xl flex justify-between items-center mb-8 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                 <div className="flex items-center gap-3">
                   <button 
-                    onClick={() => setGameState('menu')}
+                    onClick={() => { if(window.confirm('¿Seguro que deseas salir al menú?')) setGameState('menu'); }}
                     className="bg-slate-100 p-2 rounded-xl text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors"
                     title="Volver al menú"
                   >
@@ -354,131 +363,79 @@
                 </div>
               </div>
 
-              {/* Main Game Board */}
-              <div className="w-full max-w-3xl bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden relative flex flex-col">
-                
-                {/* Progress Bar */}
-                <div className="w-full h-1.5 bg-slate-100">
-                  <div 
-                    className="h-full bg-teal-500 transition-all duration-300 ease-out" 
-                    style={{ width: `${((currentWordIndex) / currentLevel.words.length) * 100}%` }}
-                  ></div>
-                </div>
-
-                <div className="p-6 md:p-10 flex-grow flex flex-col">
-                  
-                  <div className="text-center mb-10 flex-grow">
-                    <div className="inline-flex items-center gap-2 bg-slate-800 text-white px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-6 shadow-md">
-                      <span className="text-teal-400">⚡</span> Análisis de sistema completado
-                    </div>
-                    
-                    <p className="text-slate-500 text-sm mb-6 font-medium">
-                      El sistema extrajo 4 características clave. Identifica el concepto:
-                    </p>
-
-                    {/* Clues Container */}
-                    <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-2 animate-fade-in" key={currentWordIndex}>
-                      {currentWordData.clues.map((clue, idx) => (
-                        <div 
-                          key={idx} 
-                          className="bg-indigo-50 text-indigo-900 px-6 py-4 rounded-xl border-2 border-indigo-100 shadow-sm min-w-[120px] flex items-center justify-center"
-                        >
-                          <span className="text-lg md:text-xl font-black uppercase tracking-widest">{clue}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Input / Feedback Area */}
-                  <div className="min-h-[160px] flex flex-col justify-end">
-                    {isPlaying ? (
-                      <form onSubmit={handleGuessSubmit} className="max-w-md mx-auto w-full animate-fade-in">
-                        <div className="relative flex flex-col items-center">
-                          <input
-                            ref={inputRef}
-                            type="text"
-                            value={guess}
-                            onChange={(e) => setGuess(e.target.value)}
-                            placeholder="Escribe 1 palabra..."
-                            className="w-full text-center text-2xl font-black uppercase py-4 px-6 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:border-teal-500 focus:bg-white focus:shadow-md outline-none transition-all placeholder:text-slate-300 placeholder:normal-case placeholder:font-normal"
-                            autoComplete="off"
-                            spellCheck="false"
-                          />
-                        </div>
-                        
-                        <div className="flex gap-3 mt-4">
-                          <button 
-                            type="button"
-                            onClick={handleSkip}
-                            className="flex-1 py-3 px-4 bg-white border-2 border-slate-200 hover:bg-slate-100 text-slate-500 font-bold rounded-xl transition-colors"
-                          >
-                            Omitir
-                          </button>
-                          <button 
-                            type="submit"
-                            disabled={!guess.trim()}
-                            className="flex-[2] py-3 px-4 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold rounded-xl transition-all shadow-md disabled:shadow-none"
-                          >
-                            Verificar
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <div className="max-w-xl mx-auto w-full text-center animate-fade-in">
-                        {lastResult === 'correct' && (
-                          <div className="mb-5 p-5 bg-emerald-50 border-2 border-emerald-500 rounded-2xl text-emerald-800 shadow-sm relative overflow-hidden">
-                            <div className="absolute -right-4 -top-4 text-6xl opacity-20">✅</div>
-                            <h3 className="text-xl font-black uppercase mb-1 text-emerald-600 flex items-center justify-center gap-2">
-                              ✅ Procesamiento Correcto
-                            </h3>
-                          </div>
-                        )}
-                        
-                        {lastResult === 'incorrect' && (
-                          <div className="mb-5 p-5 bg-rose-50 border-2 border-rose-400 rounded-2xl text-rose-800 shadow-sm">
-                            <h3 className="text-lg font-black uppercase mb-2 text-rose-600 flex items-center justify-center gap-2">
-                              ❌ Error de validación
-                            </h3>
-                            <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Concepto objetivo:</p>
-                            <p className="text-3xl font-black uppercase tracking-widest text-slate-800">{currentWordData.word}</p>
-                            
-                            {/* EXPLICACION AÑADIDA PARA ERROR */}
-                            <div className="mt-4 p-4 bg-white bg-opacity-70 rounded-xl border border-rose-100 text-sm font-medium text-slate-700 text-left">
-                                <span className="text-rose-500 font-bold block mb-1">¿Por qué es {currentWordData.word}?</span> 
-                                {currentWordData.explanation}
-                            </div>
-                          </div>
-                        )}
-
-                        {lastResult === 'skipped' && (
-                          <div className="mb-5 p-5 bg-slate-50 border-2 border-slate-300 rounded-2xl text-slate-700 shadow-sm">
-                            <h3 className="text-lg font-black uppercase mb-2 text-slate-500 flex items-center justify-center gap-2">
-                              ⏭️ Concepto Omitido
-                            </h3>
-                            <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Concepto objetivo:</p>
-                            <p className="text-3xl font-black uppercase tracking-widest text-slate-800">{currentWordData.word}</p>
-
-                            {/* EXPLICACION AÑADIDA PARA OMITIDO */}
-                            <div className="mt-4 p-4 bg-white rounded-xl border border-slate-200 text-sm font-medium text-slate-600 text-left shadow-inner">
-                                <span className="text-slate-500 font-bold block mb-1">Explicación del concepto:</span> 
-                                {currentWordData.explanation}
-                            </div>
-                          </div>
-                        )}
-
-                        <button 
-                          onClick={nextWord}
-                          autoFocus
-                          className="w-full py-4 px-4 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
-                        >
-                          {currentWordIndex + 1 < currentLevel.words.length ? 'Siguiente Concepto' : 'Finalizar Nivel'} ➡️
-                        </button>
+              {/* Main Game Board (Modo Jugando) */}
+              {isPlaying && (
+                  <div className="w-full max-w-3xl bg-white rounded-3xl shadow-xl border border-slate-200 p-6 md:p-10 animate-fade-in flex flex-col justify-center">
+                      <h2 className="text-2xl font-black text-slate-700 text-center mb-6">Analizando pistas:</h2>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                          {currentWordData.clues.map((clue, i) => (
+                              <div key={i} className="bg-teal-50 border border-teal-100 p-4 rounded-xl text-center font-bold text-teal-800 text-xl shadow-sm tracking-wide">
+                                  {clue}
+                              </div>
+                          ))}
                       </div>
-                    )}
+                      
+                      <form onSubmit={handleGuessSubmit} className="flex flex-col gap-4">
+                          <input
+                              ref={inputRef}
+                              type="text"
+                              value={guess}
+                              onChange={e => setGuess(e.target.value)}
+                              className="w-full text-center text-2xl sm:text-3xl font-black p-4 rounded-2xl border-4 border-slate-200 focus:border-teal-500 focus:outline-none uppercase text-slate-800 transition-colors"
+                              placeholder="TU RESPUESTA"
+                          />
+                          <div className="flex gap-4 mt-2">
+                              <button type="button" onClick={handleSkip} className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-4 rounded-xl transition-colors shadow-sm">
+                                  Saltar
+                              </button>
+                              <button type="submit" className="flex-[2] bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl transition-colors shadow-md">
+                                  Adivinar
+                              </button>
+                          </div>
+                      </form>
                   </div>
+              )}
 
-                </div>
-              </div>
+              {/* Pantalla de Feedback (Resultado de la respuesta) */}
+              {!isPlaying && (
+                  <div className="w-full max-w-3xl bg-white rounded-3xl shadow-xl border border-slate-200 p-6 md:p-10 animate-fade-in text-center flex flex-col justify-center">
+                      
+                      {/* Título animado del resultado */}
+                      <div className={`text-4xl sm:text-5xl font-black mb-6 ${lastResult === 'correct' ? 'text-teal-600' : lastResult === 'skipped' ? 'text-slate-500' : 'text-rose-500'}`}>
+                          {lastResult === 'correct' ? '¡CORRECTO! 🎉' : lastResult === 'skipped' ? 'SALTADO ⏭️' : '¡INCORRECTO! ❌'}
+                      </div>
+                      
+                      <div className="mb-6">
+                          <p className="text-slate-500 font-bold uppercase tracking-widest text-sm mb-2">La respuesta era:</p>
+                          <p className="text-4xl sm:text-5xl font-black text-slate-800 tracking-tight">{currentWordData.word}</p>
+                      </div>
+
+                      <div className="bg-slate-50 border border-slate-100 p-5 sm:p-6 rounded-2xl mb-8 text-left shadow-inner">
+                          <span className="font-bold text-slate-700 block mb-2 uppercase text-xs tracking-wider">Justificación Teórica:</span>
+                          <p className="text-slate-600 leading-relaxed sm:text-lg">{currentWordData.explanation}</p>
+                      </div>
+
+                      <div className="flex flex-col gap-3">
+                          {/* BOTÓN: Validación Manual por el usuario si se equivocó por poco */}
+                          {lastResult === 'incorrect' && (
+                              <button 
+                                onClick={handleOverrideCorrect} 
+                                className="w-full bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-3 rounded-xl transition-colors border border-amber-300 shadow-sm"
+                              >
+                                  ⚠️ Escribí algo muy similar (Validar como correcta)
+                              </button>
+                          )}
+
+                          <button 
+                            onClick={nextWord} 
+                            className="w-full bg-slate-800 hover:bg-slate-900 text-white font-black text-lg sm:text-xl py-4 rounded-xl shadow-md transition-colors"
+                          >
+                              {currentWordIndex + 1 < currentLevel.words.length ? 'Siguiente Palabra ➔' : 'Ver Resultados Finales 🏆'}
+                          </button>
+                      </div>
+                  </div>
+              )}
             </div>
           );
         }
