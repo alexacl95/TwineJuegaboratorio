@@ -21,7 +21,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen px-3 py-6 sm:p-6 md:p-8 lg:p-12 selection:bg-indigo-200">
 
-    <div class="max-w-7xl mx-auto">
+    <div class="max-w-6xl mx-auto">
         
         <!-- CABECERA -->
         <header class="text-center mb-8 sm:mb-12 animate-[fadeIn_0.5s_ease-out] px-2">
@@ -33,160 +33,196 @@
         </header>
 
         <!-- CONTENEDOR DE CATEGORÍAS -->
-        <!-- 1 Columna (Móvil) -> 2 Columnas (Tablet) -> 3 Columnas (Desktop) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
+        <!-- items-start evita que las tarjetas se estiren y dejen espacios en blanco si una lista es más larga que otra -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
             
             <!-- SECCIÓN: JUEGOS GENERALES -->
-            <section class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 border-t-8 border-emerald-500 shadow-lg relative overflow-hidden flex flex-col">
-                <div class="absolute -top-4 -right-4 sm:top-0 sm:right-0 p-6 sm:p-8 opacity-5 text-7xl sm:text-8xl pointer-events-none">🎮</div>
+            <section class="bg-white rounded-2xl sm:rounded-3xl p-5 md:p-6 border-t-8 border-emerald-500 shadow-lg relative overflow-hidden flex flex-col">
+                <div class="absolute -top-4 -right-4 sm:top-0 sm:right-0 p-6 opacity-5 text-7xl pointer-events-none">🎮</div>
                 
-                <h2 class="text-xl sm:text-2xl md:text-3xl font-black text-emerald-800 mb-5 sm:mb-6 flex items-center gap-3">
-                    <span class="bg-emerald-100 p-2 rounded-xl text-emerald-600 text-lg sm:text-xl">🎮</span> 
+                <h2 class="text-xl sm:text-2xl font-black text-emerald-800 mb-4 sm:mb-5 flex items-center gap-3">
+                    <span class="bg-emerald-100 p-2 rounded-xl text-emerald-600 text-lg">🎮</span> 
                     Juegos Generales
                 </h2>
                 
-                <div class="flex flex-col gap-3 sm:gap-4 relative z-10 flex-grow">
+                <div class="flex flex-col gap-2 sm:gap-3 relative z-10 flex-grow">
                     <!-- Enlace 1 -->
-                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/General/DiceStories.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-emerald-50 border border-emerald-100 hover:border-emerald-300 hover:bg-emerald-100 text-left">
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/General/DiceStories.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 rounded-xl bg-emerald-50 border border-emerald-100 hover:border-emerald-300 hover:bg-emerald-100 text-left">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-base sm:text-lg lg:text-xl font-bold text-emerald-900 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
+                                <h3 class="text-sm sm:text-base font-bold text-emerald-900 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
                                     🎲 Dice Stories
                                 </h3>
                             </div>
-                            <span class="text-emerald-400 group-hover:text-emerald-600 transition-colors text-lg sm:text-xl">➔</span>
+                            <span class="text-emerald-400 group-hover:text-emerald-600 transition-colors text-base sm:text-lg">➔</span>
                         </div>
                     </a>
 
                     <!-- Enlace 2 -->
-                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/General/pistasCruzadas.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-emerald-50 border border-emerald-100 hover:border-emerald-300 hover:bg-emerald-100 text-left">
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/General/pistasCruzadas.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 rounded-xl bg-emerald-50 border border-emerald-100 hover:border-emerald-300 hover:bg-emerald-100 text-left">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-base sm:text-lg lg:text-xl font-bold text-emerald-900 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
+                                <h3 class="text-sm sm:text-base font-bold text-emerald-900 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
                                     ✖️ Pistas Cruzadas
                                 </h3>
                             </div>
-                            <span class="text-emerald-400 group-hover:text-emerald-600 transition-colors text-lg sm:text-xl">➔</span>
+                            <span class="text-emerald-400 group-hover:text-emerald-600 transition-colors text-base sm:text-lg">➔</span>
                         </div>
                     </a>
 
                     <!-- Enlace 3 -->
-                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/General/Pictograma.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-emerald-50 border border-emerald-100 hover:border-emerald-300 hover:bg-emerald-100 text-left">
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/General/Pictograma.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 rounded-xl bg-emerald-50 border border-emerald-100 hover:border-emerald-300 hover:bg-emerald-100 text-left">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-base sm:text-lg lg:text-xl font-bold text-emerald-900 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
+                                <h3 class="text-sm sm:text-base font-bold text-emerald-900 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
                                     🖼️ Pictograma
                                 </h3>
                             </div>
-                            <span class="text-emerald-400 group-hover:text-emerald-600 transition-colors text-lg sm:text-xl">➔</span>
+                            <span class="text-emerald-400 group-hover:text-emerald-600 transition-colors text-base sm:text-lg">➔</span>
                         </div>
                     </a>
                 </div>
             </section>
 
-            <!-- SECCIÓN: JUEGOS EPIDEMIOLOGÍA -->
-            <section class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 border-t-8 border-indigo-500 shadow-lg relative overflow-hidden flex flex-col">
-                <div class="absolute -top-4 -right-4 sm:top-0 sm:right-0 p-6 sm:p-8 opacity-5 text-7xl sm:text-8xl pointer-events-none">🔬</div>
+            <!-- SECCIÓN: EPIDEMIOLOGÍA -->
+            <section class="bg-white rounded-2xl sm:rounded-3xl p-5 md:p-6 border-t-8 border-indigo-500 shadow-lg relative overflow-hidden flex flex-col">
+                <div class="absolute -top-4 -right-4 sm:top-0 sm:right-0 p-6 opacity-5 text-7xl pointer-events-none">🔬</div>
                 
-                <h2 class="text-xl sm:text-2xl md:text-3xl font-black text-indigo-800 mb-5 sm:mb-6 flex items-center gap-3">
-                    <span class="bg-indigo-100 p-2 rounded-xl text-indigo-600 text-lg sm:text-xl">🔬</span> 
+                <h2 class="text-xl sm:text-2xl font-black text-indigo-800 mb-4 sm:mb-5 flex items-center gap-3">
+                    <span class="bg-indigo-100 p-2 rounded-xl text-indigo-600 text-lg">🔬</span> 
                     Epidemiología
                 </h2>
                 
-                <div class="flex flex-col gap-3 sm:gap-4 relative z-10 flex-grow">
+                <div class="flex flex-col gap-2 sm:gap-3 relative z-10 flex-grow">
                     <!-- Enlace 1 -->
-                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/DarkStoriesEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/DarkStoriesEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 rounded-xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-base sm:text-lg lg:text-xl font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
+                                <h3 class="text-sm sm:text-base font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
                                     🕵️‍♂️ Dark Stories
                                 </h3>
                             </div>
-                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors text-lg sm:text-xl">➔</span>
+                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors text-base sm:text-lg">➔</span>
                         </div>
                     </a>
 
                     <!-- Enlace 2 -->
-                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/DiceStoriesEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/DiceStoriesEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 rounded-xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-base sm:text-lg lg:text-xl font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
+                                <h3 class="text-sm sm:text-base font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
                                     🎲 Dice Stories Epi
                                 </h3>
                             </div>
-                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors text-lg sm:text-xl">➔</span>
+                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors text-base sm:text-lg">➔</span>
                         </div>
                     </a>
 
                     <!-- Enlace 3 -->
-                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/JustOneEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/JustOneEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 rounded-xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-base sm:text-lg lg:text-xl font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
-                                    ☝️ Just One
+                                <h3 class="text-sm sm:text-base font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
+                                    ☝️ Sólo una palabra 
                                 </h3>
                             </div>
-                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors text-lg sm:text-xl">➔</span>
+                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors text-base sm:text-lg">➔</span>
                         </div>
                     </a>
 
                     <!-- Enlace 4 -->
-                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/PalabrasCruzadasEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/PalabrasCruzadasEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 rounded-xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-base sm:text-lg lg:text-xl font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
+                                <h3 class="text-sm sm:text-base font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
                                     📝 Palabras Cruzadas
                                 </h3>
                             </div>
-                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors text-lg sm:text-xl">➔</span>
+                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors text-base sm:text-lg">➔</span>
                         </div>
                     </a>
 
                     <!-- Enlace 5 -->
-                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/PictogramaEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Epidemiologia/PictogramaEpidemiologia.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 rounded-xl bg-indigo-50 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-100 text-left">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-base sm:text-lg lg:text-xl font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
+                                <h3 class="text-sm sm:text-base font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
                                     🖼️ EPI Pictograma 
                                 </h3>
                             </div>
-                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors text-lg sm:text-xl">➔</span>
+                            <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors text-base sm:text-lg">➔</span>
                         </div>
                     </a>
                 </div>
             </section>
 
-            <!-- SECCIÓN: JUEGOS ESTADÍSTICA -->
-            <section class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 border-t-8 border-amber-500 shadow-lg relative overflow-hidden flex flex-col">
-                <div class="absolute -top-4 -right-4 sm:top-0 sm:right-0 p-6 sm:p-8 opacity-5 text-7xl sm:text-8xl pointer-events-none">📊</div>
+            <!-- SECCIÓN: ESTADÍSTICA -->
+            <section class="bg-white rounded-2xl sm:rounded-3xl p-5 md:p-6 border-t-8 border-amber-500 shadow-lg relative overflow-hidden flex flex-col">
+                <div class="absolute -top-4 -right-4 sm:top-0 sm:right-0 p-6 opacity-5 text-7xl pointer-events-none">📊</div>
                 
-                <h2 class="text-xl sm:text-2xl md:text-3xl font-black text-amber-800 mb-5 sm:mb-6 flex items-center gap-3">
-                    <span class="bg-amber-100 p-2 rounded-xl text-amber-600 text-lg sm:text-xl">📊</span> 
+                <h2 class="text-xl sm:text-2xl font-black text-amber-800 mb-4 sm:mb-5 flex items-center gap-3">
+                    <span class="bg-amber-100 p-2 rounded-xl text-amber-600 text-lg">📊</span> 
                     Estadística
                 </h2>
                 
-                <div class="flex flex-col gap-3 sm:gap-4 relative z-10 flex-grow">
+                <div class="flex flex-col gap-2 sm:gap-3 relative z-10 flex-grow">
                     <!-- Enlace 1 -->
-                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Estadistica/CarreraDeLos12.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-50 border border-amber-100 hover:border-amber-300 hover:bg-amber-100 text-left">
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Estadistica/CarreraDeLos12.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 rounded-xl bg-amber-50 border border-amber-100 hover:border-amber-300 hover:bg-amber-100 text-left">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-base sm:text-lg lg:text-xl font-bold text-amber-900 group-hover:text-amber-700 transition-colors flex items-center gap-2">
+                                <h3 class="text-sm sm:text-base font-bold text-amber-900 group-hover:text-amber-700 transition-colors flex items-center gap-2">
                                     🏁 Carrera de los 12
                                 </h3>
                             </div>
-                            <span class="text-amber-400 group-hover:text-amber-600 transition-colors text-lg sm:text-xl">➔</span>
+                            <span class="text-amber-400 group-hover:text-amber-600 transition-colors text-base sm:text-lg">➔</span>
                         </div>
                     </a>
 
                     <!-- Enlace 2 -->
-                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Estadistica/Farkle.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-50 border border-amber-100 hover:border-amber-300 hover:bg-amber-100 text-left">
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Estadistica/Farkle.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 rounded-xl bg-amber-50 border border-amber-100 hover:border-amber-300 hover:bg-amber-100 text-left">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-base sm:text-lg lg:text-xl font-bold text-amber-900 group-hover:text-amber-700 transition-colors flex items-center gap-2">
+                                <h3 class="text-sm sm:text-base font-bold text-amber-900 group-hover:text-amber-700 transition-colors flex items-center gap-2">
                                     🎲 Farkle
                                 </h3>
                             </div>
-                            <span class="text-amber-400 group-hover:text-amber-600 transition-colors text-lg sm:text-xl">➔</span>
+                            <span class="text-amber-400 group-hover:text-amber-600 transition-colors text-base sm:text-lg">➔</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- NUEVA SECCIÓN: LÓGICA -->
+            <section class="bg-white rounded-2xl sm:rounded-3xl p-5 md:p-6 border-t-8 border-purple-500 shadow-lg relative overflow-hidden flex flex-col">
+                <div class="absolute -top-4 -right-4 sm:top-0 sm:right-0 p-6 opacity-5 text-7xl pointer-events-none">🧠</div>
+                
+                <h2 class="text-xl sm:text-2xl font-black text-purple-800 mb-4 sm:mb-5 flex items-center gap-3">
+                    <span class="bg-purple-100 p-2 rounded-xl text-purple-600 text-lg">🧠</span> 
+                    Lógica
+                </h2>
+                
+                <div class="flex flex-col gap-2 sm:gap-3 relative z-10 flex-grow">
+                    <!-- Enlace 1 -->
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Logica/BloquesLogicos.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 rounded-xl bg-purple-50 border border-purple-100 hover:border-purple-300 hover:bg-purple-100 text-left">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-sm sm:text-base font-bold text-purple-900 group-hover:text-purple-700 transition-colors flex items-center gap-2">
+                                    🪣 Bloques Lógicos
+                                </h3>
+                            </div>
+                            <span class="text-purple-400 group-hover:text-purple-600 transition-colors text-base sm:text-lg">➔</span>
+                        </div>
+                    </a>
+
+                    <!-- Enlace 2 -->
+                    <a href="https://alexacl95.github.io/TwineJuegaboratorio/Juegos/Logica/CircuitoLogico.html" target="_blank" rel="noopener noreferrer" class="hover-card group block p-3 rounded-xl bg-purple-50 border border-purple-100 hover:border-purple-300 hover:bg-purple-100 text-left">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-sm sm:text-base font-bold text-purple-900 group-hover:text-purple-700 transition-colors flex items-center gap-2">
+                                    🌳 Circuito Lógico
+                                </h3>
+                            </div>
+                            <span class="text-purple-400 group-hover:text-purple-600 transition-colors text-base sm:text-lg">➔</span>
                         </div>
                     </a>
                 </div>
