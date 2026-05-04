@@ -103,19 +103,96 @@
                         e.stopPropagation(); // Evita que el clic se propague a la caja contenedora
                         if (onClick) onClick(item.instanceId);
                     }} 
-                    className={`cursor-pointer transform hover:scale-110 hover:-translate-y-1 transition-all flex justify-center items-center w-14 h-14 md:w-20 md:h-20 rounded-xl shadow-sm border-2 animate-pop 
+                    className={`cursor-pointer transform hover:scale-110 hover:-translate-y-1 transition-all flex justify-center items-center rounded-xl shadow-sm border-2 animate-pop 
+                    w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20
                     ${isSelected ? 'bg-indigo-100 border-indigo-500 shadow-md scale-105' : 'bg-white border-slate-200 hover:border-indigo-400'}
                     ${isError ? 'bg-rose-100 border-rose-500 text-rose-700 animate-shake' : ''}`}
                 >
-                    <span className={`text-lg md:text-3xl font-black font-mono tracking-tighter ${isError ? 'text-rose-700' : 'text-slate-700'}`}>{item.value}</span>
+                    <span className={`font-black font-mono tracking-tighter text-base sm:text-lg md:text-2xl lg:text-3xl
+                        ${isError ? 'text-rose-700' : 'text-slate-700'}`}>{item.value}</span>
                 </div>
             )
         };
 
         function App() {
-            const [activeTab, setActiveTab] = useState('classification'); // 'classification' | 'logic' | 'hierarchy'
+            const [activeTab, setActiveTab] = useState('hierarchy'); // 'hierarchy' | 'classification' | 'logic'
 
-            // --- ESTADO: PESTAÑA 1 (CLASIFICACIÓN) ---
+            // --- ESTADO: PESTAÑA 1 (JERARQUÍA MÚLTIPLES FRASCOS) ---
+            const [hierItems, setHierItems] = useState([]);
+            const [hierSelected, setHierSelected] = useState(null);
+            const [hierFeedback, setHierFeedback] = useState(null); // 'success' | 'error'
+
+            const initHierGame = () => {
+                // Tomamos 10 números al azar
+                let shuffledPool = [...NUM_POOL].sort(() => Math.random() - 0.5).slice(0, 10);
+                
+                const newItems = shuffledPool.map((item, index) => {
+                    // Determinar el conjunto más específico o de origen
+                    let mostSpecific = 'R'; // Por defecto (aunque ninguno en nuestra lista es solo R)
+                    if (item.sets.includes('N')) mostSpecific = 'N';
+                    else if (item.sets.includes('Z')) mostSpecific = 'Z';
+                    else if (item.sets.includes('Q')) mostSpecific = 'Q';
+                    else if (item.sets.includes('I')) mostSpecific = 'I';
+
+                    return {
+                        ...item,
+                        instanceId: `hier-${index}`,
+                        mostSpecificSet: mostSpecific,
+                        currentJar: null,
+                        isError: false
+                    };
+                });
+                
+                setHierItems(newItems);
+                setHierSelected(null);
+                setHierFeedback(null);
+            };
+
+            useEffect(() => {
+                if (activeTab === 'hierarchy' && hierItems.length === 0) initHierGame();
+            }, [activeTab]);
+
+            const handleHierItemClick = (instanceId) => {
+                setHierFeedback(null);
+                const item = hierItems.find(i => i.instanceId === instanceId);
+                
+                if (item.currentJar !== null) {
+                    // Si ya está en un frasco, al hacer clic lo devolvemos a los disponibles
+                    setHierItems(prev => prev.map(i => i.instanceId === instanceId ? { ...i, currentJar: null, isError: false } : i));
+                    if (hierSelected === instanceId) setHierSelected(null);
+                } else {
+                    // Si está en disponibles, lo seleccionamos para moverlo
+                    setHierSelected(hierSelected === instanceId ? null : instanceId);
+                }
+            };
+
+            const handleHierJarClick = (jarId) => {
+                if (hierSelected !== null) {
+                    setHierItems(prev => prev.map(i => i.instanceId === hierSelected ? { ...i, currentJar: jarId, isError: false } : i));
+                    setHierSelected(null);
+                    setHierFeedback(null);
+                }
+            };
+
+            const verifyHierGame = () => {
+                const unplaced = hierItems.filter(i => i.currentJar === null);
+                if (unplaced.length > 0) {
+                    alert(`Aún faltan ${unplaced.length} números por clasificar en la jerarquía.`);
+                    return;
+                }
+
+                let isAllCorrect = true;
+                const evaluatedItems = hierItems.map(i => {
+                    const correct = i.currentJar === i.mostSpecificSet;
+                    if (!correct) isAllCorrect = false;
+                    return { ...i, isError: !correct };
+                });
+
+                setHierItems(evaluatedItems);
+                setHierFeedback(isAllCorrect ? 'success' : 'error');
+            };
+
+            // --- ESTADO: PESTAÑA 2 (CLASIFICACIÓN) ---
             const [classCurrentNum, setClassCurrentNum] = useState(null);
             const [classSelectedSets, setClassSelectedSets] = useState([]);
             const [classFeedback, setClassFeedback] = useState(null); 
@@ -153,7 +230,7 @@
                 else setClassStreak(0);
             };
 
-            // --- ESTADO: PESTAÑA 2 (LÓGICA NUMÉRICA) ---
+            // --- ESTADO: PESTAÑA 3 (LÓGICA NUMÉRICA) ---
             const [numItems, setNumItems] = useState([]);
             const [numRule, setNumRule] = useState(null);
             const [numFeedback, setNumFeedback] = useState(null);
@@ -252,146 +329,224 @@
                 if (activeTab === 'logic' && !numRule) initNumGame();
             }, [activeTab]);
 
-            // --- ESTADO: PESTAÑA 3 (JERARQUÍA MÚLTIPLES FRASCOS) ---
-            const [hierItems, setHierItems] = useState([]);
-            const [hierSelected, setHierSelected] = useState(null);
-            const [hierFeedback, setHierFeedback] = useState(null); // 'success' | 'error'
-
-            const initHierGame = () => {
-                // Tomamos 10 números al azar
-                let shuffledPool = [...NUM_POOL].sort(() => Math.random() - 0.5).slice(0, 10);
-                
-                const newItems = shuffledPool.map((item, index) => {
-                    // Determinar el conjunto más específico o de origen
-                    let mostSpecific = 'R'; // Por defecto (aunque ninguno en nuestra lista es solo R)
-                    if (item.sets.includes('N')) mostSpecific = 'N';
-                    else if (item.sets.includes('Z')) mostSpecific = 'Z';
-                    else if (item.sets.includes('Q')) mostSpecific = 'Q';
-                    else if (item.sets.includes('I')) mostSpecific = 'I';
-
-                    return {
-                        ...item,
-                        instanceId: `hier-${index}`,
-                        mostSpecificSet: mostSpecific,
-                        currentJar: null,
-                        isError: false
-                    };
-                });
-                
-                setHierItems(newItems);
-                setHierSelected(null);
-                setHierFeedback(null);
-            };
-
-            useEffect(() => {
-                if (activeTab === 'hierarchy' && hierItems.length === 0) initHierGame();
-            }, [activeTab]);
-
-            const handleHierItemClick = (instanceId) => {
-                setHierFeedback(null);
-                const item = hierItems.find(i => i.instanceId === instanceId);
-                
-                if (item.currentJar !== null) {
-                    // Si ya está en un frasco, al hacer clic lo devolvemos a los disponibles
-                    setHierItems(prev => prev.map(i => i.instanceId === instanceId ? { ...i, currentJar: null, isError: false } : i));
-                    if (hierSelected === instanceId) setHierSelected(null);
-                } else {
-                    // Si está en disponibles, lo seleccionamos para moverlo
-                    setHierSelected(hierSelected === instanceId ? null : instanceId);
-                }
-            };
-
-            const handleHierJarClick = (jarId) => {
-                if (hierSelected !== null) {
-                    setHierItems(prev => prev.map(i => i.instanceId === hierSelected ? { ...i, currentJar: jarId, isError: false } : i));
-                    setHierSelected(null);
-                    setHierFeedback(null);
-                }
-            };
-
-            const verifyHierGame = () => {
-                const unplaced = hierItems.filter(i => i.currentJar === null);
-                if (unplaced.length > 0) {
-                    alert(`Aún faltan ${unplaced.length} números por clasificar en la jerarquía.`);
-                    return;
-                }
-
-                let isAllCorrect = true;
-                const evaluatedItems = hierItems.map(i => {
-                    const correct = i.currentJar === i.mostSpecificSet;
-                    if (!correct) isAllCorrect = false;
-                    return { ...i, isError: !correct };
-                });
-
-                setHierItems(evaluatedItems);
-                setHierFeedback(isAllCorrect ? 'success' : 'error');
-            };
-
             return (
                 <div className="min-h-screen flex flex-col">
                     
                     {/* ENCABEZADO */}
-                    <header className="bg-indigo-800 text-white p-6 shadow-md text-center shrink-0">
-                        <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-2 flex items-center justify-center gap-3">
+                    <header className="bg-indigo-800 text-white p-4 md:p-6 shadow-md text-center shrink-0">
+                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight mb-1 lg:mb-2 flex items-center justify-center gap-2 lg:gap-3">
                             <span>♾️</span> Matemáticas & Lógica
                         </h1>
-                        <p className="text-sm md:text-base text-indigo-200 font-medium">Clasificación de números y álgebra de conjuntos</p>
+                        <p className="text-xs sm:text-sm md:text-base text-indigo-200 font-medium">Clasificación de números y álgebra de conjuntos</p>
                     </header>
 
-                    {/* NAVEGACIÓN (TABS) */}
-                    <div className="flex justify-center bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm shrink-0 overflow-x-auto no-scrollbar">
+                    {/* NAVEGACIÓN (TABS) RESPONSIVA */}
+                    <div className="flex justify-start sm:justify-center bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm shrink-0 overflow-x-auto no-scrollbar">
                         <div className="flex w-full max-w-5xl min-w-max">
                             <button 
+                                onClick={() => setActiveTab('hierarchy')}
+                                className={`px-3 sm:px-4 md:px-6 py-3 md:py-4 text-xs sm:text-sm md:text-base font-bold transition-colors border-b-4 ${activeTab === 'hierarchy' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:text-indigo-600 hover:bg-slate-50'}`}
+                            >
+                                🗄️ Jerarquía (Visual)
+                            </button>
+                            <button 
                                 onClick={() => setActiveTab('classification')}
-                                className={`px-4 sm:px-6 py-4 text-sm md:text-base font-bold transition-colors border-b-4 ${activeTab === 'classification' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:text-indigo-600 hover:bg-slate-50'}`}
+                                className={`px-3 sm:px-4 md:px-6 py-3 md:py-4 text-xs sm:text-sm md:text-base font-bold transition-colors border-b-4 ${activeTab === 'classification' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:text-indigo-600 hover:bg-slate-50'}`}
                             >
                                 📝 Individual
                             </button>
                             <button 
                                 onClick={() => setActiveTab('logic')}
-                                className={`px-4 sm:px-6 py-4 text-sm md:text-base font-bold transition-colors border-b-4 ${activeTab === 'logic' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:text-indigo-600 hover:bg-slate-50'}`}
+                                className={`px-3 sm:px-4 md:px-6 py-3 md:py-4 text-xs sm:text-sm md:text-base font-bold transition-colors border-b-4 ${activeTab === 'logic' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:text-indigo-600 hover:bg-slate-50'}`}
                             >
                                 🪣 Lógica (Operadores)
-                            </button>
-                            <button 
-                                onClick={() => setActiveTab('hierarchy')}
-                                className={`px-4 sm:px-6 py-4 text-sm md:text-base font-bold transition-colors border-b-4 ${activeTab === 'hierarchy' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' : 'border-transparent text-slate-500 hover:text-indigo-600 hover:bg-slate-50'}`}
-                            >
-                                🗄️ Jerarquía (Visual)
                             </button>
                         </div>
                     </div>
 
                     {/* CONTENIDO PRINCIPAL */}
-                    <main className="flex-grow p-4 md:p-6 lg:p-8 flex justify-center items-start overflow-y-auto">
-                        <div className="w-full max-w-5xl">
+                    <main className="flex-grow p-2 sm:p-4 md:p-6 lg:p-8 flex justify-center items-start overflow-y-auto">
+                        <div className="w-full max-w-6xl">
                             
-                            {/* --- PESTAÑA 1: CLASIFICACIÓN DE CONJUNTOS --- */}
+                            {/* --- PESTAÑA 1: JERARQUÍA NUMÉRICA (VISUAL ANIDADA) --- */}
+                            {activeTab === 'hierarchy' && hierItems.length > 0 && (
+                                <div className="animate-fade-in space-y-4 md:space-y-6">
+                                    <div className="bg-white p-3 sm:p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-lg border border-slate-200">
+                                        
+                                        <div className="text-center mb-4 md:mb-6">
+                                            <h2 className="text-xl sm:text-2xl font-black text-slate-800 mb-1 md:mb-2">Construyendo los Conjuntos</h2>
+                                            <p className="text-slate-500 text-xs sm:text-sm md:text-base px-2">
+                                                Coloca cada número en su conjunto de origen o <strong>el más específico</strong> al que pertenezca.<br className="hidden md:block"/>
+                                                <span className="italic text-[10px] sm:text-xs">(Selecciona un número y haz clic en el nivel de conjunto que le corresponde).</span>
+                                            </p>
+                                        </div>
+
+                                        {/* ZONA 1: DISPONIBLES (Pool) */}
+                                        <div className="bg-slate-100 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-200 min-h-[100px] md:min-h-[120px] shadow-inner mb-4 md:mb-6">
+                                            <h3 className="font-bold text-slate-500 text-xs sm:text-sm uppercase tracking-wider mb-2 md:mb-3 text-center">Números Disponibles</h3>
+                                            <div className="flex flex-wrap gap-2 md:gap-3 justify-center items-center">
+                                                {hierItems.filter(b => b.currentJar === null).map(item => (
+                                                    <NumberItemBlock 
+                                                        key={item.instanceId} 
+                                                        item={item} 
+                                                        onClick={handleHierItemClick} 
+                                                        isSelected={hierSelected === item.instanceId} 
+                                                        isError={false}
+                                                    />
+                                                ))}
+                                                {hierItems.filter(b => b.currentJar === null).length === 0 && (
+                                                    <span className="text-emerald-600 font-bold text-sm my-2 md:my-4">¡Todos los números han sido asignados!</span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* ZONA 2: LA JERARQUÍA (Anidada Visualmente) */}
+                                        <div 
+                                            onClick={(e) => { e.stopPropagation(); handleHierJarClick('R'); }}
+                                            className={`p-2 sm:p-4 md:p-6 rounded-2xl md:rounded-[2rem] border-2 md:border-4 transition-all cursor-pointer shadow-sm relative w-full
+                                                ${hierSelected ? 'border-slate-400 bg-slate-100 hover:bg-slate-200' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'}`}
+                                        >
+                                            <h3 className="absolute top-2 left-3 md:top-4 md:left-6 font-black text-slate-400 uppercase tracking-widest text-[10px] md:text-sm">
+                                                Reales (ℝ)
+                                            </h3>
+                                            
+                                            {/* Elementos colocados incorrectamente en R (que deberían ir más profundo) */}
+                                            <div className="flex flex-wrap gap-1 sm:gap-2 min-h-[40px] mt-6 md:mt-8 mb-2 sm:mb-4 pl-1 sm:pl-2">
+                                                {hierItems.filter(i => i.currentJar === 'R').map(item => (
+                                                    <NumberItemBlock key={item.instanceId} item={item} onClick={handleHierItemClick} isSelected={hierSelected === item.instanceId} isError={item.isError} />
+                                                ))}
+                                                {hierItems.filter(i => i.currentJar === 'R').length === 0 && (
+                                                    <span className="text-slate-400 italic text-[10px] sm:text-xs w-full flex items-center">{hierSelected ? 'Clic aquí para ubicar en Reales' : ''}</span>
+                                                )}
+                                            </div>
+
+                                            <div className="flex flex-col lg:flex-row gap-2 sm:gap-4 w-full">
+                                                
+                                                {/* Lado Izquierdo: Racionales (Q) */}
+                                                <div 
+                                                    onClick={(e) => { e.stopPropagation(); handleHierJarClick('Q'); }}
+                                                    className={`flex-1 p-2 sm:p-3 md:p-6 rounded-xl md:rounded-2xl border-2 md:border-4 transition-all cursor-pointer shadow-sm flex flex-col
+                                                        ${hierSelected ? 'border-indigo-400 bg-indigo-50 hover:bg-indigo-100' : 'border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100'}`}
+                                                >
+                                                    <h3 className="font-black text-[10px] md:text-sm uppercase tracking-wider mb-2 sm:mb-3 px-2 py-1 md:px-3 rounded-md md:rounded-lg border bg-indigo-100 text-indigo-800 border-indigo-300 inline-block w-fit">
+                                                        Racionales (ℚ)
+                                                    </h3>
+                                                    <div className="flex flex-wrap gap-1 sm:gap-2 min-h-[40px] md:min-h-[60px] mb-2 sm:mb-4">
+                                                        {hierItems.filter(i => i.currentJar === 'Q').map(item => (
+                                                            <NumberItemBlock key={item.instanceId} item={item} onClick={handleHierItemClick} isSelected={hierSelected === item.instanceId} isError={item.isError} />
+                                                        ))}
+                                                        {hierItems.filter(i => i.currentJar === 'Q').length === 0 && <span className="text-indigo-300 italic text-[10px] sm:text-xs w-full">{hierSelected ? 'Clic aquí para Racionales' : ''}</span>}
+                                                    </div>
+
+                                                    {/* Enteros (Z) */}
+                                                    <div 
+                                                        onClick={(e) => { e.stopPropagation(); handleHierJarClick('Z'); }}
+                                                        className={`p-2 sm:p-3 md:p-6 rounded-xl md:rounded-2xl border-2 md:border-4 transition-all cursor-pointer shadow-sm flex flex-col mb-2 sm:mb-4 flex-grow
+                                                            ${hierSelected ? 'border-blue-400 bg-blue-50 hover:bg-blue-100' : 'border-blue-200 bg-blue-50/50 hover:bg-blue-100'}`}
+                                                    >
+                                                        <h3 className="font-black text-[10px] md:text-sm uppercase tracking-wider mb-2 sm:mb-3 px-2 py-1 md:px-3 rounded-md md:rounded-lg border bg-blue-100 text-blue-800 border-blue-300 inline-block w-fit">
+                                                            Enteros (ℤ)
+                                                        </h3>
+                                                        <div className="flex flex-wrap gap-1 sm:gap-2 min-h-[40px] md:min-h-[60px] mb-2 sm:mb-4">
+                                                            {hierItems.filter(i => i.currentJar === 'Z').map(item => (
+                                                                <NumberItemBlock key={item.instanceId} item={item} onClick={handleHierItemClick} isSelected={hierSelected === item.instanceId} isError={item.isError} />
+                                                            ))}
+                                                            {hierItems.filter(i => i.currentJar === 'Z').length === 0 && <span className="text-blue-300 italic text-[10px] sm:text-xs w-full">{hierSelected ? 'Clic aquí para Enteros' : ''}</span>}
+                                                        </div>
+
+                                                        {/* Naturales (N) */}
+                                                        <div 
+                                                            onClick={(e) => { e.stopPropagation(); handleHierJarClick('N'); }}
+                                                            className={`p-2 sm:p-3 md:p-6 rounded-xl md:rounded-2xl border-2 md:border-4 transition-all cursor-pointer shadow-sm flex flex-col flex-grow
+                                                                ${hierSelected ? 'border-emerald-400 bg-emerald-50 hover:bg-emerald-100' : 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100'}`}
+                                                        >
+                                                            <h3 className="font-black text-[10px] md:text-sm uppercase tracking-wider mb-2 sm:mb-3 px-2 py-1 md:px-3 rounded-md md:rounded-lg border bg-emerald-100 text-emerald-800 border-emerald-300 inline-block w-fit">
+                                                                Naturales (ℕ)
+                                                            </h3>
+                                                            <div className="flex flex-wrap gap-1 sm:gap-2 min-h-[40px] md:min-h-[60px]">
+                                                                {hierItems.filter(i => i.currentJar === 'N').map(item => (
+                                                                    <NumberItemBlock key={item.instanceId} item={item} onClick={handleHierItemClick} isSelected={hierSelected === item.instanceId} isError={item.isError} />
+                                                                ))}
+                                                                {hierItems.filter(i => i.currentJar === 'N').length === 0 && <span className="text-emerald-300 italic text-[10px] sm:text-xs w-full">{hierSelected ? 'Clic aquí para Naturales' : ''}</span>}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Lado Derecho: Irracionales (I) */}
+                                                <div 
+                                                    onClick={(e) => { e.stopPropagation(); handleHierJarClick('I'); }}
+                                                    className={`w-full lg:w-1/3 p-2 sm:p-3 md:p-6 rounded-xl md:rounded-2xl border-2 md:border-4 transition-all cursor-pointer shadow-sm flex flex-col min-h-[100px] md:min-h-[150px]
+                                                        ${hierSelected ? 'border-purple-400 bg-purple-50 hover:bg-purple-100' : 'border-purple-200 bg-purple-50/50 hover:bg-purple-100'}`}
+                                                >
+                                                    <h3 className="font-black text-[10px] md:text-sm uppercase tracking-wider mb-2 sm:mb-3 px-2 py-1 md:px-3 rounded-md md:rounded-lg border bg-purple-100 text-purple-800 border-purple-300 inline-block w-fit">
+                                                        Irracionales (𝕀)
+                                                    </h3>
+                                                    <div className="flex flex-wrap gap-1 sm:gap-2 min-h-[40px] md:min-h-[60px]">
+                                                        {hierItems.filter(i => i.currentJar === 'I').map(item => (
+                                                            <NumberItemBlock key={item.instanceId} item={item} onClick={handleHierItemClick} isSelected={hierSelected === item.instanceId} isError={item.isError} />
+                                                        ))}
+                                                        {hierItems.filter(i => i.currentJar === 'I').length === 0 && <span className="text-purple-300 italic text-[10px] sm:text-xs w-full">{hierSelected ? 'Clic aquí para Irracionales' : ''}</span>}
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        {/* CONTROLES Y FEEDBACK */}
+                                        <div className="mt-6 md:mt-8 flex flex-col items-center">
+                                            {hierFeedback === 'success' && (
+                                                <div className="mb-4 md:mb-6 p-3 md:p-4 bg-emerald-100 text-emerald-800 border-2 border-emerald-400 rounded-xl font-black text-center w-full max-w-md animate-fade-in text-sm md:text-lg">
+                                                    🎉 ¡Felicidades! Has clasificado todos los números en su conjunto más específico correctamente.
+                                                </div>
+                                            )}
+                                            {hierFeedback === 'error' && (
+                                                <div className="mb-4 md:mb-6 p-3 md:p-4 bg-rose-100 text-rose-800 border-2 border-rose-400 rounded-xl font-bold text-center w-full max-w-md animate-fade-in text-xs md:text-base">
+                                                    ❌ Hay errores en la clasificación. Revisa los números marcados en rojo e inténtalo de nuevo.
+                                                    <p className="text-[10px] md:text-sm font-medium mt-2">Recuerda: Todo Natural es también Entero y Racional, pero debes ubicarlo en su "caja de origen" más específica.</p>
+                                                </div>
+                                            )}
+
+                                            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full md:w-auto justify-center">
+                                                <button onClick={initHierGame} className="w-full sm:w-auto px-4 md:px-6 py-3 md:py-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors text-sm md:text-base">
+                                                    🔄 Nuevos Números
+                                                </button>
+                                                <button onClick={verifyHierGame} className="w-full sm:w-auto px-6 md:px-10 py-3 md:py-4 bg-slate-800 hover:bg-slate-900 text-white font-black rounded-xl shadow-lg transition-transform transform hover:-translate-y-1 text-sm md:text-lg">
+                                                    Verificar Clasificación
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- PESTAÑA 2: CLASIFICACIÓN DE CONJUNTOS INDIVIDUAL --- */}
                             {activeTab === 'classification' && classCurrentNum && (
                                 <div className="animate-fade-in space-y-6 max-w-4xl mx-auto">
-                                    <div className="bg-white p-6 md:p-10 rounded-3xl shadow-lg border border-slate-200 relative overflow-hidden">
+                                    <div className="bg-white p-4 sm:p-6 md:p-10 rounded-2xl md:rounded-3xl shadow-lg border border-slate-200 relative overflow-hidden">
                                         
-                                        <div className="absolute top-4 right-4 bg-orange-100 text-orange-600 px-3 py-1 rounded-full font-bold text-sm shadow-sm border border-orange-200">
+                                        <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-orange-100 text-orange-600 px-2 py-1 sm:px-3 sm:py-1 rounded-full font-bold text-xs sm:text-sm shadow-sm border border-orange-200">
                                             🔥 Racha: {classStreak}
                                         </div>
 
-                                        <div className="text-center mb-8">
-                                            <h2 className="text-2xl font-black text-slate-800 mb-2">Análisis de Conjuntos</h2>
-                                            <p className="text-slate-500 text-sm md:text-base">Selecciona <strong>TODOS</strong> los conjuntos a los que pertenece este número. <br className="hidden md:block"/>Recuerda la jerarquía (Ej: todo Natural es también Entero, Racional y Real).</p>
+                                        <div className="text-center mb-6 md:mb-8 mt-4 sm:mt-0">
+                                            <h2 className="text-xl sm:text-2xl font-black text-slate-800 mb-1 md:mb-2">Análisis de Conjuntos</h2>
+                                            <p className="text-slate-500 text-xs sm:text-sm md:text-base px-2">Selecciona <strong>TODOS</strong> los conjuntos a los que pertenece este número. <br className="hidden md:block"/>Recuerda la jerarquía (Ej: todo Natural es también Entero, Racional y Real).</p>
                                         </div>
 
-                                        <div className="flex flex-col items-center mb-10">
-                                            <div className="w-32 h-32 md:w-40 md:h-40 bg-slate-50 border-4 border-indigo-100 rounded-3xl shadow-inner flex items-center justify-center mb-6">
-                                                <span className="text-5xl md:text-6xl font-black text-indigo-700 font-mono tracking-tighter">{classCurrentNum.value}</span>
+                                        <div className="flex flex-col items-center mb-8 md:mb-10">
+                                            <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 bg-slate-50 border-4 border-indigo-100 rounded-2xl sm:rounded-3xl shadow-inner flex items-center justify-center mb-4 sm:mb-6">
+                                                <span className="text-4xl sm:text-5xl md:text-6xl font-black text-indigo-700 font-mono tracking-tighter">{classCurrentNum.value}</span>
                                             </div>
 
-                                            <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-2xl">
+                                            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 max-w-2xl px-2">
                                                 {SETS_DEF.map(set => (
                                                     <button 
                                                         key={set.id}
                                                         onClick={() => toggleClassSet(set.id)}
                                                         disabled={classFeedback !== null}
-                                                        className={`px-4 py-3 md:px-6 md:py-4 rounded-xl font-black text-sm md:text-base transition-all border-2 ${
+                                                        className={`px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4 rounded-xl font-black text-[10px] sm:text-xs md:text-base transition-all border-2 ${
                                                             classSelectedSets.includes(set.id) 
                                                             ? `${set.color} shadow-md transform scale-105` 
                                                             : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
@@ -408,22 +563,22 @@
                                             {!classFeedback ? (
                                                 <button 
                                                     onClick={verifyClassification}
-                                                    className="w-full md:w-auto px-12 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg rounded-xl shadow-[0_4px_0_rgb(67,56,202)] hover:translate-y-[2px] hover:shadow-[0_2px_0_rgb(67,56,202)] transition-all"
+                                                    className="w-full sm:w-auto px-6 sm:px-12 py-3 sm:py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-base md:text-lg rounded-xl shadow-[0_4px_0_rgb(67,56,202)] hover:translate-y-[2px] hover:shadow-[0_2px_0_rgb(67,56,202)] transition-all"
                                                 >
                                                     Verificar Respuesta
                                                 </button>
                                             ) : (
                                                 <div className="w-full text-center animate-fade-in">
                                                     {classFeedback === 'correct' ? (
-                                                        <div className="mb-6 p-4 bg-emerald-100 text-emerald-800 border-2 border-emerald-400 rounded-xl">
-                                                            <h3 className="font-black text-xl mb-1">🎉 ¡Correcto!</h3>
-                                                            <p className="font-medium text-sm md:text-base">{classCurrentNum.explanation}</p>
+                                                        <div className="mb-4 md:mb-6 p-3 md:p-4 bg-emerald-100 text-emerald-800 border-2 border-emerald-400 rounded-xl">
+                                                            <h3 className="font-black text-lg md:text-xl mb-1">🎉 ¡Correcto!</h3>
+                                                            <p className="font-medium text-xs sm:text-sm md:text-base">{classCurrentNum.explanation}</p>
                                                         </div>
                                                     ) : (
-                                                        <div className="mb-6 p-4 bg-rose-100 text-rose-800 border-2 border-rose-400 rounded-xl">
-                                                            <h3 className="font-black text-xl mb-1">❌ Incorrecto</h3>
-                                                            <p className="font-medium text-sm md:text-base mb-2">Te faltaron o sobraron conjuntos.</p>
-                                                            <p className="text-sm bg-rose-50 p-2 rounded-lg inline-block border border-rose-200">
+                                                        <div className="mb-4 md:mb-6 p-3 md:p-4 bg-rose-100 text-rose-800 border-2 border-rose-400 rounded-xl">
+                                                            <h3 className="font-black text-lg md:text-xl mb-1">❌ Incorrecto</h3>
+                                                            <p className="font-medium text-xs sm:text-sm md:text-base mb-2">Te faltaron o sobraron conjuntos.</p>
+                                                            <p className="text-[10px] sm:text-xs md:text-sm bg-rose-50 p-2 rounded-lg inline-block border border-rose-200">
                                                                 Respuesta correcta: <strong>{classCurrentNum.sets.join(', ')}</strong><br/>
                                                                 <span className="italic text-rose-600">{classCurrentNum.explanation}</span>
                                                             </p>
@@ -432,7 +587,7 @@
                                                     
                                                     <button 
                                                         onClick={initClassification}
-                                                        className="w-full md:w-auto px-12 py-4 bg-slate-800 hover:bg-slate-900 text-white font-black text-lg rounded-xl shadow-[0_4px_0_rgb(15,23,42)] hover:translate-y-[2px] hover:shadow-[0_2px_0_rgb(15,23,42)] transition-all"
+                                                        className="w-full sm:w-auto px-6 sm:px-12 py-3 sm:py-4 bg-slate-800 hover:bg-slate-900 text-white font-black text-base md:text-lg rounded-xl shadow-[0_4px_0_rgb(15,23,42)] hover:translate-y-[2px] hover:shadow-[0_2px_0_rgb(15,23,42)] transition-all"
                                                     >
                                                         Siguiente Número ➔
                                                     </button>
@@ -444,236 +599,83 @@
                                 </div>
                             )}
 
-                            {/* --- PESTAÑA 2: LÓGICA NUMÉRICA (FRASCOS INDIVIDUALES) --- */}
+                            {/* --- PESTAÑA 3: LÓGICA NUMÉRICA (FRASCOS INDIVIDUALES) --- */}
                             {activeTab === 'logic' && numRule && (
-                                <div className="animate-fade-in space-y-6 max-w-4xl mx-auto">
-                                    <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-slate-200">
-                                        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                                <div className="animate-fade-in space-y-4 md:space-y-6 max-w-4xl mx-auto">
+                                    <div className="bg-white p-4 sm:p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-lg border border-slate-200">
+                                        <div className="flex flex-col md:flex-row justify-between items-center mb-4 md:mb-6 gap-3 md:gap-4">
                                             <div className="text-center md:text-left">
-                                                <h2 className="text-2xl font-black text-slate-800 flex items-center justify-center md:justify-start gap-2">
+                                                <h2 className="text-xl sm:text-2xl font-black text-slate-800 flex items-center justify-center md:justify-start gap-2">
                                                     🪣 Lógica y Operadores
                                                 </h2>
-                                                <p className="text-slate-500 text-sm">Clasifica los números según la regla lógica generada.</p>
+                                                <p className="text-slate-500 text-xs sm:text-sm">Clasifica los números según la regla lógica generada.</p>
                                             </div>
                                             
-                                            <div className="flex flex-wrap justify-center gap-2 bg-slate-100 p-2 rounded-xl">
-                                                <button onClick={() => initNumGame('AND')} className={`px-4 sm:px-6 py-2 rounded-lg font-black transition-all ${numOpMode === 'AND' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>AND (Y)</button>
-                                                <button onClick={() => initNumGame('OR')} className={`px-4 sm:px-6 py-2 rounded-lg font-black transition-all ${numOpMode === 'OR' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>OR (O)</button>
-                                                <button onClick={() => initNumGame('NOT')} className={`px-4 sm:px-6 py-2 rounded-lg font-black transition-all ${numOpMode === 'NOT' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>NOT (NO)</button>
+                                            <div className="flex flex-wrap justify-center gap-2 bg-slate-100 p-1 sm:p-2 rounded-xl">
+                                                <button onClick={() => initNumGame('AND')} className={`px-2 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all ${numOpMode === 'AND' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>AND (Y)</button>
+                                                <button onClick={() => initNumGame('OR')} className={`px-2 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all ${numOpMode === 'OR' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>OR (O)</button>
+                                                <button onClick={() => initNumGame('NOT')} className={`px-2 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all ${numOpMode === 'NOT' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>NOT (NO)</button>
                                             </div>
                                         </div>
 
-                                        <div className={`p-4 rounded-2xl border-2 mb-6 text-center shadow-sm ${numOpMode === 'AND' ? 'bg-indigo-50 border-indigo-200 text-indigo-900' : numOpMode === 'OR' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-purple-50 border-purple-200 text-purple-900'}`}>
-                                            <span className="text-xs uppercase font-bold tracking-widest opacity-60 block mb-1">Regla Lógica del Frasco</span>
-                                            <span className="text-lg md:text-2xl font-black">
+                                        <div className={`p-3 md:p-4 rounded-xl md:rounded-2xl border-2 mb-4 md:mb-6 text-center shadow-sm ${numOpMode === 'AND' ? 'bg-indigo-50 border-indigo-200 text-indigo-900' : numOpMode === 'OR' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-purple-50 border-purple-200 text-purple-900'}`}>
+                                            <span className="text-[10px] sm:text-xs uppercase font-bold tracking-widest opacity-60 block mb-1">Regla Lógica del Frasco</span>
+                                            <span className="text-base sm:text-lg md:text-2xl font-black">
                                                 {numOpMode === 'AND' && <>Números que sean <span className="underline">{numRule.cond1.label}</span> <br className="md:hidden"/><strong>AND (Y)</strong> <br className="md:hidden"/><span className="underline">{numRule.cond2.label}</span></>}
                                                 {numOpMode === 'OR' && <>Números que sean <span className="underline">{numRule.cond1.label}</span> <br className="md:hidden"/><strong>OR (O)</strong> <br className="md:hidden"/><span className="underline">{numRule.cond2.label}</span></>}
                                                 {numOpMode === 'NOT' && <>Números que <strong>NOT (NO)</strong> sean <br className="md:hidden"/><span className="underline">{numRule.cond1.label}</span></>}
                                             </span>
                                         </div>
 
-                                        <div className="grid md:grid-cols-2 gap-6">
-                                            <div className="bg-slate-100 p-4 rounded-2xl border border-slate-200 min-h-[250px] shadow-inner">
-                                                <h3 className="font-bold text-slate-500 text-sm uppercase tracking-wider mb-4 text-center">Disponibles</h3>
-                                                <div className="flex flex-wrap gap-3 justify-center items-center">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                            <div className="bg-slate-100 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-200 min-h-[180px] md:min-h-[250px] shadow-inner">
+                                                <h3 className="font-bold text-slate-500 text-xs sm:text-sm uppercase tracking-wider mb-3 md:mb-4 text-center">Disponibles</h3>
+                                                <div className="flex flex-wrap gap-2 md:gap-3 justify-center items-center">
                                                     {numItems.filter(b => !b.inJar).map(item => (
                                                         <NumberItemBlock key={item.instanceId} item={item} onClick={toggleNumJar} isSelected={false} />
                                                     ))}
                                                     {numItems.filter(b => !b.inJar).length === 0 && (
-                                                        <span className="text-slate-400 italic text-sm mt-10">No hay más números.</span>
+                                                        <span className="text-slate-400 italic text-xs sm:text-sm mt-6 md:mt-10">No hay más números.</span>
                                                     )}
                                                 </div>
                                             </div>
 
-                                            <div className="bg-white p-4 rounded-2xl border-4 border-dashed border-indigo-200 min-h-[250px] relative">
-                                                <h3 className="font-bold text-indigo-500 text-sm uppercase tracking-wider mb-4 text-center">El Frasco</h3>
-                                                <div className="flex flex-wrap gap-3 justify-center items-center z-10 relative">
+                                            <div className="bg-white p-3 md:p-4 rounded-xl md:rounded-2xl border-2 md:border-4 border-dashed border-indigo-200 min-h-[180px] md:min-h-[250px] relative">
+                                                <h3 className="font-bold text-indigo-500 text-xs sm:text-sm uppercase tracking-wider mb-3 md:mb-4 text-center">El Frasco</h3>
+                                                <div className="flex flex-wrap gap-2 md:gap-3 justify-center items-center z-10 relative">
                                                     {numItems.filter(b => b.inJar).map(item => (
                                                         <NumberItemBlock key={item.instanceId} item={item} onClick={toggleNumJar} isSelected={true} />
                                                     ))}
                                                     {numItems.filter(b => b.inJar).length === 0 && (
-                                                        <span className="text-slate-400 italic text-sm mt-10 text-center w-full">Haz clic en los números<br/>para meterlos al frasco.</span>
+                                                        <span className="text-slate-400 italic text-xs sm:text-sm mt-6 md:mt-10 text-center w-full">Haz clic en los números<br/>para meterlos al frasco.</span>
                                                     )}
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="mt-8 flex flex-col items-center">
+                                        <div className="mt-6 md:mt-8 flex flex-col items-center">
                                             {numFeedback === 'success' && numExpectedCount > 0 && (
-                                                <div className="mb-6 p-4 bg-emerald-100 text-emerald-800 border-2 border-emerald-400 rounded-xl font-black text-center w-full max-w-md animate-fade-in text-lg">
+                                                <div className="mb-4 md:mb-6 p-3 md:p-4 bg-emerald-100 text-emerald-800 border-2 border-emerald-400 rounded-xl font-black text-center w-full max-w-md animate-fade-in text-sm md:text-lg">
                                                     🎉 ¡Excelente clasificación lógica! El frasco es correcto.
                                                 </div>
                                             )}
                                             {numFeedback === 'success' && numExpectedCount === 0 && (
-                                                <div className="mb-6 p-4 bg-emerald-100 text-emerald-800 border-2 border-emerald-400 rounded-xl font-black text-center w-full max-w-md animate-fade-in text-lg">
+                                                <div className="mb-4 md:mb-6 p-3 md:p-4 bg-emerald-100 text-emerald-800 border-2 border-emerald-400 rounded-xl font-black text-center w-full max-w-md animate-fade-in text-sm md:text-lg">
                                                     🎉 ¡Excelente! ¡Te diste cuenta que ningún número cumple esta regla (Conjunto vacío)!
                                                 </div>
                                             )}
                                             {numFeedback === 'error' && (
-                                                <div className="mb-6 p-4 bg-rose-100 text-rose-800 border-2 border-rose-400 rounded-xl font-bold text-center w-full max-w-md animate-fade-in">
+                                                <div className="mb-4 md:mb-6 p-3 md:p-4 bg-rose-100 text-rose-800 border-2 border-rose-400 rounded-xl font-bold text-center w-full max-w-md animate-fade-in text-xs md:text-base">
                                                     ❌ Clasificación incorrecta. Revisa si falta algún número o si metiste uno equivocado.
                                                 </div>
                                             )}
 
-                                            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto justify-center">
-                                                <button onClick={() => initNumGame()} className="w-full sm:w-auto px-6 py-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors">
+                                            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full md:w-auto justify-center">
+                                                <button onClick={() => initNumGame()} className="w-full sm:w-auto px-4 md:px-6 py-3 md:py-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors text-sm md:text-base">
                                                     🔄 Generar Nueva Regla
                                                 </button>
-                                                <button onClick={verifyNumJar} className="w-full sm:w-auto px-10 py-4 bg-slate-800 hover:bg-slate-900 text-white font-black rounded-xl shadow-lg transition-transform transform hover:-translate-y-1 text-lg">
+                                                <button onClick={verifyNumJar} className="w-full sm:w-auto px-6 md:px-10 py-3 md:py-4 bg-slate-800 hover:bg-slate-900 text-white font-black rounded-xl shadow-lg transition-transform transform hover:-translate-y-1 text-sm md:text-lg">
                                                     Verificar Frasco
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* --- PESTAÑA 3: JERARQUÍA NUMÉRICA (VISUAL ANIDADA) --- */}
-                            {activeTab === 'hierarchy' && hierItems.length > 0 && (
-                                <div className="animate-fade-in space-y-6">
-                                    <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-slate-200">
-                                        
-                                        <div className="text-center mb-6">
-                                            <h2 className="text-2xl font-black text-slate-800 mb-2">Construyendo los Conjuntos</h2>
-                                            <p className="text-slate-500 text-sm md:text-base">
-                                                Coloca cada número en su conjunto de origen o <strong>el más específico</strong> al que pertenezca.<br className="hidden md:block"/>
-                                                <span className="italic text-xs">(Selecciona un número y haz clic en el nivel de conjunto que le corresponde).</span>
-                                            </p>
-                                        </div>
-
-                                        {/* ZONA 1: DISPONIBLES (Pool) */}
-                                        <div className="bg-slate-100 p-4 rounded-2xl border border-slate-200 min-h-[120px] shadow-inner mb-6">
-                                            <h3 className="font-bold text-slate-500 text-sm uppercase tracking-wider mb-3 text-center">Números Disponibles</h3>
-                                            <div className="flex flex-wrap gap-2 md:gap-3 justify-center items-center">
-                                                {hierItems.filter(b => b.currentJar === null).map(item => (
-                                                    <NumberItemBlock 
-                                                        key={item.instanceId} 
-                                                        item={item} 
-                                                        onClick={handleHierItemClick} 
-                                                        isSelected={hierSelected === item.instanceId} 
-                                                        isError={false}
-                                                    />
-                                                ))}
-                                                {hierItems.filter(b => b.currentJar === null).length === 0 && (
-                                                    <span className="text-emerald-600 font-bold text-sm my-4">¡Todos los números han sido asignados!</span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* ZONA 2: LA JERARQUÍA (Anidada Visualmente) */}
-                                        <div 
-                                            onClick={(e) => { e.stopPropagation(); handleHierJarClick('R'); }}
-                                            className={`p-4 md:p-6 rounded-[2rem] border-4 transition-all cursor-pointer shadow-sm relative w-full
-                                                ${hierSelected ? 'border-slate-400 bg-slate-100 hover:bg-slate-200' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'}`}
-                                        >
-                                            <h3 className="absolute top-3 md:top-4 left-4 md:left-6 font-black text-slate-400 uppercase tracking-widest text-xs md:text-sm">
-                                                Números Reales (ℝ)
-                                            </h3>
-                                            
-                                            {/* Elementos colocados incorrectamente en R (que deberían ir más profundo) */}
-                                            <div className="flex flex-wrap gap-2 min-h-[40px] mt-6 md:mt-8 mb-4 pl-2">
-                                                {hierItems.filter(i => i.currentJar === 'R').map(item => (
-                                                    <NumberItemBlock key={item.instanceId} item={item} onClick={handleHierItemClick} isSelected={hierSelected === item.instanceId} isError={item.isError} />
-                                                ))}
-                                                {hierItems.filter(i => i.currentJar === 'R').length === 0 && (
-                                                    <span className="text-slate-400 italic text-xs w-full flex items-center">{hierSelected ? 'Haz clic aquí para ubicar en Reales' : ''}</span>
-                                                )}
-                                            </div>
-
-                                            <div className="flex flex-col lg:flex-row gap-4 w-full">
-                                                
-                                                {/* Lado Izquierdo: Racionales (Q) */}
-                                                <div 
-                                                    onClick={(e) => { e.stopPropagation(); handleHierJarClick('Q'); }}
-                                                    className={`flex-1 p-4 md:p-6 rounded-2xl border-4 transition-all cursor-pointer shadow-sm flex flex-col
-                                                        ${hierSelected ? 'border-indigo-400 bg-indigo-50 hover:bg-indigo-100' : 'border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100'}`}
-                                                >
-                                                    <h3 className="font-black text-xs md:text-sm uppercase tracking-wider mb-3 px-3 py-1 rounded-lg border bg-indigo-100 text-indigo-800 border-indigo-300 inline-block w-fit">
-                                                        Racionales (ℚ)
-                                                    </h3>
-                                                    <div className="flex flex-wrap gap-2 min-h-[60px] mb-4">
-                                                        {hierItems.filter(i => i.currentJar === 'Q').map(item => (
-                                                            <NumberItemBlock key={item.instanceId} item={item} onClick={handleHierItemClick} isSelected={hierSelected === item.instanceId} isError={item.isError} />
-                                                        ))}
-                                                        {hierItems.filter(i => i.currentJar === 'Q').length === 0 && <span className="text-indigo-300 italic text-xs w-full">{hierSelected ? 'Haz clic aquí para ubicar en Racionales' : ''}</span>}
-                                                    </div>
-
-                                                    {/* Enteros (Z) */}
-                                                    <div 
-                                                        onClick={(e) => { e.stopPropagation(); handleHierJarClick('Z'); }}
-                                                        className={`p-4 md:p-6 rounded-2xl border-4 transition-all cursor-pointer shadow-sm flex flex-col mb-4 flex-grow
-                                                            ${hierSelected ? 'border-blue-400 bg-blue-50 hover:bg-blue-100' : 'border-blue-200 bg-blue-50/50 hover:bg-blue-100'}`}
-                                                    >
-                                                        <h3 className="font-black text-xs md:text-sm uppercase tracking-wider mb-3 px-3 py-1 rounded-lg border bg-blue-100 text-blue-800 border-blue-300 inline-block w-fit">
-                                                            Enteros (ℤ)
-                                                        </h3>
-                                                        <div className="flex flex-wrap gap-2 min-h-[60px] mb-4">
-                                                            {hierItems.filter(i => i.currentJar === 'Z').map(item => (
-                                                                <NumberItemBlock key={item.instanceId} item={item} onClick={handleHierItemClick} isSelected={hierSelected === item.instanceId} isError={item.isError} />
-                                                            ))}
-                                                            {hierItems.filter(i => i.currentJar === 'Z').length === 0 && <span className="text-blue-300 italic text-xs w-full">{hierSelected ? 'Haz clic aquí para ubicar en Enteros' : ''}</span>}
-                                                        </div>
-
-                                                        {/* Naturales (N) */}
-                                                        <div 
-                                                            onClick={(e) => { e.stopPropagation(); handleHierJarClick('N'); }}
-                                                            className={`p-4 md:p-6 rounded-2xl border-4 transition-all cursor-pointer shadow-sm flex flex-col flex-grow
-                                                                ${hierSelected ? 'border-emerald-400 bg-emerald-50 hover:bg-emerald-100' : 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100'}`}
-                                                        >
-                                                            <h3 className="font-black text-xs md:text-sm uppercase tracking-wider mb-3 px-3 py-1 rounded-lg border bg-emerald-100 text-emerald-800 border-emerald-300 inline-block w-fit">
-                                                                Naturales (ℕ)
-                                                            </h3>
-                                                            <div className="flex flex-wrap gap-2 min-h-[60px]">
-                                                                {hierItems.filter(i => i.currentJar === 'N').map(item => (
-                                                                    <NumberItemBlock key={item.instanceId} item={item} onClick={handleHierItemClick} isSelected={hierSelected === item.instanceId} isError={item.isError} />
-                                                                ))}
-                                                                {hierItems.filter(i => i.currentJar === 'N').length === 0 && <span className="text-emerald-300 italic text-xs w-full">{hierSelected ? 'Haz clic aquí para ubicar en Naturales' : ''}</span>}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Lado Derecho: Irracionales (I) */}
-                                                <div 
-                                                    onClick={(e) => { e.stopPropagation(); handleHierJarClick('I'); }}
-                                                    className={`w-full lg:w-1/3 p-4 md:p-6 rounded-2xl border-4 transition-all cursor-pointer shadow-sm flex flex-col min-h-[150px]
-                                                        ${hierSelected ? 'border-purple-400 bg-purple-50 hover:bg-purple-100' : 'border-purple-200 bg-purple-50/50 hover:bg-purple-100'}`}
-                                                >
-                                                    <h3 className="font-black text-xs md:text-sm uppercase tracking-wider mb-3 px-3 py-1 rounded-lg border bg-purple-100 text-purple-800 border-purple-300 inline-block w-fit">
-                                                        Irracionales (𝕀)
-                                                    </h3>
-                                                    <div className="flex flex-wrap gap-2 min-h-[60px]">
-                                                        {hierItems.filter(i => i.currentJar === 'I').map(item => (
-                                                            <NumberItemBlock key={item.instanceId} item={item} onClick={handleHierItemClick} isSelected={hierSelected === item.instanceId} isError={item.isError} />
-                                                        ))}
-                                                        {hierItems.filter(i => i.currentJar === 'I').length === 0 && <span className="text-purple-300 italic text-xs w-full">{hierSelected ? 'Haz clic aquí para ubicar en Irracionales' : ''}</span>}
-                                                    </div>
-                                                </div>
-
-                                            </div>
-                                        </div>
-
-                                        {/* CONTROLES Y FEEDBACK */}
-                                        <div className="mt-8 flex flex-col items-center">
-                                            {hierFeedback === 'success' && (
-                                                <div className="mb-6 p-4 bg-emerald-100 text-emerald-800 border-2 border-emerald-400 rounded-xl font-black text-center w-full max-w-md animate-fade-in text-lg">
-                                                    🎉 ¡Felicidades! Has clasificado todos los números en su conjunto más específico correctamente.
-                                                </div>
-                                            )}
-                                            {hierFeedback === 'error' && (
-                                                <div className="mb-6 p-4 bg-rose-100 text-rose-800 border-2 border-rose-400 rounded-xl font-bold text-center w-full max-w-md animate-fade-in">
-                                                    ❌ Hay errores en la clasificación. Revisa los números marcados en rojo e inténtalo de nuevo.
-                                                    <p className="text-sm font-medium mt-2">Recuerda: Todo Natural es también Entero y Racional, pero debes ubicarlo en su "caja de origen" más específica.</p>
-                                                </div>
-                                            )}
-
-                                            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto justify-center">
-                                                <button onClick={initHierGame} className="w-full sm:w-auto px-6 py-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors">
-                                                    🔄 Nuevos Números
-                                                </button>
-                                                <button onClick={verifyHierGame} className="w-full sm:w-auto px-10 py-4 bg-slate-800 hover:bg-slate-900 text-white font-black rounded-xl shadow-lg transition-transform transform hover:-translate-y-1 text-lg">
-                                                    Verificar Clasificación
                                                 </button>
                                             </div>
                                         </div>
