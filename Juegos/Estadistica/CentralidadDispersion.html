@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Laboratorio Estadístico: Centro y Variabilidad</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { 
+            background-color: #f8fafc; 
+            font-family: system-ui, -apple-system, sans-serif; 
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-slate-800 bg-slate-50 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // --- COMPONENTE: PREGUNTA DE SELECCIÓN MÚLTIPLE ---
+        const RadioGroup = ({ options, name, value, onChange, disabled }) => (
+            <div className="flex flex-col gap-2 mt-2">
+                {options.map((opt, i) => (
+                    <label key={i} className={`flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-all ${value === opt.val ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'bg-white border-slate-200 hover:bg-slate-50'} ${disabled ? 'opacity-80 cursor-not-allowed' : ''}`}>
+                        <input 
+                            type="radio" 
+                            name={name} 
+                            value={opt.val} 
+                            checked={value === opt.val} 
+                            onChange={() => onChange(opt.val)} 
+                            disabled={disabled}
+                            className="mt-1 w-4 h-4 text-indigo-600 focus:ring-indigo-500" 
+                        />
+                        <span className="text-sm font-medium text-slate-700">{opt.label}</span>
+                    </label>
+                ))}
+            </div>
+        );
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('taller1'); // 'taller1' | 'taller2'
+            
+            // Estado para los acordeones (desplegables)
+            const [isAccordionOpen, setIsAccordionOpen] = useState(false);
+            const [isAccordionOpen2, setIsAccordionOpen2] = useState(false);
+
+            // --- ESTADOS: TALLER 1 (CENTRO Y VARIABILIDAD) ---
+            const [t1q1Moda, setT1q1Moda] = useState('');
+            const [t1q1Mediana, setT1q1Mediana] = useState('');
+            const [t1q1Media, setT1q1Media] = useState('');
+            const [t1q2, setT1q2] = useState('');
+            const [t1q3, setT1q3] = useState('');
+            const [t1q4, setT1q4] = useState('');
+            const [t1Status, setT1Status] = useState(null);
+
+            // --- ESTADOS: TALLER 2 (DIAGRAMA DE CAJA Y RANGO) ---
+            const [t2q1Val, setT2q1Val] = useState('');
+            const [t2q1Move, setT2q1Move] = useState('');
+            const [t2q2Min, setT2q2Min] = useState('');
+            const [t2q2Med, setT2q2Med] = useState('');
+            const [t2q2Max, setT2q2Max] = useState('');
+            const [t2q3Box, setT2q3Box] = useState('');
+            const [t2q3Cons, setT2q3Cons] = useState('');
+            const [t2q4, setT2q4] = useState('');
+            const [t2Status, setT2Status] = useState(null);
+
+            // --- FUNCIONES DE VERIFICACIÓN ---
+            const verifyT1 = () => {
+                const q1 = t1q1Moda == '2' && t1q1Mediana == '3' && t1q1Media == '5';
+                const q2 = t1q2 === 'media';
+                const q3 = t1q3 === 'simetrica';
+                const q4 = t1q4 === 'posicion';
+                
+                setT1Status({ q1, q2, q3, q4, all: q1 && q2 && q3 && q4 });
+                if(q1 && q2 && q3 && q4) alert("¡Taller 1 completado exitosamente!");
+            };
+
+            const verifyT2 = () => {
+                const q1 = t2q1Val == '14' && t2q1Move === 'disminuye';
+                const q2 = t2q2Min == '4' && t2q2Med == '12' && t2q2Max == '14';
+                const q3 = t2q3Box === 'delgada' && t2q3Cons === 'consistente';
+                const q4 = t2q4 === 'A';
+
+                setT2Status({ q1, q2, q3, q4, all: q1 && q2 && q3 && q4 });
+                if(q1 && q2 && q3 && q4) alert("¡Taller 2 completado exitosamente!");
+            };
+
+            const inputClass = (status, fieldStatus) => {
+                const base = "w-20 text-center border-2 p-2 rounded-xl focus:outline-none transition-all font-bold ";
+                if (!status) return base + "border-slate-300 focus:border-indigo-500";
+                return base + (fieldStatus ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-rose-500 bg-rose-50 text-rose-700");
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    
+                    {/* ENCABEZADO */}
+                    <header className="bg-indigo-900 text-white p-4 shadow-md text-center shrink-0 z-50">
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tight flex items-center justify-center gap-3">
+                            <span>⚽</span> Matemáticas Futboleras & PhET
+                        </h1>
+                        <p className="text-xs md:text-sm text-indigo-200 font-medium mt-1">Exploración de Centro y Variabilidad Estadística</p>
+                    </header>
+
+                    {/* LAYOUT PRINCIPAL (SPLIT SCREEN) */}
+                    <div className="flex-grow flex flex-col lg:flex-row w-full h-full max-w-[1600px] mx-auto">
+                        
+                        {/* --- PANEL IZQUIERDO: SIMULADOR PHET (STICKY) --- */}
+                        <div className="w-full lg:w-1/2 p-4 lg:p-6 lg:border-r border-slate-200 lg:sticky lg:top-0 lg:h-screen flex flex-col">
+                            <div className="bg-white p-3 border border-slate-200 rounded-3xl shadow-sm mb-4 flex-grow relative" style={{ minHeight: '50vh' }}>
+                                <iframe 
+                                    src="https://phet.colorado.edu/sims/html/center-and-variability/latest/center-and-variability_all.html?locale=es" 
+                                    className="absolute inset-0 w-full h-full rounded-2xl"
+                                    scrolling="no" 
+                                    allowFullScreen
+                                    title="Simulador PhET: Centro y Variabilidad"
+                                ></iframe>
+                            </div>
+                            <div className="bg-blue-50 border border-blue-200 p-4 rounded-2xl shrink-0 hidden lg:block">
+                                <p className="text-blue-800 text-sm font-bold flex items-start gap-2">
+                                    <span className="text-lg">💡</span> 
+                                    Usa la pestaña inferior del simulador según el taller ("Mediana", "Media y Mediana" o "Variabilidad").
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* --- PANEL DERECHO: TALLERES (SCROLLABLE) --- */}
+                        <div className="w-full lg:w-1/2 bg-white min-h-screen flex flex-col relative">
+                            
+                            {/* TABS DE TALLERES */}
+                            <div className="flex bg-slate-50 border-b border-slate-200 sticky top-0 z-40">
+                                <button 
+                                    onClick={() => setActiveTab('taller1')}
+                                    className={`flex-1 py-4 px-2 text-xs md:text-sm font-black uppercase tracking-wider transition-all border-b-4 ${activeTab === 'taller1' ? 'border-indigo-600 text-indigo-700 bg-white' : 'border-transparent text-slate-500 hover:text-indigo-600 hover:bg-white/50'}`}
+                                >
+                                    Taller 1: Centro
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('taller2')}
+                                    className={`flex-1 py-4 px-2 text-xs md:text-sm font-black uppercase tracking-wider transition-all border-b-4 ${activeTab === 'taller2' ? 'border-indigo-600 text-indigo-700 bg-white' : 'border-transparent text-slate-500 hover:text-indigo-600 hover:bg-white/50'}`}
+                                >
+                                    Taller 2: Variabilidad
+                                </button>
+                            </div>
+
+                            {/* CONTENIDO DEL TALLER 1 */}
+                            {activeTab === 'taller1' && (
+                                <div className="p-4 md:p-8 overflow-y-auto animate-fade-in relative pb-32">
+                                    <div className="space-y-8">
+                                        
+                                        <div className="border-b pb-4">
+                                            <h2 className="text-2xl font-black text-slate-800">Exploración de Centro Estadístico</h2>
+                                            <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+                                                Vamos a explorar la simulación PhET: primero abre el simulador (Pestaña "Media y Mediana"), allí podrás encontrar múltiples botones e interactuar con ellos, tómate 5 minutos para realizar esto. Identifica los botones de lanzamiento, los selectores de predicción de media y mediana, y los selectores para escoger la media y la mediana. ¿Qué puedes evidenciar de cada uno?
+                                            </p>
+                                        </div>
+
+                                        {/* ACORDEÓN DESPLEGABLE TALLER 1 */}
+                                        <div className="bg-indigo-50 rounded-xl border border-indigo-200 overflow-hidden">
+                                            <button 
+                                                onClick={() => setIsAccordionOpen(!isAccordionOpen)} 
+                                                className="w-full p-4 flex justify-between items-center font-bold text-indigo-800 hover:bg-indigo-100 transition-colors"
+                                            >
+                                                <span className="flex items-center gap-2"><span>ℹ️</span> Guía de los botones del simulador</span>
+                                                <span className="text-xl leading-none">{isAccordionOpen ? '▲' : '▼'}</span>
+                                            </button>
+                                            
+                                            {isAccordionOpen && (
+                                                <div className="p-4 pt-0 text-sm text-indigo-900 space-y-3 animate-fade-in border-t border-indigo-100 mt-2">
+                                                    <p><strong>Lanzamiento 1:</strong> Una persona patea un balón.</p>
+                                                    <p><strong>Lanzamiento 2:</strong> Cinco personas diferentes patean un balón.</p>
+                                                    <p><strong>Parte interior:</strong> En el selector de predicción de media y mediana puedes colocar los valores que crees que serán la media y mediana. En los selectores de media y mediana se calculan los valores finales.</p>
+                                                    <p>En la sección de gráfica de cruces se representan las coordenadas de los balones pateados y se logran identificar la media y mediana.</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* SECCIÓN 1 */}
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-indigo-800 mb-2 flex items-center gap-2"><span>1️⃣</span> Configuración Inicial</h3>
+                                            <p className="text-sm text-slate-600 mb-4">Da clic en el borrador para limpiar la simulación, ahora lanza 5 balones y acomódalos en las distancias: <strong>2, 2, 3, 5, 13</strong>. Ingresa los valores de moda, media y mediana.</p>
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center">
+                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Moda</span>
+                                                    <input type="number" value={t1q1Moda} onChange={e=>setT1q1Moda(e.target.value)} disabled={t1Status?.all} className={inputClass(t1Status, t1Status?.q1)} placeholder="?" />
+                                                </div>
+                                                <div className="bg-white p-3 rounded-xl border border-rose-200 flex flex-col items-center shadow-[0_0_10px_rgba(244,63,94,0.1)]">
+                                                    <span className="text-xs font-bold text-rose-500 uppercase tracking-widest mb-2">Mediana (Flecha Roja)</span>
+                                                    <input type="number" value={t1q1Mediana} onChange={e=>setT1q1Mediana(e.target.value)} disabled={t1Status?.all} className={inputClass(t1Status, t1Status?.q1)} placeholder="?" />
+                                                </div>
+                                                <div className="bg-white p-3 rounded-xl border border-purple-200 flex flex-col items-center shadow-[0_0_10px_rgba(168,85,247,0.1)]">
+                                                    <span className="text-xs font-bold text-purple-500 uppercase tracking-widest mb-2">Media (Triángulo Púrpura)</span>
+                                                    <input type="number" value={t1q1Media} onChange={e=>setT1q1Media(e.target.value)} disabled={t1Status?.all} className={inputClass(t1Status, t1Status?.q1)} placeholder="?" />
+                                                </div>
+                                            </div>
+                                            {t1Status && !t1Status.q1 && <p className="text-xs font-bold text-rose-600 mt-2">Revisa los valores extraídos del simulador.</p>}
+                                        </div>
+
+                                        {/* SECCIÓN 2 */}
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-indigo-800 mb-2 flex items-center gap-2"><span>2️⃣</span> Experimento de Movimiento</h3>
+                                            <p className="text-sm text-slate-600 mb-4">Toma el balón que está en el <strong>13</strong> y arrástralo hasta el <strong>15</strong>. Observa atentamente las marcas.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">¿Cuál de las medidas cambió su valor al mover ese único balón atípico?</label>
+                                            <RadioGroup 
+                                                name="t1q2" 
+                                                value={t1q2} 
+                                                onChange={setT1q2} 
+                                                disabled={t1Status?.all}
+                                                options={[
+                                                    { val: 'moda', label: 'La Moda (se movió junto con el balón)' },
+                                                    { val: 'mediana', label: 'La Mediana (la flecha roja se desplazó)' },
+                                                    { val: 'media', label: 'La Media (el punto de equilibrio púrpura cambió)' }
+                                                ]} 
+                                            />
+                                            {t1Status && !t1Status.q2 && <p className="text-xs font-bold text-rose-600 mt-2">Pista: Fíjate cuál de los símbolos se deslizó hacia la derecha.</p>}
+                                        </div>
+
+                                        {/* SECCIÓN 3 */}
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-indigo-800 mb-2 flex items-center gap-2"><span>3️⃣</span> Desafío de Simetría</h3>
+                                            <p className="text-sm text-slate-600 mb-4">Intenta colocar 5 balones de tal forma que la Media y la Mediana queden exactamente en el mismo número (Ej: ambas en el 7).</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">¿Cómo tuviste que organizar los balones para lograr esto?</label>
+                                            <RadioGroup 
+                                                name="t1q3" 
+                                                value={t1q3} 
+                                                onChange={setT1q3} 
+                                                disabled={t1Status?.all}
+                                                options={[
+                                                    { val: 'extremos', label: 'Puse todos los balones juntos en un solo extremo (ej. todos en el 14).' },
+                                                    { val: 'simetrica', label: 'Ordené los valores al rededor del valor deseado (al rededor de 7).' },
+                                                    { val: 'imposible', label: 'Es imposible que ambas medidas marquen exactamente lo mismo.' }
+                                                ]} 
+                                            />
+                                            {t1Status && !t1Status.q3 && <p className="text-xs font-bold text-rose-600 mt-2">Pista: ¿Qué pasa si pones un balón en el 5, otro en el 9 y tres en el 7?</p>}
+                                        </div>
+
+                                        {/* SECCIÓN 4 */}
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-indigo-800 mb-2 flex items-center gap-2"><span>4️⃣</span> Análisis Crítico</h3>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">Basado en lo anterior, si un jugador patea un balón muy lejos por accidente (valor atípico), ¿por qué la Media se ve afectada pero la Mediana no?</label>
+                                            <RadioGroup 
+                                                name="t1q4" 
+                                                value={t1q4} 
+                                                onChange={setT1q4} 
+                                                disabled={t1Status?.all}
+                                                options={[
+                                                    { val: 'posicion', label: 'Porque la Media suma todos los valores (incluyendo el atípico), mientras que la Mediana solo busca la posición central.' },
+                                                    { val: 'fuerza', label: 'Porque la Media es una medida más "fuerte" y siempre se mueve hacia los números grandes.' },
+                                                    { val: 'azar', label: 'Es simple coincidencia; la Mediana también se afecta por igual siempre.' }
+                                                ]} 
+                                            />
+                                            {t1Status && !t1Status.q4 && <p className="text-xs font-bold text-rose-600 mt-2">Selección incorrecta.</p>}
+                                        </div>
+
+                                    </div>
+
+                                    {/* CONTROLES FLOTANTES TALLER 1 */}
+                                    <div className="fixed bottom-0 right-0 w-full lg:w-1/2 bg-white border-t border-slate-200 p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-40 flex justify-center gap-3">
+                                        {!t1Status?.all ? (
+                                            <button onClick={verifyT1} className="w-full md:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-lg transition-all text-sm md:text-base">
+                                                Verificar Taller 1
+                                            </button>
+                                        ) : (
+                                            <div className="w-full md:w-auto px-6 py-3 bg-emerald-100 text-emerald-800 font-bold rounded-xl flex items-center justify-center gap-2 text-sm md:text-base shadow-sm border border-emerald-200">
+                                                <span>✅</span> ¡Taller Completado!
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* CONTENIDO DEL TALLER 2 */}
+                            {activeTab === 'taller2' && (
+                                <div className="p-4 md:p-8 overflow-y-auto animate-fade-in relative pb-32">
+                                    <div className="space-y-8">
+                                        
+                                        <div className="border-b pb-4">
+                                            <h2 className="text-2xl font-black text-slate-800">Variabilidad y Diagramas de Caja</h2>
+                                            <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+                                                Vamos a explorar la simulación PhET: primero abre el simulador (Pestaña de variabilidad), allí podrás encontrar múltiples botones e interactuar con ellos, tómate 5 minutos para realizar esto. Identifica los botones de lanzamiento, los diferentes equipos que pueden lanzar, un apuntador, y valores de media y moda.
+                                            </p>
+                                        </div>
+
+                                        {/* ACORDEÓN DESPLEGABLE TALLER 2 */}
+                                        <div className="bg-indigo-50 rounded-xl border border-indigo-200 overflow-hidden">
+                                            <button 
+                                                onClick={() => setIsAccordionOpen2(!isAccordionOpen2)} 
+                                                className="w-full p-4 flex justify-between items-center font-bold text-indigo-800 hover:bg-indigo-100 transition-colors"
+                                            >
+                                                <span className="flex items-center gap-2"><span>ℹ️</span> Guía de los botones del simulador</span>
+                                                <span className="text-xl leading-none">{isAccordionOpen2 ? '▲' : '▼'}</span>
+                                            </button>
+                                            
+                                            {isAccordionOpen2 && (
+                                                <div className="p-4 pt-0 text-sm text-indigo-900 space-y-3 animate-fade-in border-t border-indigo-100 mt-2">
+                                                    <p><strong>Lanzamiento 2:</strong> cinco personas diferentes patean un balón.</p>
+                                                    <p><strong>Parte inferior:</strong> puedes encontrar selectores para observar la media y mediana.</p>
+                                                    <p><strong>Herramientas:</strong> un apuntador y herramienta de intervalo para medir.</p>
+                                                    <p><strong>Parte superior:</strong> puedes encontrar una representación del rango de los lanzamientos y un diagrama de caja y bigotes.</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* SECCIÓN 1 */}
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-indigo-800 mb-2 flex items-center gap-2"><span>1️⃣</span> Explorando el Rango</h3>
+                                            <p className="text-sm text-slate-600 mb-4">Haz que un equipo realice 5 lanzamientos, organiza el máximo y el mínimo de los lanzamientos para que un balón quede en <strong>1</strong> y el otro en <strong>15</strong>.</p>
+                                            
+                                            <div className="flex flex-wrap items-center gap-4 mb-6 bg-white p-4 rounded-xl border border-slate-200">
+                                                <label className="font-bold text-slate-800 text-sm">¿Cuál es la distancia total del rango inicial?</label>
+                                                <div className="flex items-center gap-2">
+                                                    <input type="number" value={t2q1Val} onChange={e=>setT2q1Val(e.target.value)} disabled={t2Status?.all} className={inputClass(t2Status, t2Status?.q1)} placeholder="?" />
+                                                    <span className="text-sm font-bold text-slate-500">metros</span>
+                                                </div>
+                                            </div>
+
+                                            <label className="font-bold text-slate-800 text-sm block mb-2">Mueve ambos balones más extremos hacia el centro, si es necesario, agrupa los demás balones para que no queden por fuera de los balones que has movido. ¿Qué sucede con el Rango (línea verde)?</label>
+                                            <RadioGroup 
+                                                name="t2q1Move" 
+                                                value={t2q1Move} 
+                                                onChange={setT2q1Move} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: 'aumenta', label: 'El rango aumenta notablemente.' },
+                                                    { val: 'disminuye', label: 'El rango disminuye (la línea verde se hace corta).' },
+                                                    { val: 'igual', label: 'El rango se mantiene igual sin importar la posición.' }
+                                                ]} 
+                                            />
+                                        </div>
+
+                                        {/* SECCIÓN 2 */}
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-indigo-800 mb-2 flex items-center gap-2"><span>2️⃣</span> Diagrama de Caja (Boxplot)</h3>
+                                            <p className="text-sm text-slate-600 mb-4">Activa la vista de "Diagrama de Caja" en el simulador. Coloca 5 balones en las posiciones: <strong>4, 9, 12, 14, 14</strong>.</p>
+                                            
+                                            <p className="font-bold text-slate-800 text-sm mb-3">Anota los valores que marca el diagrama de caja:</p>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                <div className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center justify-between gap-2">
+                                                    <span className="text-[10px] font-bold text-slate-500 uppercase text-center leading-tight">Valor Mínimo <br/>(Bigote Izquierdo)</span>
+                                                    <input type="number" value={t2q2Min} onChange={e=>setT2q2Min(e.target.value)} disabled={t2Status?.all} className={inputClass(t2Status, t2Status?.q2)} placeholder="?" />
+                                                </div>
+                                                <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-200 flex flex-col items-center justify-between gap-2">
+                                                    <span className="text-[10px] font-bold text-indigo-600 uppercase text-center leading-tight">Mediana <br/>(Línea Interna)</span>
+                                                    <input type="number" value={t2q2Med} onChange={e=>setT2q2Med(e.target.value)} disabled={t2Status?.all} className={inputClass(t2Status, t2Status?.q2)} placeholder="?" />
+                                                </div>
+                                                <div className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center justify-between gap-2">
+                                                    <span className="text-[10px] font-bold text-slate-500 uppercase text-center leading-tight">Valor Máximo <br/>(Bigote Derecho)</span>
+                                                    <input type="number" value={t2q2Max} onChange={e=>setT2q2Max(e.target.value)} disabled={t2Status?.all} className={inputClass(t2Status, t2Status?.q2)} placeholder="?" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* SECCIÓN 3 */}
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-indigo-800 mb-2 flex items-center gap-2"><span>3️⃣</span> Dispersión y Consistencia</h3>
+                                            <p className="text-sm text-slate-600 mb-4">Mantén un balón en el 1 y otro en el 15. Coloca los otros 3 balones exactamente en la misma posición (ej. el número 8).</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm block mb-2">Al acumular datos en el centro, ¿qué le pasó a la forma de la "caja"?</label>
+                                            <RadioGroup 
+                                                name="t2q3Box" 
+                                                value={t2q3Box} 
+                                                onChange={setT2q3Box} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: 'ancha', label: 'La caja se hizo muy ancha.' },
+                                                    { val: 'delgada', label: 'La caja se hizo muy estrecha / delgada.' }
+                                                ]} 
+                                            />
+
+                                            <label className="font-bold text-slate-800 text-sm block mt-6 mb-2">Esto significa que, estadísticamente, la mayoría de los lanzamientos del jugador son:</label>
+                                            <RadioGroup 
+                                                name="t2q3Cons" 
+                                                value={t2q3Cons} 
+                                                onChange={setT2q3Cons} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: 'consistente', label: 'Muy consistentes (casi todos caen en la misma zona).' },
+                                                    { val: 'inconsistente', label: 'Poco consistentes (totalmente aleatorios).' }
+                                                ]} 
+                                            />
+                                        </div>
+
+                                        {/* SECCIÓN 4 */}
+                                        <div className="bg-slate-800 text-white p-6 rounded-2xl">
+                                            <h3 className="font-black text-xl mb-3 flex items-center gap-2"><span>📋</span> Conclusión del Analista</h3>
+                                            <p className="text-sm text-slate-300 mb-4">Dos jugadores tienen el mismo promedio matemático de distancia de pase. Sin embargo, en el simulador ves que el <strong>Jugador A</strong> tiene un diagrama de caja muy estrecho (pequeño), y el <strong>Jugador B</strong> tiene un diagrama que ocupa casi toda la cancha.</p>
+                                            
+                                            <label className="font-bold text-white text-sm block mb-3">Si necesitas estar seguro de dónde va a caer el balón para planear una jugada crítica, ¿a quién eliges?</label>
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <label className={`flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${t2q4 === 'A' ? 'bg-indigo-600 border-indigo-400' : 'bg-slate-700 border-slate-600 hover:bg-slate-600'}`}>
+                                                    <input type="radio" name="t2q4" value="A" className="hidden" onChange={() => setT2q4('A')} disabled={t2Status?.all} />
+                                                    <span className="text-3xl mb-2">🎯</span>
+                                                    <span className="font-bold text-center text-sm">Al Jugador A <br/><span className="font-normal text-xs text-indigo-200">(Caja Estrecha)</span></span>
+                                                </label>
+                                                <label className={`flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${t2q4 === 'B' ? 'bg-indigo-600 border-indigo-400' : 'bg-slate-700 border-slate-600 hover:bg-slate-600'}`}>
+                                                    <input type="radio" name="t2q4" value="B" className="hidden" onChange={() => setT2q4('B')} disabled={t2Status?.all} />
+                                                    <span className="text-3xl mb-2">🌪️</span>
+                                                    <span className="font-bold text-center text-sm">Al Jugador B <br/><span className="font-normal text-xs text-indigo-200">(Caja Ancha)</span></span>
+                                                </label>
+                                            </div>
+                                            {t2Status && !t2Status.q4 && <p className="text-xs font-bold text-rose-400 mt-3 text-center">Analiza bien: Una caja estrecha indica que la mayoría de sus pases caen en un lugar predecible.</p>}
+                                        </div>
+
+                                    </div>
+
+                                    {/* CONTROLES FLOTANTES TALLER 2 */}
+                                    <div className="fixed bottom-0 right-0 w-full lg:w-1/2 bg-white border-t border-slate-200 p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-40 flex justify-center gap-3">
+                                        {!t2Status?.all ? (
+                                            <button onClick={verifyT2} className="w-full md:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-lg transition-all text-sm md:text-base">
+                                                Verificar Taller 2
+                                            </button>
+                                        ) : (
+                                            <div className="w-full md:w-auto px-6 py-3 bg-emerald-100 text-emerald-800 font-bold rounded-xl flex items-center justify-center gap-2 text-sm md:text-base shadow-sm border border-emerald-200">
+                                                <span>✅</span> ¡Taller Completado!
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
