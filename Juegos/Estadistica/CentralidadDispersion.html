@@ -70,6 +70,7 @@
             const [t1q2, setT1q2] = useState('');
             const [t1q3, setT1q3] = useState('');
             const [t1q4, setT1q4] = useState('');
+            const [t1q5, setT1q5] = useState('');
             const [t1Status, setT1Status] = useState(null);
 
             // --- ESTADOS: TALLER 2 (DIAGRAMA DE CAJA Y RANGO) ---
@@ -89,9 +90,10 @@
                 const q2 = t1q2 === 'media';
                 const q3 = t1q3 === 'simetrica';
                 const q4 = t1q4 === 'posicion';
+                const q5 = t1q5 === 'media_jala';
                 
-                setT1Status({ q1, q2, q3, q4, all: q1 && q2 && q3 && q4 });
-                if(q1 && q2 && q3 && q4) alert("¡Taller 1 completado exitosamente!");
+                setT1Status({ q1, q2, q3, q4, q5, all: q1 && q2 && q3 && q4 && q5 });
+                if(q1 && q2 && q3 && q4 && q5) alert("¡Taller 1 completado exitosamente!");
             };
 
             const verifyT2 = () => {
@@ -116,7 +118,7 @@
                     {/* ENCABEZADO */}
                     <header className="bg-indigo-900 text-white p-4 shadow-md text-center shrink-0 z-50">
                         <h1 className="text-2xl md:text-3xl font-black tracking-tight flex items-center justify-center gap-3">
-                            <span>⚽</span> Estadística Futbolera & PhET
+                            <span>⚽</span> Matemáticas Futboleras & PhET
                         </h1>
                         <p className="text-xs md:text-sm text-indigo-200 font-medium mt-1">Exploración de Centro y Variabilidad Estadística</p>
                     </header>
@@ -170,7 +172,7 @@
                                         <div className="border-b pb-4">
                                             <h2 className="text-2xl font-black text-slate-800">Exploración de Centro Estadístico</h2>
                                             <p className="text-slate-600 text-sm mt-2 leading-relaxed">
-                                                Vamos a explorar la simulación PhET: primero abre el simulador (Pestaña "Media y Mediana"), allí podrás encontrar múltiples botones e interactuar con ellos, tómate 5 minutos para realizar esto. Identifica los botones de lanzamiento, los selectores de predicción de media y mediana, y los selectores para escoger la media y la mediana. ¿Qué puedes evidenciar de cada uno?
+                                                Vamos a explorar la simulación PhET: primero abre el <strong>simulador (Pestaña "Media y Mediana")</strong>, allí podrás encontrar múltiples botones e interactuar con ellos, tómate 5 minutos para realizar esto. Identifica los botones de lanzamiento, los selectores de predicción de media y mediana, y los selectores para escoger la media y la mediana. ¿Qué puedes evidenciar de cada uno?
                                             </p>
                                         </div>
 
@@ -188,7 +190,7 @@
                                                 <div className="p-4 pt-0 text-sm text-indigo-900 space-y-3 animate-fade-in border-t border-indigo-100 mt-2">
                                                     <p><strong>Lanzamiento 1:</strong> Una persona patea un balón.</p>
                                                     <p><strong>Lanzamiento 2:</strong> Cinco personas diferentes patean un balón.</p>
-                                                    <p><strong>Parte interior:</strong> En el selector de predicción de media y mediana puedes colocar los valores que crees que serán la media y mediana. En los selectores de media y mediana se calculan los valores finales.</p>
+                                                    <p><strong>Parte interior:</strong> En el selector de predicción de media y mediana puedes arrastrar los valores que crees que serán la media y mediana. En los selectores de media y mediana se calculan los valores finales.</p>
                                                     <p>En la sección de gráfica de cruces se representan las coordenadas de los balones pateados y se logran identificar la media y mediana.</p>
                                                 </div>
                                             )}
@@ -239,7 +241,7 @@
                                         {/* SECCIÓN 3 */}
                                         <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
                                             <h3 className="font-black text-indigo-800 mb-2 flex items-center gap-2"><span>3️⃣</span> Desafío de Simetría</h3>
-                                            <p className="text-sm text-slate-600 mb-4">Intenta colocar 5 balones de tal forma que la Media y la Mediana queden exactamente en el mismo número (Ej: ambas en el 7).</p>
+                                            <p className="text-sm text-slate-600 mb-4">Intenta Arrastrar 5 balones de tal forma que la Media y la Mediana queden exactamente en el mismo número (Ej: ambas en el 7).</p>
                                             
                                             <label className="font-bold text-slate-800 text-sm">¿Cómo tuviste que organizar los balones para lograr esto?</label>
                                             <RadioGroup 
@@ -275,6 +277,26 @@
                                             {t1Status && !t1Status.q4 && <p className="text-xs font-bold text-rose-600 mt-2">Selección incorrecta.</p>}
                                         </div>
 
+                                        {/* SECCIÓN 5: ASIMETRÍA */}
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-indigo-800 mb-2 flex items-center gap-2"><span>5️⃣</span> Asimetría y Colas Pesadas</h3>
+                                            <p className="text-sm text-slate-600 mb-4">Limpia la simulación. Arrastra 3 balones agrupados a la izquierda (ej. en el 2, 3 y 3) y mueve 2 balones muy lejos hacia la derecha (ej. en el 14 y 15) para representar una cola larga hacia un lado.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">¿Qué sucede con la Media y la Mediana cuando arrastras balones en un lado y creas una cola hacia el otro?</label>
+                                            <RadioGroup 
+                                                name="t1q5" 
+                                                value={t1q5} 
+                                                onChange={setT1q5} 
+                                                disabled={t1Status?.all}
+                                                options={[
+                                                    { val: 'media_jala', label: 'La Media es "jalada" hacia la cola larga (hacia los balones extremos), mientras que la Mediana se queda cerca del grupo principal.' },
+                                                    { val: 'mediana_jala', label: 'La Mediana es fuertemente "jalada" hacia la cola larga, pero la Media apenas se mueve.' },
+                                                    { val: 'juntas', label: 'Ambas medidas se mueven exactamente juntas hacia los valores extremos de la cola.' }
+                                                ]} 
+                                            />
+                                            {t1Status && !t1Status.q5 && <p className="text-xs font-bold text-rose-600 mt-2">Pista: Observa qué símbolo se desplaza más lejos del grupo original cuando alejas los balones de la cola.</p>}
+                                        </div>
+
                                     </div>
 
                                     {/* CONTROLES TALLER 1 STICKY BOTTOM */}
@@ -300,7 +322,7 @@
                                         <div className="border-b pb-4">
                                             <h2 className="text-2xl font-black text-slate-800">Variabilidad y Diagramas de Caja</h2>
                                             <p className="text-slate-600 text-sm mt-2 leading-relaxed">
-                                                Vamos a explorar la simulación PhET: primero abre el simulador (Pestaña de variabilidad), allí podrás encontrar múltiples botones e interactuar con ellos, tómate 5 minutos para realizar esto. Identifica los botones de lanzamiento, los diferentes equipos que pueden lanzar, un apuntador, y valores de media y moda.
+                                                Vamos a explorar la simulación PhET: primero abre el <strong> simulador (Pestaña de Variabilidad)</strong>, allí podrás encontrar múltiples botones e interactuar con ellos, tómate 5 minutos para realizar esto. Identifica los botones de lanzamiento, los diferentes equipos que pueden lanzar, un apuntador, y valores de media y moda.
                                             </p>
                                         </div>
 
@@ -354,7 +376,7 @@
                                         {/* SECCIÓN 2 */}
                                         <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
                                             <h3 className="font-black text-indigo-800 mb-2 flex items-center gap-2"><span>2️⃣</span> Diagrama de Caja (Boxplot)</h3>
-                                            <p className="text-sm text-slate-600 mb-4">Activa la vista de "Diagrama de Caja" en el simulador. Coloca 5 balones en las posiciones: <strong>4, 9, 12, 14, 14</strong>.</p>
+                                            <p className="text-sm text-slate-600 mb-4">Activa la vista de "Diagrama de Caja" en el simulador. Arrastra 5 balones en las posiciones: <strong>4, 9, 12, 14, 14</strong>.</p>
                                             
                                             <p className="font-bold text-slate-800 text-sm mb-3">Anota los valores que marca el diagrama de caja:</p>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -376,7 +398,7 @@
                                         {/* SECCIÓN 3 */}
                                         <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
                                             <h3 className="font-black text-indigo-800 mb-2 flex items-center gap-2"><span>3️⃣</span> Dispersión y Consistencia</h3>
-                                            <p className="text-sm text-slate-600 mb-4">Mantén un balón en el 1 y otro en el 15. Coloca los otros 3 balones exactamente en la misma posición (ej. el número 8).</p>
+                                            <p className="text-sm text-slate-600 mb-4">Mantén un balón en el 1 y otro en el 15. Arrastra los otros 3 balones exactamente en la misma posición (ej. el número 8).</p>
                                             
                                             <label className="font-bold text-slate-800 text-sm block mb-2">Al acumular datos en el centro, ¿qué le pasó a la forma de la "caja"?</label>
                                             <RadioGroup 
@@ -406,7 +428,7 @@
                                         {/* SECCIÓN 4 */}
                                         <div className="bg-slate-800 text-white p-6 rounded-2xl">
                                             <h3 className="font-black text-xl mb-3 flex items-center gap-2"><span>📋</span> Conclusión del Analista</h3>
-                                            <p className="text-sm text-slate-300 mb-4">Dos jugadores tienen el mismo promedio de distancia de pase. Sin embargo, en el simulador ves que el <strong>Jugador A</strong> tiene un diagrama de caja muy estrecho (pequeño), y el <strong>Jugador B</strong> tiene un diagrama que ocupa casi toda la cancha.</p>
+                                            <p className="text-sm text-slate-300 mb-4">Dos jugadores tienen el mismo promedio matemático de distancia de pase. Sin embargo, en el simulador ves que el <strong>Jugador A</strong> tiene un diagrama de caja muy estrecho (pequeño), y el <strong>Jugador B</strong> tiene un diagrama que ocupa casi toda la cancha.</p>
                                             
                                             <label className="font-bold text-white text-sm block mb-3">Si necesitas estar seguro de dónde va a caer el balón para planear una jugada crítica, ¿a quién eliges?</label>
                                             
