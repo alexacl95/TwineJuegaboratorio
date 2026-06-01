@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Laboratorio: Regresión Lineal y Coeficientes</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { 
+            background-color: #f8fafc; 
+            font-family: system-ui, -apple-system, sans-serif; 
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Clase especial para simular ecuaciones matemáticas en HTML */
+        .math-eq {
+            font-family: "Times New Roman", Times, serif;
+            font-style: italic;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="text-slate-800 bg-slate-50 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // --- COMPONENTE: PREGUNTA DE SELECCIÓN MÚLTIPLE ---
+        const RadioGroup = ({ options, name, value, onChange, disabled }) => (
+            <div className="flex flex-col gap-2 mt-2">
+                {options.map((opt, i) => (
+                    <label key={i} className={`flex items-start gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all ${value === opt.val ? 'bg-violet-50 border-violet-500 shadow-sm' : 'bg-white border-slate-200 hover:bg-slate-50'} ${disabled ? 'opacity-80 cursor-not-allowed' : ''}`}>
+                        <input 
+                            type="radio" 
+                            name={name} 
+                            value={opt.val} 
+                            checked={value === opt.val} 
+                            onChange={() => onChange(opt.val)} 
+                            disabled={disabled}
+                            className="mt-1 min-w-[16px] w-4 h-4 text-violet-600 focus:ring-violet-500" 
+                        />
+                        <span className="text-sm font-medium text-slate-700">{opt.label}</span>
+                    </label>
+                ))}
+            </div>
+        );
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('taller1'); // 'taller1' | 'taller2' | 'taller3'
+            const [isAccordionOpen, setIsAccordionOpen] = useState(false);
+
+            // --- ESTADOS: TALLER 1 (CORRELACIÓN Y CAUSALIDAD) ---
+            const [t1q1R, setT1q1R] = useState('');
+            const [t1q1Eq, setT1q1Eq] = useState('');
+            const [t1q2, setT1q2] = useState('');
+            const [t1q3, setT1q3] = useState('');
+            const [t1q4, setT1q4] = useState('');
+            const [t1Status, setT1Status] = useState(null);
+
+            // --- ESTADOS: TALLER 2 (COEFICIENTES DE REGRESIÓN) ---
+            const [t2q1, setT2q1] = useState('');
+            const [t2q2, setT2q2] = useState('');
+            const [t2q3A, setT2q3A] = useState('');
+            const [t2q3B, setT2q3B] = useState('');
+            const [t2q3R, setT2q3R] = useState('');
+            const [t2q4, setT2q4] = useState('');
+            const [t2q5, setT2q5] = useState('');
+            const [t2q6, setT2q6] = useState(''); 
+            const [t2q7, setT2q7] = useState(''); 
+            const [t2Status, setT2Status] = useState(null);
+
+            // --- ESTADOS: TALLER 3 (ANÁLISIS DE RESIDUALES) ---
+            const [t3q1, setT3q1] = useState('');
+            const [t3q2, setT3q2] = useState('');
+            const [t3q3, setT3q3] = useState('');
+            const [t3q4, setT3q4] = useState('');
+            const [t3Status, setT3Status] = useState(null);
+
+            // --- FUNCIONES DE VERIFICACIÓN ---
+            const verifyT1 = () => {
+                const parsedR = parseFloat(t1q1R.replace(',', '.'));
+                const q1a = !isNaN(parsedR) && parsedR >= 0.90 && parsedR <= 1.00;
+                const q1b = t1q1Eq === 'eq1'; // y = 0.33x + 4.00
+                const q2 = t1q2 === 'fuerte_negativa';
+                const q3 = t1q3 === 'positiva';
+                const q4 = t1q4 === 'falso'; 
+                
+                setT1Status({ q1a, q1b, q2, q3, q4, all: q1a && q1b && q2 && q3 && q4 });
+                if(q1a && q1b && q2 && q3 && q4) alert("¡Taller 1 completado! Comprendes perfectamente la diferencia entre correlación y causalidad.");
+            };
+
+            const verifyT2 = () => {
+                const q1 = t2q1 === 'paralelo';
+                const q2 = t2q2 === 'inclinacion';
+                
+                const parsedA = parseFloat(t2q3A.replace(',', '.'));
+                const parsedB = parseFloat(t2q3B.replace(',', '.'));
+                const parsedR = parseFloat(t2q3R.replace(',', '.'));
+                
+                const q3 = (!isNaN(parsedA) && parsedA >= 0.8 && parsedA <= 1.2) && 
+                           (!isNaN(parsedB) && parsedB >= 1.0 && parsedB <= 3.0) && 
+                           (!isNaN(parsedR) && parsedR >= 0.90 && parsedR <= 1.00);
+                const q4 = t2q4 === 'ambos_negativos';
+                const q5 = t2q5 === 'suave_alineada';
+                const q6 = t2q6 === 'matematica';
+                const q7 = t2q7 === 'sobreestima';
+
+                setT2Status({ q1, q2, q3, q4, q5, q6, q7, all: q1 && q2 && q3 && q4 && q5 && q6 && q7 });
+                if(q1 && q2 && q3 && q4 && q5 && q6 && q7) alert("¡Taller 2 completado! Has dominado el análisis de los coeficientes de regresión lineal.");
+            };
+
+            const verifyT3 = () => {
+                const q1 = t3q1 === 'diferencia';
+                const q2 = t3q2 === 'positivo';
+                const q3 = t3q3 === 'aumenta';
+                const q4 = t3q4 === 'cero';
+
+                setT3Status({ q1, q2, q3, q4, all: q1 && q2 && q3 && q4 });
+                if(q1 && q2 && q3 && q4) alert("¡Taller 3 completado! Eres un experto en el análisis de errores y residuales.");
+            };
+
+            const inputClass = (status, fieldStatus) => {
+                const base = "w-20 md:w-24 text-center border-2 p-2 rounded-xl focus:outline-none transition-all font-mono font-bold text-base md:text-lg ";
+                if (!status) return base + "border-slate-300 focus:border-violet-500";
+                return base + (fieldStatus ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-rose-500 bg-rose-50 text-rose-700");
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    
+                    {/* ENCABEZADO */}
+                    <header className="bg-violet-900 text-white p-4 shadow-md text-center shrink-0 z-50">
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tight flex items-center justify-center gap-3">
+                            <span>📈</span> Estadística: Regresión Lineal
+                        </h1>
+                        <p className="text-xs md:text-sm text-violet-200 font-medium mt-1">Refuerzo Unidad 3 - Coeficientes y Residuales</p>
+                    </header>
+
+                    {/* LAYOUT PRINCIPAL (SPLIT SCREEN) */}
+                    <div className="flex-grow flex flex-col lg:flex-row w-full h-full max-w-[1600px] mx-auto">
+                        
+                        {/* --- PANEL IZQUIERDO: SIMULADOR PHET (STICKY) --- */}
+                        <div className="w-full lg:w-1/2 p-3 sm:p-4 lg:p-6 lg:border-r border-slate-200 lg:sticky lg:top-0 lg:h-screen flex flex-col z-30">
+                            <div className="bg-white p-2 md:p-3 border border-slate-200 rounded-2xl md:rounded-3xl shadow-sm flex-grow relative w-full h-[45vh] lg:h-[80vh] min-h-[300px]">
+                                <iframe 
+                                    src="https://phet.colorado.edu/sims/html/least-squares-regression/latest/least-squares-regression_all.html?locale=es" 
+                                    className="absolute inset-0 w-full h-full rounded-xl md:rounded-2xl"
+                                    scrolling="no" 
+                                    allowFullScreen
+                                    title="Simulador PhET: Regresión Lineal"
+                                ></iframe>
+                            </div>
+                            
+                            <div className="text-center mt-3 text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest lg:hidden">
+                                ↓ Desliza la pantalla tocando fuera del simulador ↓
+                            </div>
+                        </div>
+
+                        {/* --- PANEL DERECHO: GUÍAS DE ESTUDIO --- */}
+                        <div className="w-full lg:w-1/2 bg-white flex flex-col relative">
+                            
+                            {/* TABS DE TALLERES */}
+                            <div className="flex bg-slate-50 border-b border-slate-200 sticky top-0 z-40 overflow-x-auto no-scrollbar">
+                                <button 
+                                    onClick={() => setActiveTab('taller1')}
+                                    className={`flex-1 min-w-[120px] py-4 px-2 text-xs md:text-sm font-black uppercase tracking-wider transition-all border-b-4 ${activeTab === 'taller1' ? 'border-violet-600 text-violet-700 bg-white' : 'border-transparent text-slate-500 hover:text-violet-600 hover:bg-white/50'}`}
+                                >
+                                    1. Correlación
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('taller2')}
+                                    className={`flex-1 min-w-[120px] py-4 px-2 text-xs md:text-sm font-black uppercase tracking-wider transition-all border-b-4 ${activeTab === 'taller2' ? 'border-violet-600 text-violet-700 bg-white' : 'border-transparent text-slate-500 hover:text-violet-600 hover:bg-white/50'}`}
+                                >
+                                    2. Coeficientes
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('taller3')}
+                                    className={`flex-1 min-w-[120px] py-4 px-2 text-xs md:text-sm font-black uppercase tracking-wider transition-all border-b-4 ${activeTab === 'taller3' ? 'border-violet-600 text-violet-700 bg-white' : 'border-transparent text-slate-500 hover:text-violet-600 hover:bg-white/50'}`}
+                                >
+                                    3. Residuales
+                                </button>
+                            </div>
+
+                            {/* --- CONTENIDO TALLER 1 --- */}
+                            {activeTab === 'taller1' && (
+                                <div className="flex flex-col flex-grow animate-fade-in relative">
+                                    <div className="p-4 md:p-8 space-y-6 md:space-y-8 flex-grow pb-32">
+                                        
+                                        <div className="border-b pb-4">
+                                            <h2 className="text-xl md:text-2xl font-black text-slate-800">Fuerza de la Relación Lineal</h2>
+                                            <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+                                                En esta unidad exploraremos el grado en que dos variables están conectadas linealmente y aprenderemos que la asociación estadística no siempre implica causalidad.
+                                            </p>
+                                        </div>
+
+                                        {/* ACORDEÓN DESPLEGABLE */}
+                                        <div className="bg-violet-50 rounded-xl border border-violet-200 overflow-hidden">
+                                            <button 
+                                                onClick={() => setIsAccordionOpen(!isAccordionOpen)} 
+                                                className="w-full p-4 flex justify-between items-center font-bold text-violet-800 hover:bg-violet-100 transition-colors"
+                                            >
+                                                <span className="flex items-center gap-2"><span>ℹ️</span> Guía del Simulador</span>
+                                                <span className="text-xl leading-none">{isAccordionOpen ? '▲' : '▼'}</span>
+                                            </button>
+                                            
+                                            {isAccordionOpen && (
+                                                <div className="p-4 pt-0 text-sm text-violet-900 space-y-3 animate-fade-in border-t border-violet-100 mt-2">
+                                                    <p><strong>Pantalla principal:</strong> Puedes arrastrar puntos al plano cartesiano para ver cómo se comporta la recta.</p>
+                                                    <p><strong>Mi Línea vs Mejor Ajuste:</strong> Tienes controles a la derecha para dibujar tu propia recta ("Mi línea") y compararla con la línea matemática perfecta ("Mejor ajuste de línea").</p>
+                                                    <p><strong>Coeficiente r:</strong> Activa la casilla "Coeficiente de Correlación" para ver la fuerza de la relación de tus puntos.</p>
+                                                    <p><strong>Datos reales:</strong> Usa el menú desplegable (que dice "Personalizar") para cargar ejemplos de la vida real.</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* SECCIÓN 1 */}
+                                        <div className="bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-violet-900 mb-2 flex items-center gap-2"><span>1️⃣</span> Construcción del Modelo</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Abre el simulador y asegúrate de estar en el modo <strong>"Personalizar"</strong>. Activa la "Cuadrícula". Arrastra los puntos naranjas y colócalos aproximadamente en las coordenadas: <strong>(3,5), (6,6), (9,7) y (12,8)</strong>.</p>
+                                            
+                                            <p className="font-bold text-slate-800 text-sm mb-2">Activa el "Mejor ajuste de línea" y el "Coeficiente de Correlación". Responde:</p>
+                                            
+                                            <div className="bg-white p-4 rounded-xl border border-slate-200 mb-4 flex items-center gap-3">
+                                                <span className="font-bold text-slate-600">Valor de <span className="math-eq">r</span>:</span>
+                                                <input type="number" value={t1q1R} onChange={e=>setT1q1R(e.target.value)} disabled={t1Status?.all} className={inputClass(t1Status, t1Status?.q1a)} placeholder="1.00" />
+                                            </div>
+
+                                            <label className="font-bold text-slate-800 text-sm">¿Cuál es la ecuación matemática de esta recta de mejor ajuste?</label>
+                                            <RadioGroup 
+                                                name="t1q1Eq" 
+                                                value={t1q1Eq} 
+                                                onChange={setT1q1Eq} 
+                                                disabled={t1Status?.all}
+                                                options={[
+                                                    { val: 'eq1', label: 'Aprox. y = 0.33x + 4.00' },
+                                                    { val: 'eq2', label: 'Aprox. y = 3.00x + 5.00' },
+                                                    { val: 'eq3', label: 'Aprox. y = 0.50x + 1.00' }
+                                                ]} 
+                                            />
+                                            {(t1Status && (!t1Status.q1a || !t1Status.q1b)) && <p className="text-xs font-bold text-rose-600 mt-2">Error en la sección 1. Intenta colocar los puntos lo más cerca posible a las intersecciones indicadas (el sistema acepta valores aproximados).</p>}
+                                        </div>
+
+                                        {/* SECCIÓN 2 */}
+                                        <div className="bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-violet-900 mb-2 flex items-center gap-2"><span>2️⃣</span> Interpretación de la Correlación (<span className="math-eq">r</span>)</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Limpia el tablero (botón amarillo de borrado) y ubica 5 puntos de manera que formen una línea diagonal que baje de izquierda a derecha. Lograrás un coeficiente <span className="math-eq">r</span> cercano a -1.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">¿Qué significa estadísticamente que dos variables tengan una correlación de <span className="math-eq">r = -0.95</span>?</label>
+                                            <RadioGroup 
+                                                name="t1q2" 
+                                                value={t1q2} 
+                                                onChange={setT1q2} 
+                                                disabled={t1Status?.all}
+                                                options={[
+                                                    { val: 'debil', label: 'A) Que existe una relación muy débil, casi nula, entre ambas variables.' },
+                                                    { val: 'fuerte_positiva', label: 'B) Que ambas variables aumentan juntas al mismo tiempo.' },
+                                                    { val: 'fuerte_negativa', label: 'C) Que hay una fuerte relación inversa: si una variable aumenta, la otra disminuye considerablemente.' }
+                                                ]} 
+                                            />
+                                        </div>
+
+                                        {/* SECCIÓN 3 */}
+                                        <div className="bg-violet-50 p-4 md:p-5 rounded-2xl border border-violet-200">
+                                            <h3 className="font-black text-violet-900 mb-2 flex items-center gap-2"><span>3️⃣</span> Datos Reales: TVs y Vida</h3>
+                                            <p className="text-sm text-slate-700 mb-4">En el menú desplegable (donde dice "Personalizar"), selecciona el conjunto de datos <strong>"Esperanza de vida vs. TVs"</strong>. Activa la línea de mejor ajuste y el coeficiente <span className="math-eq">r</span>.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">¿Qué tipo de correlación gráfica observas entre la cantidad de televisores y los años de vida?</label>
+                                            <RadioGroup 
+                                                name="t1q3" 
+                                                value={t1q3} 
+                                                onChange={setT1q3} 
+                                                disabled={t1Status?.all}
+                                                options={[
+                                                    { val: 'positiva', label: 'Fuerte correlación Positiva (r > 0.80)' },
+                                                    { val: 'negativa', label: 'Fuerte correlación Negativa (r < -0.80)' },
+                                                    { val: 'nula', label: 'Correlación nula (r cercano a 0)' }
+                                                ]} 
+                                            />
+
+                                            <label className="font-bold text-slate-800 text-sm block mt-6">Dado el resultado anterior, un político concluye: <span className="italic">"Si regalamos más televisores a la población, vivirán más años."</span>. Según lo aprendido en la Unidad 3 sobre causalidad, esta afirmación es:</label>
+                                            <RadioGroup 
+                                                name="t1q4" 
+                                                value={t1q4} 
+                                                onChange={setT1q4} 
+                                                disabled={t1Status?.all}
+                                                options={[
+                                                    { val: 'verdadero', label: 'Verdadera. Al tener una alta correlación estadística, se demuestra la causa directa.' },
+                                                    { val: 'falso', label: 'Falsa. Correlación no implica causalidad. Podría haber una tercera variable (como la riqueza del país) que afecta tanto la compra de TVs como la esperanza de vida.' }
+                                                ]} 
+                                            />
+                                            {(t1Status && (!t1Status.q3 || !t1Status.q4)) && <p className="text-xs font-bold text-rose-600 mt-2">Error. Recuerda la principal regla de la estadística: que dos cosas ocurran juntas no significa que una cause la otra.</p>}
+                                        </div>
+
+                                    </div>
+
+                                    {/* CONTROLES TALLER 1 */}
+                                    <div className="sticky bottom-0 mt-auto w-full bg-white border-t border-slate-200 p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-40 flex justify-center gap-3">
+                                        {!t1Status?.all ? (
+                                            <button onClick={verifyT1} className="w-full md:w-auto px-8 py-3 bg-violet-600 hover:bg-violet-700 text-white font-black rounded-xl shadow-[0_4px_0_rgb(109,40,217)] hover:translate-y-[2px] hover:shadow-[0_2px_0_rgb(109,40,217)] transition-all text-sm md:text-base">
+                                                Verificar Respuestas
+                                            </button>
+                                        ) : (
+                                            <div className="w-full md:w-auto px-6 py-3 bg-emerald-100 text-emerald-800 font-bold rounded-xl flex items-center justify-center gap-2 text-sm md:text-base shadow-sm border border-emerald-200">
+                                                <span>✅</span> ¡Respuestas Correctas! Avanza a la pestaña 2.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- CONTENIDO TALLER 2 (COEFICIENTES DE REGRESIÓN) --- */}
+                            {activeTab === 'taller2' && (
+                                <div className="flex flex-col flex-grow animate-fade-in relative">
+                                    <div className="p-4 md:p-8 space-y-6 md:space-y-8 flex-grow pb-32">
+                                        
+                                        <div className="border-b pb-4">
+                                            <h2 className="text-xl md:text-2xl font-black text-slate-800">Coeficientes de la Regresión Lineal</h2>
+                                            <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+                                                Exploremos la ecuación matemática de la recta (<span className="math-eq">y = ax + b</span>) interactuando con el simulador para comprender qué representa el coeficiente de regresión (<span className="math-eq">a</span>), el coeficiente de posición (<span className="math-eq">b</span>) y su relación con el coeficiente de correlación (<span className="math-eq">r</span>).
+                                            </p>
+                                        </div>
+
+                                        {/* SECCIÓN 1 */}
+                                        <div className="bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-violet-900 mb-2 flex items-center gap-2"><span>1️⃣</span> Coeficiente de Posición (<span className="math-eq">b</span>)</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Asegúrate de estar en el modo "Personalizar". Activa <strong>"Mi línea"</strong> en el panel derecho. Ajusta el control deslizante del coeficiente <span className="math-eq">a</span> exactamente a <strong>0.00</strong>. Luego mueve el control deslizante de <span className="math-eq">b</span> entre 0 y 10.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">Al mover exclusivamente el coeficiente de posición (<span className="math-eq">b</span>), ¿qué movimiento realiza la recta en el plano?</label>
+                                            <RadioGroup 
+                                                name="t2q1" 
+                                                value={t2q1} 
+                                                onChange={setT2q1} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: 'inclinacion', label: 'A) Se inclina hacia arriba y hacia abajo.' },
+                                                    { val: 'paralelo', label: 'B) Se desplaza paralelamente hacia arriba y hacia abajo (cortando el eje Y en el valor de b).' },
+                                                    { val: 'horizontal', label: 'C) Se desplaza hacia la izquierda y hacia la derecha.' }
+                                                ]} 
+                                            />
+                                        </div>
+
+                                        {/* SECCIÓN 2 */}
+                                        <div className="bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-violet-900 mb-2 flex items-center gap-2"><span>2️⃣</span> Coeficiente de Regresión (<span className="math-eq">a</span>)</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Ahora, deja el coeficiente <span className="math-eq">b</span> fijo en <strong>5.00</strong>. Mueve el control del coeficiente <span className="math-eq">a</span> a valores positivos grandes y luego a valores negativos.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">En la ecuación <span className="math-eq">y = ax + b</span>, ¿qué representa físicamente el coeficiente <span className="math-eq">a</span> (también conocido como pendiente)?</label>
+                                            <RadioGroup 
+                                                name="t2q2" 
+                                                value={t2q2} 
+                                                onChange={setT2q2} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: 'cruce_x', label: 'A) El punto exacto donde la recta cruza el eje X.' },
+                                                    { val: 'inclinacion', label: 'B) La inclinación o pendiente de la recta (positiva sube, negativa baja).' },
+                                                    { val: 'fuerza', label: 'C) La fuerza de los datos atípicos.' }
+                                                ]} 
+                                            />
+                                        </div>
+
+                                        {/* SECCIÓN 3 */}
+                                        <div className="bg-violet-50 p-4 md:p-5 rounded-2xl border border-violet-200">
+                                            <h3 className="font-black text-violet-900 mb-2 flex items-center gap-2"><span>3️⃣</span> Construyendo una recta específica</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Limpia el tablero. Activa la Cuadrícula. Coloca 4 puntos naranjas <strong>aproximadamente</strong> en las siguientes coordenadas: <strong>(2,4), (4,6), (6,8) y (8,10)</strong>.</p>
+                                            
+                                            <p className="font-bold text-slate-800 text-sm mb-3">Activa el "Mejor ajuste de línea" y el "Coeficiente de Correlación". Ingresa los valores exactos calculados por el simulador:</p>
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                <div className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center justify-between gap-2">
+                                                    <span className="text-[10px] font-bold text-slate-500 uppercase text-center leading-tight">Coeficiente <span className="math-eq">a</span> <br/>(Pendiente)</span>
+                                                    <input type="number" value={t2q3A} onChange={e=>setT2q3A(e.target.value)} disabled={t2Status?.all} className={inputClass(t2Status, t2Status?.q3)} placeholder="?" />
+                                                </div>
+                                                <div className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center justify-between gap-2">
+                                                    <span className="text-[10px] font-bold text-slate-500 uppercase text-center leading-tight">Coeficiente <span className="math-eq">b</span> <br/>(Posición)</span>
+                                                    <input type="number" value={t2q3B} onChange={e=>setT2q3B(e.target.value)} disabled={t2Status?.all} className={inputClass(t2Status, t2Status?.q3)} placeholder="?" />
+                                                </div>
+                                                <div className="bg-violet-100 p-3 rounded-xl border border-violet-300 flex flex-col items-center justify-between gap-2">
+                                                    <span className="text-[10px] font-bold text-violet-700 uppercase text-center leading-tight">Correlación <span className="math-eq">r</span> <br/>(Fuerza)</span>
+                                                    <input type="number" step="0.01" value={t2q3R} onChange={e=>setT2q3R(e.target.value)} disabled={t2Status?.all} className={inputClass(t2Status, t2Status?.q3)} placeholder="?" />
+                                                </div>
+                                            </div>
+                                            {(t2Status && !t2Status.q3) && <p className="text-xs font-bold text-rose-600 mt-3 text-center">Error en los coeficientes. Intenta alinear los puntos a la cuadrícula (el sistema acepta aproximaciones de tu recta).</p>}
+                                        </div>
+
+                                        {/* SECCIÓN 4 */}
+                                        <div className="bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-violet-900 mb-2 flex items-center gap-2"><span>4️⃣</span> Relación entre Pendiente y Correlación</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Manteniendo los puntos anteriores, toma el último punto que estaba en (8,10) y muévelo hacia abajo hasta <strong>(8,0)</strong>.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">Observa la nueva recta de mejor ajuste y el nuevo coeficiente de correlación. ¿Qué sucede con los signos de <span className="math-eq">a</span> (coeficiente de regresión) y <span className="math-eq">r</span> (coeficiente de correlación)?</label>
+                                            <RadioGroup 
+                                                name="t2q4" 
+                                                value={t2q4} 
+                                                onChange={setT2q4} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: 'solo_a_negativo', label: 'A) La pendiente (a) se vuelve negativa, pero la correlación (r) sigue siendo positiva.' },
+                                                    { val: 'ambos_negativos', label: 'B) Ambos (a y r) toman valores negativos, ya que la recta ahora desciende en el eje Y a medida que avanza en el eje X.' },
+                                                    { val: 'cero', label: 'C) Ambos se vuelven cero inmediatamente.' }
+                                                ]} 
+                                            />
+                                        </div>
+
+                                        {/* SECCIÓN 5 */}
+                                        <div className="bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-violet-900 mb-2 flex items-center gap-2"><span>5️⃣</span> Análisis: Fuerza vs. Inclinación</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Es vital no confundir la inclinación de la recta con la fuerza de los datos.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">Si tuviéramos un conjunto de datos donde la recta de mejor ajuste tiene un coeficiente de regresión <span className="math-eq">a = 0.20</span> y un coeficiente de correlación <span className="math-eq">r = 0.99</span>, ¿qué podemos deducir geométricamente?</label>
+                                            <RadioGroup 
+                                                name="t2q5" 
+                                                value={t2q5} 
+                                                onChange={setT2q5} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: 'dispersos', label: 'A) Tienen una pendiente suave, pero están muy dispersos y lejos de la recta.' },
+                                                    { val: 'suave_alineada', label: 'B) Tienen una pendiente suave (se eleva poco a poco), pero los puntos están casi perfectamente alineados sobre la recta.' },
+                                                    { val: 'vertical', label: 'C) Tienen una pendiente muy empinada, casi formando una línea vertical perfecta.' }
+                                                ]} 
+                                            />
+                                            {t2Status && !t2Status.q5 && <p className="text-xs font-bold text-rose-400 mt-2">Pista: <span className="math-eq">a = 0.20</span> indica una inclinación leve, mientras que <span className="math-eq">r = 0.99</span> indica que los puntos casi no tienen dispersión respecto a esa línea.</p>}
+                                        </div>
+
+                                        {/* SECCIÓN 6 */}
+                                        <div className="bg-violet-50 p-4 md:p-5 rounded-2xl border border-violet-200">
+                                            <h3 className="font-black text-violet-900 mb-2 flex items-center gap-2"><span>6️⃣</span> Ajuste Manual vs. Ajuste Matemático</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Limpia el tablero. Coloca unos 5 o 6 puntos dispersos que sigan una tendencia hacia arriba. Activa <strong>"Mi línea"</strong> e intenta ajustar la recta visualmente (moviendo los controles de <span className="math-eq">a</span> y <span className="math-eq">b</span>) para que pase por el "centro" del grupo de puntos de la forma más pareja posible. Finalmente, activa <strong>"Mejor ajuste de línea"</strong> para comparar tu aproximación humana con la del sistema.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">Al comparar tu recta manual con la recta matemática, ¿qué conclusión es estadísticamente correcta?</label>
+                                            <RadioGroup 
+                                                name="t2q6" 
+                                                value={t2q6} 
+                                                onChange={setT2q6} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: 'visual', label: 'A) Es muy fácil igualar a la perfección la recta matemática solo mirando los puntos.' },
+                                                    { val: 'matematica', label: 'B) La recta matemática calcula el punto exacto que minimiza el error total (suma de residuales al cuadrado), una precisión difícil de lograr a simple vista.' },
+                                                    { val: 'cruza', label: 'C) La recta de mejor ajuste siempre cruza exactamente por el centro de todos los puntos sin dejar ningún margen de error.' }
+                                                ]} 
+                                            />
+                                        </div>
+
+                                        {/* SECCIÓN 7 */}
+                                        <div className="bg-slate-800 p-4 md:p-5 rounded-2xl border border-slate-700 text-white">
+                                            <h3 className="font-black text-violet-300 mb-2 flex items-center gap-2"><span>7️⃣</span> El Impacto Sistemático del Coeficiente (<span className="math-eq">b</span>)</h3>
+                                            <p className="text-sm text-slate-300 mb-4">Usando la gráfica anterior, copia el valor de la pendiente (<span className="math-eq">a</span>) de la recta de mejor ajuste y ponlo en tu recta manual ("Mi línea"). Ahora, altera <strong>solo el coeficiente de posición (<span className="math-eq">b</span>)</strong> en "Mi línea", aumentándolo artificialmente en un par de unidades.</p>
+                                            
+                                            <label className="font-bold text-white text-sm">¿Cómo afecta este cambio en <span className="math-eq">b</span> a tus nuevas predicciones manuales en comparación con los datos reales?</label>
+                                            <RadioGroup 
+                                                name="t2q7" 
+                                                value={t2q7} 
+                                                onChange={setT2q7} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: 'inclina', label: 'A) La recta se vuelve más inclinada, cambiando la tasa de crecimiento.' },
+                                                    { val: 'sobreestima', label: 'B) La recta se desplaza paralelamente hacia arriba, por lo que las predicciones de esta recta sobreestimarán sistemáticamente los valores reales.' },
+                                                    { val: 'correlacion', label: 'C) La fuerza de correlación (r) de los datos disminuye automáticamente en el simulador.' }
+                                                ]} 
+                                            />
+                                        </div>
+
+                                    </div>
+
+                                    {/* CONTROLES TALLER 2 */}
+                                    <div className="sticky bottom-0 mt-auto w-full bg-white border-t border-slate-200 p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-40 flex justify-center gap-3">
+                                        {!t2Status?.all ? (
+                                            <button onClick={verifyT2} className="w-full md:w-auto px-8 py-3 bg-violet-600 hover:bg-violet-700 text-white font-black rounded-xl shadow-[0_4px_0_rgb(109,40,217)] hover:translate-y-[2px] hover:shadow-[0_2px_0_rgb(109,40,217)] transition-all text-sm md:text-base">
+                                                Verificar Respuestas
+                                            </button>
+                                        ) : (
+                                            <div className="w-full md:w-auto px-6 py-3 bg-emerald-100 text-emerald-800 font-bold rounded-xl flex items-center justify-center gap-2 text-sm md:text-base shadow-sm border border-emerald-200">
+                                                <span>✅</span> ¡Respuestas Correctas! Avanza a la pestaña 3.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- CONTENIDO TALLER 3 (ANÁLISIS DE RESIDUALES) --- */}
+                            {activeTab === 'taller3' && (
+                                <div className="flex flex-col flex-grow animate-fade-in relative">
+                                    <div className="p-4 md:p-8 space-y-6 md:space-y-8 flex-grow pb-32">
+                                        
+                                        <div className="border-b pb-4">
+                                            <h2 className="text-xl md:text-2xl font-black text-slate-800">Análisis de Residuales</h2>
+                                            <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+                                                Entenderemos qué significa el "error" en un modelo de predicción observando cómo la recta de mejor ajuste intenta minimizar la distancia entre los datos reales y los estimados.
+                                            </p>
+                                        </div>
+
+                                        {/* SECCIÓN 1 */}
+                                        <div className="bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-violet-900 mb-2 flex items-center gap-2"><span>1️⃣</span> ¿Qué es un Residuo?</h3>
+                                            <p className="text-sm text-slate-700 mb-4">En el menú desplegable (Personalizar), selecciona el conjunto de datos <strong>"Precio de la gasolina en EUA vs. tiempo"</strong>. Activa la casilla de <strong>"Mejor ajuste de línea"</strong> y luego marca la opción <strong>"Residual"</strong>. Verás unas líneas verticales que conectan los puntos azules con la recta roja.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">Observando la gráfica, ¿qué representa estadísticamente esta línea vertical (el residuo)?</label>
+                                            <RadioGroup 
+                                                name="t3q1" 
+                                                value={t3q1} 
+                                                onChange={setT3q1} 
+                                                disabled={t3Status?.all}
+                                                options={[
+                                                    { val: 'distancia_x', label: 'A) La distancia horizontal entre el dato y el eje Y.' },
+                                                    { val: 'diferencia', label: 'B) La diferencia (error) entre el valor real observado y el valor que predecía la línea de regresión.' },
+                                                    { val: 'pendiente', label: 'C) La pendiente exacta del conjunto de datos en ese año en específico.' }
+                                                ]} 
+                                            />
+                                        </div>
+
+                                        {/* SECCIÓN 2 */}
+                                        <div className="bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-violet-900 mb-2 flex items-center gap-2"><span>2️⃣</span> Residuos Positivos y Negativos</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Mira de cerca los puntos en la gráfica de la gasolina. Algunos están por encima de la recta roja y otros por debajo.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">Si un punto de dato real se encuentra por <strong>ENCIMA</strong> de la línea de mejor ajuste, significa que su residual es:</label>
+                                            <RadioGroup 
+                                                name="t3q2" 
+                                                value={t3q2} 
+                                                onChange={setT3q2} 
+                                                disabled={t3Status?.all}
+                                                options={[
+                                                    { val: 'positivo', label: 'A) Positivo (El valor real fue mayor de lo que el modelo matemático esperaba).' },
+                                                    { val: 'negativo', label: 'B) Negativo (El modelo matemático calculó un valor mayor al real).' },
+                                                    { val: 'nulo', label: 'C) Cero (No hay error de estimación).' }
+                                                ]} 
+                                            />
+                                        </div>
+
+                                        {/* SECCIÓN 3 */}
+                                        <div className="bg-violet-50 p-4 md:p-5 rounded-2xl border border-violet-200">
+                                            <h3 className="font-black text-violet-900 mb-2 flex items-center gap-2"><span>3️⃣</span> La Suma de los Errores al Cuadrado</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Limpia el simulador y ponlo en <strong>"Personalizar"</strong>. Coloca 4 puntos formando un grupo cercano y activa <strong>"Residual cuadrada"</strong>. Ahora, abre la pequeña ventana de <strong>"Suma"</strong> (abajo de los residuales) para ver el área total de esos cuadrados. <br/><br/> Toma uno de esos puntos y aléjalo lo más posible de la recta (creando un valor atípico o <em>outlier</em>).</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">¿Qué ocurre visualmente con la barra de la "Suma" al crear este valor atípico?</label>
+                                            <RadioGroup 
+                                                name="t3q3" 
+                                                value={t3q3} 
+                                                onChange={setT3q3} 
+                                                disabled={t3Status?.all}
+                                                options={[
+                                                    { val: 'disminuye', label: 'A) Disminuye, indicando que el modelo mejoró su predicción.' },
+                                                    { val: 'aumenta', label: 'B) Crece drásticamente, indicando que el error total de la predicción aumentó por culpa de ese punto lejano.' },
+                                                    { val: 'constante', label: 'C) Se mantiene constante, porque la recta se auto-corrige inmediatamente ignorando el error.' }
+                                                ]} 
+                                            />
+                                        </div>
+
+                                        {/* SECCIÓN 4 */}
+                                        <div className="bg-slate-800 p-4 md:p-5 rounded-2xl border border-slate-700 text-white">
+                                            <h3 className="font-black text-violet-300 mb-2 flex items-center gap-2"><span>4️⃣</span> El Modelo Perfecto</h3>
+                                            <p className="text-sm text-slate-300 mb-4">Imagina que logramos colocar 5 puntos formando una línea recta perfecta (el coeficiente de correlación <span className="math-eq">r</span> marcaría exactamente 1.00).</p>
+                                            
+                                            <label className="font-bold text-white text-sm">En este caso hipotético de una alineación perfecta, ¿de qué tamaño serían los residuales?</label>
+                                            <RadioGroup 
+                                                name="t3q4" 
+                                                value={t3q4} 
+                                                onChange={setT3q4} 
+                                                disabled={t3Status?.all}
+                                                options={[
+                                                    { val: 'infinito', label: 'A) Infinitos, porque la recta cruza todos los puntos simultáneamente.' },
+                                                    { val: 'cero', label: 'B) Cero, dado que no existiría diferencia (ni error) entre el dato real y la línea estimada.' },
+                                                    { val: 'maximo', label: 'C) Tendrían el tamaño máximo posible dentro de la cuadrícula.' }
+                                                ]} 
+                                            />
+                                            {t3Status && !t3Status.q4 && <p className="text-xs font-bold text-rose-400 mt-2">Error. Recuerda que el residual es el tamaño del "error". Si la línea adivina de forma perfecta todos los puntos, el error desaparece.</p>}
+                                        </div>
+
+                                    </div>
+
+                                    {/* CONTROLES TALLER 3 */}
+                                    <div className="sticky bottom-0 mt-auto w-full bg-white border-t border-slate-200 p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-40 flex justify-center gap-3">
+                                        {!t3Status?.all ? (
+                                            <button onClick={verifyT3} className="w-full md:w-auto px-8 py-3 bg-violet-600 hover:bg-violet-700 text-white font-black rounded-xl shadow-[0_4px_0_rgb(109,40,217)] hover:translate-y-[2px] hover:shadow-[0_2px_0_rgb(109,40,217)] transition-all text-sm md:text-base">
+                                                Verificar Respuestas
+                                            </button>
+                                        ) : (
+                                            <div className="w-full md:w-auto px-6 py-3 bg-emerald-100 text-emerald-800 font-bold rounded-xl flex items-center justify-center gap-2 text-sm md:text-base shadow-sm border border-emerald-200">
+                                                <span>✅</span> ¡Laboratorio Finalizado!
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
