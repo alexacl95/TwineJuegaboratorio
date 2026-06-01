@@ -103,7 +103,6 @@
             }
         };
 
-        // --- COMPONENTES DEL GRAFO (Curvas perfectas) ---
         const points = {
             1: [50, 10],   
             2: [25, 35],   
@@ -117,6 +116,213 @@
             'nutria': [54, 85],
             'hipopotamo': [70, 85]
         };
+
+        // --- BASE DE DATOS DE CARTAS: BIODIVERSITY BATTLE (COLOMBIA) ---
+        const ADVERSE_CARDS = [
+            {
+                id: 'card-1',
+                title: 'Fenómeno de El Niño (Gran Sequía)',
+                ecosystem: 'Lagunas Andinas y Humedales',
+                icon: '☀️🔥',
+                desc: 'Las temperaturas récord reducen los caudales a mínimos históricos, evaporando humedales temporales y reduciendo el aporte de los glaciares.',
+                adaptationLogic: {
+                    'pato': [
+                        { step: "IF (lagunas_andinas == secas)", result: "THEN migrar de emergencia a tramos altos de ríos torrenciales andinos." },
+                        { step: "AND IF (peces_pequeños == escasean)", result: "THEN alimentarse de larvas de insectos bajo las piedras húmedas de los rápidos." },
+                        { step: "ELSE", result: "Inanición crítica por colapso de las redes tróficas del humedal." }
+                    ],
+                    'aguila': [
+                        { step: "IF (termicas_calientes == ascienden)", result: "THEN aprovechar corrientes ascendentes para planear distancias largas consumiendo menos energía." },
+                        { step: "AND IF (roedores_páramo == migran)", result: "THEN expandir el territorio de caza hacia valles andinos y laderas boscosas bajas." },
+                        { step: "RESULT", result: "Supervivencia moderadamente exitosa debido a alta movilidad aérea." }
+                    ],
+                    'nutria': [
+                        { step: "IF (nivel_rio == desciende_críticamente)", result: "THEN concentrar la manada en pozas profundas donde aún se agrupan los peces." },
+                        { step: "AND IF (intervención_humana == alta)", result: "THEN refugiarse en canales secundarios e igapós inaccesibles de la selva." },
+                        { step: "ELSE", result: "Riesgo de colisión territorial violenta con otras familias de nutrias." }
+                    ],
+                    'hipopotamo': [
+                        { step: "IF (humedales_locales == evaporados)", result: "THEN migrar de noche por tierra hacia el cauce principal del Río Magdalena." },
+                        { step: "AND IF (pastos_naturales == secos)", result: "THEN invadir cultivos y potreros ganaderos locales para alimentación nocturna." },
+                        { step: "RESULT", result: "Supervivencia del 100% por ausencia de depredadores y enorme masa corporal." }
+                    ],
+                    'dragon': [
+                        { step: "IF (incendios_páramo == destruyen_vegetación)", result: "THEN refugiarse en el imaginario mítico colectivo de los estudiantes." },
+                        { step: "RESULT", result: "El dragón sobrevive atrapado en un bucle infinito de sueños y leyendas." }
+                    ],
+                    'roca': [
+                        { step: "IF (temperatura_ambiente > 42°C)", result: "THEN absorber calor solar directo durante el día." },
+                        { step: "THEN", result: "Irradiar calor residual durante la noche fría sirviendo de termorregulador para reptiles." },
+                        { step: "RESULT", result: "Resiliencia absoluta del 100%. Estructura inalterable." }
+                    ]
+                }
+            },
+            {
+                id: 'card-2',
+                title: 'Minería de Aluvión (Invasión de Mercurio)',
+                ecosystem: 'Afluentes del Río Amazonas y Selva del Chocó',
+                icon: '⛏️⚠️',
+                desc: 'Maquinaria pesada remueve los lechos de los ríos y vierte toneladas de mercurio para separar el oro, destruyendo las riberas andinas.',
+                adaptationLogic: {
+                    'pato': [
+                        { step: "IF (sedimentos_mineros == enturbian_el_agua)", result: "THEN pérdida de visibilidad para cazar insectos y larvas bajo el agua." },
+                        { step: "ELSE", result: "Migrar forzadamente aguas arriba hacia quebradas cristalinas no intervenidas." }
+                    ],
+                    'aguila': [
+                        { step: "IF (presas_páramo == consumen_agua_con_metales)", result: "THEN la toxicidad química se bioacumula en la cadena trófica." },
+                        { step: "AND IF (águila == consume_presas_intoxicadas)", result: "THEN debilitamiento severo de las cáscaras de huevo al anidar." },
+                        { step: "RESULT", result: "Fracaso reproductivo y declive poblacional a mediano plazo." }
+                    ],
+                    'nutria': [
+                        { step: "IF (mercurio == entra_al_plancton_y_peces)", result: "THEN se acumula críticamente en las nutrias por ser depredadores tope." },
+                        { step: "THEN", result: "Pérdida paulatina de la coordinación motora para nadar, ceguera y fallo orgánico." },
+                        { step: "ELSE", result: "Desplazamiento a lagunas aisladas alejadas de la cuenca minera activa." }
+                    ],
+                    'hipopotamo': [
+                        { step: "IF (aguas_rio == contaminadas_con_metales)", result: "THEN resistir la exposición externa gracias a su piel de 5 cm de espesor." },
+                        { step: "AND IF (dieta == vegetación_terrestre)", result: "THEN evitar la bioacumulación por metales que sufren los piscívoros." },
+                        { step: "RESULT", result: "Inmune a la bioacumulación directa en la cadena alimentaria acuática." }
+                    ],
+                    'dragon': [
+                        { step: "IF (el río de oro de la leyenda de El Dorado se contamina)", result: "THEN el dragón despliega magia lógica computacional volviéndose inmune a toxinas." }
+                    ],
+                    'roca': [
+                        { step: "IF (mercurio_líquido == toca_la_roca)", result: "THEN la roca permanece completamente inerte y el metal resbala por gravedad." }
+                    ]
+                }
+            },
+            {
+                id: 'card-3',
+                title: 'Retroceso Glaciar por Calentamiento Andino',
+                ecosystem: 'Parques Nacionales y Páramos de Alta Montaña',
+                icon: '🏔️🌡️',
+                desc: 'La línea de frío sube de nivel. Especies de pisos térmicos más bajos invaden el páramo mientras los frailejones colapsan por falta de humedad.',
+                adaptationLogic: {
+                    'pato': [
+                        { step: "IF (aporte_agua_glaciar == desaparece)", result: "THEN las lagunas andinas reducen su profundidad media y caudal." },
+                        { step: "RESULT", result: "Adaptación forzada a vivir únicamente en embalses artificiales estables." }
+                    ],
+                    'aguila': [
+                        { step: "IF (bosque_altoandino == desplaza_al_páramo)", result: "THEN reubicar nidos en escarpes rocosos inaccesibles a mayor altitud." },
+                        { step: "AND IF (humanos == colonizan_antiguos_páramos)", result: "THEN evitar áreas de pastoreo para no ser cazada por ganaderos." },
+                        { step: "RESULT", result: "Supervivencia moderada en picos andinos distantes de actividades agrícolas." }
+                    ],
+                    'nutria': [
+                        { step: "IF (páramos == pierden_temperatura_fría)", result: "THEN el ecosistema de tierras altas andinas sigue sin ser apto para nutrias gigantes." },
+                        { step: "RESULT", result: "La especie se mantiene en los ríos bajos de la llanura amazónica sin afectación directa." }
+                    ],
+                    'hipopotamo': [
+                        { step: "IF (el valle del Magdalena aumenta de temperatura)", result: "THEN pasar más horas del día sumergido en aguas profundas para termorregular." },
+                        { step: "RESULT", result: "Aceleración de ciclos reproductivos debido a la simulación perfecta de su hábitat tropical nativo." }
+                    ],
+                    'dragon': [
+                        { step: "IF (la temperatura del páramo andino aumenta)", result: "THEN el dragón expande sus alas térmicas para equilibrar las corrientes de viento." }
+                    ],
+                    'roca': [
+                        { step: "IF (glaciar_milenario == se_derrite)", result: "THEN la roca queda expuesta a la intemperie por primera vez en miles de años." },
+                        { step: "THEN", result: "Soportar la radiación ultravioleta directa sin sufrir cambios en su estructura mineral." }
+                    ]
+                }
+            },
+            {
+                id: 'card-4',
+                title: 'Fragmentación de Selva por Deforestación',
+                ecosystem: 'Bosques y Selvas Amazónicas',
+                icon: '🪓🌳',
+                desc: 'La apertura de carreteras ilegales y la tala descontrolada destruyen el dosel del bosque, fragmentando los hábitats y cortando los corredores de fauna.',
+                adaptationLogic: {
+                    'pato': [
+                        { step: "IF (deforestación == causa_erosión_en_ríos)", result: "THEN migrar a tramos altos donde el cauce conserva vegetación protectora." },
+                        { step: "ELSE", result: "Pérdida de hábitat por colmatación y sedimentación de los rápidos." }
+                    ],
+                    'aguila': [
+                        { step: "IF (árboles_emergentes_gigantes == talados)", result: "THEN reubicar plataformas de nidos en escarpes y riscos rocosos andinos." },
+                        { step: "AND IF (presas_páramo_escasean)", result: "THEN expandir la caza hacia potreros abiertos capturando pequeños mamíferos." },
+                        { step: "RESULT", result: "Adaptación viable a mediano plazo gracias a su gran movilidad de vuelo." }
+                    ],
+                    'nutria': [
+                        { step: "IF (bosque_de_galería_ribereño == talado)", result: "THEN refugiarse en raíces profundas de árboles caídos sumergidos en el cauce." },
+                        { step: "ELSE", result: "Vulnerabilidad extrema ante cazadores ilegales por pérdida de cobertura vegetal." }
+                    ],
+                    'hipopotamo': [
+                        { step: "IF (selva_baja_y_matorrales == talados_para_pastos)", result: "THEN colonizar inmediatamente los nuevos potreros despejados para alimentación." },
+                        { step: "RESULT", result: "Aumento poblacional y expansión al multiplicarse las zonas de pastoreo terrestre." }
+                    ],
+                    'dragon': [
+                        { step: "IF (el bosque mítico es talado)", result: "THEN habitar los espacios digitales de programación y el código lógico de los estudiantes." }
+                    ],
+                    'roca': [
+                        { step: "IF (los árboles sombreadores == talados)", result: "THEN quedar expuesta a la intemperie y la radiación solar directa sin coberturas." },
+                        { step: "RESULT", result: "Soportar la erosión eólica y pluvial extrema sin cambios químicos internos." }
+                    ]
+                }
+            },
+            {
+                id: 'card-5',
+                title: 'Derrame de Hidrocarburos en Ríos',
+                ecosystem: 'Cuencas Hídricas y Llanuras de la Orinoquía',
+                icon: '🛢️💧',
+                desc: 'Fallas o atentados en oleoductos vierten crudo pesado en ríos y ciénagas, creando una densa capa impermeable letal para el intercambio de oxígeno.',
+                adaptationLogic: {
+                    'pato': [
+                        { step: "IF (crudo_liviano == flota_en_superficie)", result: "THEN migrar de inmediato a humedales andinos aislados o lagunas de montaña limpias." },
+                        { step: "ELSE", result: "Envenenamiento por ingesta al lamer plumas o pérdida de flotabilidad y muerte por hipotermia." }
+                    ],
+                    'aguila': [
+                        { step: "IF (peces_muertos_con_petróleo == flotan)", result: "THEN evitar estrictamente alimentarse de carroña aceitosa del río." },
+                        { step: "THEN", result: "Cazar únicamente presas terrestres vivas (roedores, lagartos) en sabanas secas." }
+                    ],
+                    'nutria': [
+                        { step: "IF (crudo == impregna_pelaje_impermeable)", result: "THEN migrar forzadamente por tierra hacia caños aislados libres de contaminación." },
+                        { step: "ELSE", result: "Muerte rápida por hipotermia debido a la pérdida del aislamiento térmico que brinda su pelo." }
+                    ],
+                    'hipopotamo': [
+                        { step: "IF (aceite_pesado == toca_la_piel)", result: "THEN resistir la absorción gracias a su piel ultra-gruesa de 5 centímetros de espesor." },
+                        { step: "AND IF (agua_de_ciénaga == contaminada)", result: "THEN beber únicamente de escorrentías limpias y nacimientos de agua limpia." },
+                        { step: "RESULT", result: "Resiliencia física muy alta por su dieta estrictamente herbívora terrestre." }
+                    ],
+                    'dragon': [
+                        { step: "IF (el agua del río se vuelve negra)", result: "THEN transmutar químicamente el crudo en energía lógica pura para el circuito." }
+                    ],
+                    'roca': [
+                        { step: "IF (crudo_pesado == mancha_la_roca)", result: "THEN servir de sustrato físico inerte para el desarrollo de bacterias degradadoras de petróleo." },
+                        { step: "RESULT", result: "Estructura interna intacta. Soporta el petróleo y el lavado químico posterior." }
+                    ]
+                }
+            },
+            {
+                id: 'card-6',
+                title: 'Fenómeno de La Niña (Lluvias Extremas)',
+                ecosystem: 'Valles Interandinos y Llanuras Inundables',
+                icon: '🌧️⛈️',
+                desc: 'Lluvias torrenciales continuas causan inundaciones masivas, conectando ecosistemas terrestres y acuáticos bajo un solo espejo de agua turbia.',
+                adaptationLogic: {
+                    'pato': [
+                        { step: "IF (ríos_torrenciales == desbordados_con_lodo)", result: "THEN resguardarse en remansos tranquilos y pequeñas quebradas inundadas secundarias." },
+                        { step: "ELSE", result: "Incapacidad de bucear por corrientes de lodo y pérdida severa de visibilidad de caza." }
+                    ],
+                    'aguila': [
+                        { step: "IF (tormentas_continuas == impiden_el_vuelo)", result: "THEN ayunar refugiada en riscos rocosos altos a la espera de que aclare el cielo." },
+                        { step: "RESULT", result: "Pérdida temporal de peso pero alta supervivencia gracias a su metabolismo de descanso." }
+                    ],
+                    'nutria': [
+                        { step: "IF (sabanas_y_selvas == totalmente_inundadas)", result: "THEN dispersar a la manada a través de las selvas inundables para cazar peces libremente." },
+                        { step: "RESULT", result: "Excelente éxito de caza, aumento de la tasa de reproducción por abundancia de alimento." }
+                    ],
+                    'hipopotamo': [
+                        { step: "IF (ciénagas == se_conectan_en_espejos_de_agua)", result: "THEN nadar distancias masivas y colonizar nuevas ciénagas a kilómetros de distancia." },
+                        { step: "RESULT", result: "Dispersión descontrolada por el territorio colombiano, empeorando su invasión biológica." }
+                    ],
+                    'dragon': [
+                        { step: "IF (tormenta_eléctrica == impacta_al_dragón)", result: "THEN absorber la energía del rayo para alimentar y reiniciar el circuito lógico." }
+                    ],
+                    'roca': [
+                        { step: "IF (inundación_masiva == sumerge_la_roca_por_meses)", result: "THEN servir de anclaje para colonias de algas y plantas acuáticas de río." },
+                        { step: "RESULT", result: "Estabilidad física perfecta e imperturbable bajo las corrientes de agua." }
+                    ]
+                }
+            }
+        ];
 
         const SVGConnections = ({ history, unlockedHistories, isLooping }) => {
             const isPathInCurrent = (from, to) => {
@@ -200,9 +406,7 @@
 
             return (
                 <div className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
-                    {/* El viewBox 0 0 100 100 permite que las curvas mapeen a los porcentajes exactos de las cajas */}
                     <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
-                        {/* Renderizado de Trazos Curvos Dinámicos */}
                         {drawCircuitLine(1, 2)}
                         {drawCircuitLine(1, 4)}
                         {drawCircuitLine(2, 3)}
@@ -219,16 +423,25 @@
             );
         };
 
-        // --- APLICACIÓN PRINCIPAL ---
         function App() {
+            // Navegación de pestañas globales
+            const [activeTab, setActiveTab] = useState('circuit'); // 'circuit' o 'battle'
+
+            // Estados del circuito lógico original
             const [gameState, setGameState] = useState('menu'); 
             const [currentNode, setCurrentNode] = useState(1);
             const [history, setHistory] = useState([1]); 
             const [finalResult, setFinalResult] = useState(null);
-            
             const [unlockedAnimals, setUnlockedAnimals] = useState([]);
             const [unlockedHistories, setUnlockedHistories] = useState([]);
-            
+
+            // Estados de la Batalla por la Biodiversidad
+            const [activeCardIndex, setActiveCardIndex] = useState(0);
+            const [selectedSpecies, setSelectedSpecies] = useState('pato');
+            const [showAdaptation, setShowAdaptation] = useState(false);
+            const [showExitConfirm, setShowExitConfirm] = useState(false);
+            const [speciesLockAlert, setSpeciesLockAlert] = useState(false);
+
             const scrollContainerRef = useRef(null);
 
             useEffect(() => {
@@ -301,32 +514,42 @@
                 setFinalResult(null);
             };
 
-            if (gameState === 'menu') {
-                return (
-                    <div className="min-h-screen bg-slate-100 p-4 md:p-8 font-sans bg-grid-pattern flex flex-col items-center justify-center overflow-auto relative">
-                        <div className="bg-white border-2 border-slate-200 shadow-xl rounded-3xl p-6 md:p-10 text-center animate-fade-in my-8 z-10 w-full max-w-xl relative overflow-hidden">
-                            <div className="text-6xl mb-6">🤖🌳</div>
-                            <h1 className="text-3xl md:text-5xl font-black text-slate-800 mb-4 tracking-tight">Circuito Lógico</h1>
-                            <h2 className="text-lg md:text-xl text-slate-500 font-bold mb-8 uppercase tracking-widest">Algoritmo y Robot Humano</h2>
-                            
-                            <p className="text-slate-600 mb-10 text-base md:text-lg leading-relaxed">
-                                Recorre el árbol de decisiones. Responde a las condiciones lógicas (<span className="font-bold text-indigo-600">AND</span> / <span className="font-bold text-amber-500">OR</span>) en cada estación para descubrir la clasificación del animal y su ecosistema.
-                            </p>
+            const handleNextCard = () => {
+                setShowAdaptation(false);
+                setSpeciesLockAlert(false);
+                let nextIndex;
+                do {
+                    nextIndex = Math.floor(Math.random() * ADVERSE_CARDS.length);
+                } while (nextIndex === activeCardIndex && ADVERSE_CARDS.length > 1);
+                setActiveCardIndex(nextIndex);
+            };
 
-                            <button 
-                                onClick={startGame}
-                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg md:text-xl py-4 rounded-xl shadow-[0_4px_0_rgb(67,56,202)] hover:shadow-[0_2px_0_rgb(67,56,202)] transition-all hover:translate-y-[2px]"
-                            >
-                                Iniciar Sistema ▶
-                            </button>
-                        </div>
-                    </div>
-                );
-            }
+            const handleSpeciesSelect = (key) => {
+                setSelectedSpecies(key);
+                setShowAdaptation(false);
+                setSpeciesLockAlert(false);
+            };
+
+            const handleCompile = () => {
+                // Verificar si la especie ya fue desbloqueada en el circuito lógico
+                const isUnlocked = unlockedAnimals.includes(selectedSpecies);
+                if (!isUnlocked) {
+                    setSpeciesLockAlert(true);
+                    setShowAdaptation(false);
+                    return;
+                }
+                setSpeciesLockAlert(false);
+                setShowAdaptation(true);
+            };
+
+            const handleConfirmExit = () => {
+                setGameState('menu');
+                setShowExitConfirm(false);
+            };
 
             const isNodeCurrent = (id) => currentNode === id;
             
-            // Cajas de Estaciones (Restauradas a tema claro)
+            // Cajas de Estaciones (Mantiene el tema claro original)
             const renderStation = (id, top, left) => {
                 const node = LOGIC_FLOW.nodes[id];
                 if (!node) return null;
@@ -369,7 +592,7 @@
                 );
             };
 
-            // Cajas de Resultados (Restauradas a tema claro)
+            // Cajas de Resultados (Mantiene el tema claro original)
             const renderResultBox = (id, top, left) => {
                 const result = LOGIC_FLOW.results[id];
                 const inCurrentPath = history.includes(id);
@@ -405,155 +628,388 @@
 
             return (
                 <div className="h-full bg-slate-50 flex flex-col relative overflow-hidden">
-                    {/* BARRA SUPERIOR DE NAVEGACIÓN */}
-                    <div className="bg-white border-b border-slate-200 p-3 md:p-4 flex justify-between items-center z-30 relative shrink-0 shadow-sm">
-                        <button 
-                            onClick={handleBack}
-                            disabled={history.length <= 1 || gameState === 'looping'}
-                            className={`font-bold px-3 py-2 rounded-lg transition-colors flex items-center gap-1 md:gap-2 text-xs md:text-base border ${
-                                history.length > 1 && gameState !== 'looping' 
-                                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300' 
-                                : 'bg-transparent text-slate-400 border-transparent cursor-not-allowed'
-                            }`}
-                        >
-                            ⬅ Atrás
-                        </button>
-                        
-                        <div className="text-center flex-grow font-black text-indigo-700 text-base md:text-xl">
-                            Circuito Lógico
-                        </div>
-                        
-                        <button 
-                            onClick={() => {if(window.confirm('¿Volver al menú?')) setGameState('menu')}}
-                            className="bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 font-bold px-3 py-2 rounded-lg transition-colors text-xs md:text-base"
-                        >
-                            Salir
-                        </button>
-                    </div>
-
-                    {/* ÁREA DEL TABLERO GRÁFICO */}
-                    <div ref={scrollContainerRef} className="flex-grow overflow-auto bg-slate-50 scroll-smooth-mobile relative">
-                        <div className="relative bg-grid-pattern min-w-[800px] w-full h-[500px] md:min-h-[600px] mx-auto">
-                            <SVGConnections history={history} unlockedHistories={unlockedHistories} isLooping={gameState === 'looping'} />
-                            
-                            {renderStation(1, points[1][1], points[1][0])}
-                            {renderStation(2, points[2][1], points[2][0])}
-                            {renderStation(4, points[4][1], points[4][0])}
-                            {renderStation(3, points[3][1], points[3][0])}
-                            {renderStation(5, points[5][1], points[5][0])}
-                            
-                            {renderResultBox('dragon', points['dragon'][1], points['dragon'][0])}
-                            {renderResultBox('roca', points['roca'][1], points['roca'][0])}
-
-                            {renderResultBox('pato', points['pato'][1], points['pato'][0])}
-                            {renderResultBox('aguila', points['aguila'][1], points['aguila'][0])}
-                            {renderResultBox('nutria', points['nutria'][1], points['nutria'][0])}
-                            {renderResultBox('hipopotamo', points['hipopotamo'][1], points['hipopotamo'][0])}
-                        </div>
-                    </div>
-
-                    {/* PANEL DE INTERACCIÓN INFERIOR */}
-                    <div className="bg-white border-t border-slate-200 p-4 md:p-6 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-30 relative shrink-0 min-h-[190px] flex flex-col justify-center">
-                        
-                        {gameState === 'playing' && LOGIC_FLOW.nodes[currentNode] && (
-                            <div className="max-w-2xl mx-auto w-full text-center animate-fade-in">
-                                <p className="text-xl md:text-3xl font-black text-slate-800 mb-6 md:mb-8 leading-tight">
-                                    {LOGIC_FLOW.nodes[currentNode].question}
-                                </p>
-                                
-                                <div className="flex justify-center gap-4 md:gap-8">
-                                    <button 
-                                        onClick={() => handleAnswer('yes')}
-                                        className="flex-1 max-w-[150px] md:max-w-[180px] bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg md:text-xl py-3 md:py-4 rounded-xl shadow-[0_4px_0_rgb(5,150,105)] hover:shadow-[0_2px_0_rgb(5,150,105)] transition-all hover:translate-y-[2px]"
-                                    >
-                                        SÍ
-                                    </button>
-                                    <button 
-                                        onClick={() => handleAnswer('no')}
-                                        className="flex-1 max-w-[150px] md:max-w-[180px] bg-rose-500 hover:bg-rose-600 text-white font-black text-lg md:text-xl py-3 md:py-4 rounded-xl shadow-[0_4px_0_rgb(225,29,72)] hover:shadow-[0_2px_0_rgb(225,29,72)] transition-all hover:translate-y-[2px]"
-                                    >
-                                        NO
-                                    </button>
-                                </div>
+                    
+                    {/* CABECERA PRINCIPAL CON SELECTOR DE PESTAÑAS (Integración de cartas) */}
+                    <header className="bg-white border-b border-slate-200 px-4 py-3 shrink-0 flex flex-col sm:flex-row items-center justify-between shadow-sm z-30 gap-3">
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl md:text-3xl">🇨🇴</span>
+                            <div>
+                                <h1 className="text-sm md:text-base font-black text-slate-800 uppercase tracking-tight leading-none">Ecosistemas Colombia</h1>
+                                <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mt-0.5">Biodiversity Battle & Logic Circuit</p>
                             </div>
-                        )}
+                        </div>
 
-                        {gameState === 'looping' && (
-                            <div className="text-center animate-fade-in w-full max-w-2xl mx-auto">
-                                <div className="text-5xl md:text-6xl mb-2 drop-shadow-md">🌀</div>
-                                <div className="font-black text-lg md:text-xl text-amber-600 mb-4 tracking-wider">¡BUCLE INFINITO DETECTADO!</div>
-                                
-                                <div className="flex flex-wrap justify-center gap-2 mb-6">
-                                    {Object.entries(LOGIC_FLOW.results['dragon'].traits).map(([k, v]) => (
-                                        <div key={k} className="bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
-                                            <span className="text-[10px] uppercase font-bold text-amber-500 mr-1">{k}:</span>
-                                            <span className="text-xs font-black text-amber-700">{v}</span>
-                                        </div>
-                                    ))}
-                                </div>
+                        {/* Pestañas Interactivas */}
+                        <div className="bg-slate-100 p-1 rounded-xl flex gap-1 border border-slate-200 shrink-0">
+                            <button 
+                                onClick={() => setActiveTab('circuit')}
+                                className={`px-4 py-2 text-xs md:text-sm font-black rounded-lg transition-all ${activeTab === 'circuit' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                            >
+                                🕹️ Circuito Lógico
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('battle')}
+                                className={`px-4 py-2 text-xs md:text-sm font-black rounded-lg transition-all ${activeTab === 'battle' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                            >
+                                🔥 Batalla Ecológica
+                            </button>
+                        </div>
+                    </header>
 
-                                <button 
-                                    onClick={handleContinueLoop}
-                                    className="px-6 py-2 md:py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-black transition-all shadow-[0_4px_0_rgb(217,119,6)] hover:shadow-[0_2px_0_rgb(217,119,6)] hover:translate-y-[2px]"
-                                >
-                                    🔄 Continuar (Volver al inicio)
-                                </button>
-                            </div>
-                        )}
+                    {/* SECCIÓN 1: PESTAÑA CIRCUITO LÓGICO */}
+                    {activeTab === 'circuit' && (
+                        <div className="flex-grow flex flex-col h-full overflow-hidden">
+                            {gameState === 'menu' ? (
+                                <div className="min-h-0 flex-grow bg-slate-100 p-4 md:p-8 font-sans bg-grid-pattern flex flex-col items-center justify-center overflow-auto relative">
+                                    <div className="bg-white border-2 border-slate-200 shadow-xl rounded-3xl p-6 md:p-10 text-center animate-fade-in my-8 z-10 w-full max-w-xl relative overflow-hidden">
+                                        <div className="text-6xl mb-6">🤖🌳</div>
+                                        <h1 className="text-3xl md:text-5xl font-black text-slate-800 mb-4 tracking-tight">Circuito Lógico</h1>
+                                        <h2 className="text-lg md:text-xl text-slate-500 font-bold mb-8 uppercase tracking-widest">Algoritmo y Robot Humano</h2>
+                                        
+                                        <p className="text-slate-600 mb-10 text-base md:text-lg leading-relaxed">
+                                            Recorre el árbol de decisiones. Responde a las condiciones lógicas (<span className="font-bold text-indigo-600">AND</span> / <span className="font-bold text-amber-500">OR</span>) en cada estación para descubrir la clasificación del animal y su ecosistema.
+                                        </p>
 
-                        {gameState === 'result' && finalResult && (
-                            <div className="text-center animate-fade-in w-full max-w-2xl mx-auto">
-                                <div className="text-5xl md:text-6xl mb-2 md:mb-4 drop-shadow-sm">{LOGIC_FLOW.results[currentNode].emoji}</div>
-                                <div className={`text-lg md:text-xl font-black ${finalResult.isError ? 'text-amber-600' : 'text-emerald-600'}`}>
-                                    {finalResult.isRock ? 'Felicidades, eres: ' : '¡Descubriste un '} {LOGIC_FLOW.results[currentNode].animal}!
-                                </div>
-                                <p className="text-xs md:text-sm text-slate-500 font-bold mb-4 uppercase tracking-widest">
-                                    Ecosistema: <span className="text-slate-800">{LOGIC_FLOW.results[currentNode].eco}</span>
-                                </p>
-
-                                <div className="flex flex-wrap justify-center gap-2 mb-6">
-                                    {Object.entries(LOGIC_FLOW.results[currentNode].traits).map(([k, v]) => (
-                                        <div key={k} className="bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100">
-                                            <span className="text-[10px] uppercase font-bold text-indigo-400 mr-1">{k}:</span>
-                                            <span className="text-xs font-black text-indigo-700">{v}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                {finalResult.isRock && <p className="mb-4 text-xs sm:text-sm text-slate-500 font-medium italic max-w-sm mx-auto">No vuela, no nada, no tiene plumas, ni pelo... ¡Definitivamente es una roca! 🪨 Una mascota excelente.</p>}
-
-                                {/* Descubrimientos */}
-                                <div className="mb-4 bg-slate-50 border border-slate-100 rounded-xl p-3 max-w-sm mx-auto">
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">Base de Datos</p>
-                                    <div className="flex justify-center gap-2 mb-1 flex-wrap">
-                                        {['pato', 'aguila', 'nutria', 'hipopotamo', 'dragon', 'roca'].map(animalKey => {
-                                            const isUnlocked = unlockedAnimals.includes(animalKey);
-                                            const animalData = LOGIC_FLOW.results[animalKey];
-                                            return (
-                                                <div 
-                                                    key={animalKey} 
-                                                    className={`flex flex-col items-center p-2 rounded-lg transition-all ${isUnlocked ? 'bg-white border border-slate-200 shadow-sm' : 'opacity-40 grayscale'}`} 
-                                                    title={isUnlocked ? animalData.animal : 'Desconocido'}
-                                                >
-                                                    <div className="text-2xl md:text-3xl leading-none mb-1">{isUnlocked ? animalData.emoji : '❓'}</div>
-                                                    <div className="text-[10px] font-bold text-slate-600">{isUnlocked ? animalData.animal : '???'}</div>
-                                                </div>
-                                            );
-                                        })}
+                                        <button 
+                                            onClick={startGame}
+                                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg md:text-xl py-4 rounded-xl shadow-[0_4px_0_rgb(67,56,202)] hover:shadow-[0_2px_0_rgb(67,56,202)] transition-all hover:translate-y-[2px]"
+                                        >
+                                            Iniciar Sistema ▶
+                                        </button>
                                     </div>
-                                    <p className="text-[10px] font-bold text-indigo-600 mt-2">
-                                        {unlockedAnimals.filter(a => ['pato', 'aguila', 'nutria', 'hipopotamo', 'dragon', 'roca'].includes(a)).length} de 6 finales encontrados
-                                    </p>
                                 </div>
+                            ) : (
+                                <div className="flex-grow flex flex-col h-full overflow-hidden">
+                                    {/* BARRA INTERNA DE NAVEGACIÓN CIRCUITO */}
+                                    <div className="bg-white border-b border-slate-100 p-3 flex justify-between items-center z-10 relative shrink-0 shadow-sm">
+                                        <button 
+                                            onClick={handleBack}
+                                            disabled={history.length <= 1 || gameState === 'looping'}
+                                            className={`font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 md:gap-2 text-xs border ${
+                                                history.length > 1 && gameState !== 'looping' 
+                                                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300' 
+                                                : 'bg-transparent text-slate-400 border-transparent cursor-not-allowed'
+                                            }`}
+                                        >
+                                            ⬅ Atrás
+                                        </button>
+                                        
+                                        <div className="text-center font-black text-indigo-700 text-sm md:text-base">
+                                            {gameState === 'playing' ? `Estación actual: ${currentNode}` : 'Resultado final del análisis'}
+                                        </div>
+                                        
+                                        <button 
+                                            onClick={() => setShowExitConfirm(true)}
+                                            className="bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 font-bold px-3 py-1.5 rounded-lg transition-colors text-xs"
+                                        >
+                                            Salir al menú
+                                        </button>
+                                    </div>
 
-                                <button 
-                                    onClick={() => {setGameState('playing'); setCurrentNode(1); setHistory([1]);}} 
-                                    className="mt-2 px-6 py-2 md:py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-[0_4px_0_rgb(67,56,202)] hover:shadow-[0_2px_0_rgb(67,56,202)] hover:translate-y-[2px] w-full sm:w-auto"
-                                >
-                                    🔍 Analizar otra ruta
-                                </button>
+                                    {/* ÁREA DEL TABLERO GRÁFICO */}
+                                    <div ref={scrollContainerRef} className="flex-grow overflow-auto bg-slate-50 scroll-smooth-mobile relative">
+                                        <div className="relative bg-grid-pattern min-w-[800px] w-full h-[500px] md:min-h-[550px] mx-auto">
+                                            <SVGConnections history={history} unlockedHistories={unlockedHistories} isLooping={gameState === 'looping'} />
+                                            
+                                            {renderStation(1, points[1][1], points[1][0])}
+                                            {renderStation(2, points[2][1], points[2][0])}
+                                            {renderStation(4, points[4][1], points[4][0])}
+                                            {renderStation(3, points[3][1], points[3][0])}
+                                            {renderStation(5, points[5][1], points[5][0])}
+                                            
+                                            {renderResultBox('dragon', points['dragon'][1], points['dragon'][0])}
+                                            {renderResultBox('roca', points['roca'][1], points['roca'][0])}
+
+                                            {renderResultBox('pato', points['pato'][1], points['pato'][0])}
+                                            {renderResultBox('aguila', points['aguila'][1], points['aguila'][0])}
+                                            {renderResultBox('nutria', points['nutria'][1], points['nutria'][0])}
+                                            {renderResultBox('hipopotamo', points['hipopotamo'][1], points['hipopotamo'][0])}
+                                        </div>
+                                    </div>
+
+                                    {/* PANEL DE INTERACCIÓN INFERIOR CIRCUITO */}
+                                    <div className="bg-white border-t border-slate-200 p-4 md:p-6 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-20 relative shrink-0 min-h-[180px] flex flex-col justify-center">
+                                        
+                                        {gameState === 'playing' && LOGIC_FLOW.nodes[currentNode] && (
+                                            <div className="max-w-2xl mx-auto w-full text-center animate-fade-in">
+                                                <p className="text-xl md:text-3xl font-black text-slate-800 mb-6 md:mb-8 leading-tight">
+                                                    {LOGIC_FLOW.nodes[currentNode].question}
+                                                </p>
+                                                
+                                                <div className="flex justify-center gap-4 md:gap-8">
+                                                    <button 
+                                                        onClick={() => handleAnswer('yes')}
+                                                        className="flex-1 max-w-[150px] md:max-w-[180px] bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg md:text-xl py-3 md:py-4 rounded-xl shadow-[0_4px_0_rgb(5,150,105)] hover:shadow-[0_2px_0_rgb(5,150,105)] transition-all hover:translate-y-[2px]"
+                                                    >
+                                                        SÍ
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleAnswer('no')}
+                                                        className="flex-1 max-w-[150px] md:max-w-[180px] bg-rose-500 hover:bg-rose-600 text-white font-black text-lg md:text-xl py-3 md:py-4 rounded-xl shadow-[0_4px_0_rgb(225,29,72)] hover:shadow-[0_2px_0_rgb(225,29,72)] transition-all hover:translate-y-[2px]"
+                                                    >
+                                                        NO
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {gameState === 'looping' && (
+                                            <div className="text-center animate-fade-in w-full max-w-2xl mx-auto">
+                                                <div className="text-5xl md:text-6xl mb-2 drop-shadow-md">🌀</div>
+                                                <div className="font-black text-lg md:text-xl text-amber-600 mb-4 tracking-wider">¡BUCLE INFINITO DETECTADO!</div>
+                                                
+                                                <div className="flex flex-wrap justify-center gap-2 mb-6">
+                                                    {Object.entries(LOGIC_FLOW.results['dragon'].traits).map(([k, v]) => (
+                                                        <div key={k} className="bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+                                                            <span className="text-[10px] uppercase font-bold text-amber-500 mr-1">{k}:</span>
+                                                            <span className="text-xs font-black text-amber-700">{v}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                <button 
+                                                    onClick={handleContinueLoop}
+                                                    className="px-6 py-2 md:py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-black transition-all shadow-[0_4px_0_rgb(217,119,6)] hover:shadow-[0_2px_0_rgb(217,119,6)] hover:translate-y-[2px]"
+                                                >
+                                                    🔄 Continuar (Volver al inicio)
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {gameState === 'result' && finalResult && (
+                                            <div className="text-center animate-fade-in w-full max-w-2xl mx-auto">
+                                                <div className="text-5xl md:text-6xl mb-2 md:mb-4 drop-shadow-sm">{LOGIC_FLOW.results[currentNode].emoji}</div>
+                                                <div className={`text-lg md:text-xl font-black ${finalResult.isError ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                                    {finalResult.isRock ? 'Felicidades, eres: ' : '¡Descubriste un '} {LOGIC_FLOW.results[currentNode].animal}!
+                                                </div>
+                                                <p className="text-xs md:text-sm text-slate-500 font-bold mb-4 uppercase tracking-widest">
+                                                    Ecosistema: <span className="text-slate-800">{LOGIC_FLOW.results[currentNode].eco}</span>
+                                                </p>
+
+                                                <div className="flex flex-wrap justify-center gap-2 mb-6">
+                                                    {Object.entries(LOGIC_FLOW.results[currentNode].traits).map(([k, v]) => (
+                                                        <div key={k} className="bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100">
+                                                            <span className="text-[10px] uppercase font-bold text-indigo-400 mr-1">{k}:</span>
+                                                            <span className="text-xs font-black text-indigo-700">{v}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                {finalResult.isRock && <p className="mb-4 text-xs sm:text-sm text-slate-500 font-medium italic max-w-sm mx-auto">No vuela, no nada, no tiene plumas, ni pelo... ¡Definitivamente es una roca! 🪨 Una mascota excelente.</p>}
+
+                                                {/* Descubrimientos */}
+                                                <div className="mb-4 bg-slate-50 border border-slate-100 rounded-xl p-3 max-w-sm mx-auto">
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">Base de Datos</p>
+                                                    <div className="flex justify-center gap-2 mb-1 flex-wrap">
+                                                        {['pato', 'aguila', 'nutria', 'hipopotamo', 'dragon', 'roca'].map(animalKey => {
+                                                            const isUnlocked = unlockedAnimals.includes(animalKey);
+                                                            const animalData = LOGIC_FLOW.results[animalKey];
+                                                            return (
+                                                                <div 
+                                                                    key={animalKey} 
+                                                                    className={`flex flex-col items-center p-2 rounded-lg transition-all ${isUnlocked ? 'bg-white border border-slate-200 shadow-sm' : 'opacity-40 grayscale'}`} 
+                                                                    title={isUnlocked ? animalData.animal : 'Desconocido'}
+                                                                >
+                                                                    <div className="text-2xl md:text-3xl leading-none mb-1">{isUnlocked ? animalData.emoji : '❓'}</div>
+                                                                    <div className="text-[10px] font-bold text-slate-600">{isUnlocked ? animalData.animal : '???'}</div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    <p className="text-[10px] font-bold text-indigo-600 mt-2">
+                                                        {unlockedAnimals.filter(a => ['pato', 'aguila', 'nutria', 'hipopotamo', 'dragon', 'roca'].includes(a)).length} de 6 finales encontrados
+                                                    </p>
+                                                </div>
+
+                                                <button 
+                                                    onClick={() => {setGameState('playing'); setCurrentNode(1); setHistory([1]);}} 
+                                                    className="mt-2 px-6 py-2 md:py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-[0_4px_0_rgb(67,56,202)] hover:shadow-[0_2px_0_rgb(67,56,202)] hover:translate-y-[2px] w-full sm:w-auto"
+                                                >
+                                                    🔍 Analizar otra ruta
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* SECCIÓN 2: PESTAÑA DE BIODIVERSITY BATTLE (COLOMBIA) */}
+                    {activeTab === 'battle' && (
+                        <div className="flex-grow flex flex-col md:flex-row overflow-hidden bg-grid-pattern relative p-4 md:p-8 gap-6 md:gap-8 h-full">
+                            
+                            {/* Columna Izquierda: Carta de Evento Ecológico Colombiano */}
+                            <div className="flex-1 flex flex-col justify-center items-center">
+                                <div className="bg-white border-2 border-slate-200 shadow-xl rounded-3xl p-6 md:p-8 max-w-md w-full relative overflow-hidden flex flex-col justify-between h-[340px] md:h-[400px]">
+                                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-amber-500 to-indigo-500"></div>
+                                    
+                                    <div>
+                                        <div className="flex justify-between items-start mb-4">
+                                            <span className="text-[10px] font-black bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full border border-indigo-100 uppercase tracking-wider">
+                                                🚨 Evento Adverso
+                                            </span>
+                                            <span className="text-3xl">{ADVERSE_CARDS[activeCardIndex].icon}</span>
+                                        </div>
+                                        
+                                        <h3 className="text-xl md:text-2xl font-black text-slate-800 mb-1 leading-tight">
+                                            {ADVERSE_CARDS[activeCardIndex].title}
+                                        </h3>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
+                                            📍 {ADVERSE_CARDS[activeCardIndex].ecosystem}
+                                        </p>
+                                        
+                                        <p className="text-xs md:text-sm text-slate-600 leading-relaxed italic animate-fade-in" key={activeCardIndex}>
+                                            "{ADVERSE_CARDS[activeCardIndex].desc}"
+                                        </p>
+                                    </div>
+
+                                    <button 
+                                        onClick={handleNextCard}
+                                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-widest shadow-md transition-all active:scale-95"
+                                    >
+                                        🎲 Siguiente Evento Colombiano
+                                    </button>
+                                </div>
                             </div>
-                        )}
-                    </div>
+
+                            {/* Columna Derecha: Lógica de Adaptación de la Especie (Pseudocódigo) */}
+                            <div className="flex-grow md:max-w-md flex flex-col h-full bg-white border-2 border-slate-200 rounded-3xl shadow-xl p-5 md:p-8 overflow-hidden z-10">
+                                <h3 className="text-base md:text-lg font-black text-slate-800 uppercase tracking-tight mb-4 border-b border-slate-100 pb-3 flex items-center justify-between">
+                                    <span>🧬 Respuesta Lógica</span>
+                                    <span className="text-xs text-indigo-600 font-bold uppercase">{unlockedAnimals.length} Desbloqueados</span>
+                                </h3>
+
+                                <div className="space-y-4 flex-grow flex flex-col justify-between overflow-hidden">
+                                    
+                                    {/* Selector de Especie de la Base de Datos */}
+                                    <div>
+                                        <label className="text-[9px] font-black uppercase text-slate-400 block mb-2 tracking-wider">Selecciona la especie para evaluar</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {['pato', 'aguila', 'nutria', 'hipopotamo', 'dragon', 'roca'].map(key => {
+                                                const spec = LOGIC_FLOW.results[key];
+                                                const isUnlocked = unlockedAnimals.includes(key);
+                                                const isSelected = selectedSpecies === key;
+
+                                                let btnClass = `p-2 rounded-xl border flex flex-col items-center justify-center transition-all `;
+                                                if (isSelected) {
+                                                    btnClass += "border-indigo-500 bg-indigo-50 shadow-sm ";
+                                                } else {
+                                                    btnClass += "border-slate-200 bg-white hover:bg-slate-50 ";
+                                                }
+
+                                                return (
+                                                    <button
+                                                        key={key}
+                                                        onClick={() => handleSpeciesSelect(key)}
+                                                        className={btnClass}
+                                                    >
+                                                        <span className={`text-2xl mb-1 ${!isUnlocked ? 'grayscale opacity-50' : ''}`}>{isUnlocked ? spec.emoji : '🔒'}</span>
+                                                        <span className="text-[9px] font-bold text-slate-600 text-center leading-none truncate w-full">
+                                                            {isUnlocked ? spec.animal : 'Bloqueado'}
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Panel de Simulación Algorítmica */}
+                                    <div className="flex-grow overflow-y-auto no-scrollbar border border-slate-100 rounded-2xl bg-slate-50 p-4 min-h-[150px] flex flex-col justify-center">
+                                        
+                                        {/* Estado Inicial: Botón para compilar */}
+                                        {!showAdaptation && !speciesLockAlert && (
+                                            <div className="text-center py-6">
+                                                <div className="text-4xl mb-2">⚡</div>
+                                                <p className="text-xs text-slate-500 font-medium max-w-xs mx-auto mb-4">
+                                                    Haz clic en el botón de abajo para compilar el algoritmo de adaptación de la especie seleccionada frente a la crisis actual.
+                                                </p>
+                                                <button
+                                                    onClick={handleCompile}
+                                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-6 py-2.5 rounded-xl text-xs uppercase shadow-md transition-transform active:scale-95"
+                                                >
+                                                    Evaluar Adaptación
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Estado de Alerta: Especie no desbloqueada (Sustituto de alert nativo) */}
+                                        {speciesLockAlert && (
+                                            <div className="text-center py-4 animate-fade-in">
+                                                <div className="text-4xl mb-2">🔒</div>
+                                                <h4 className="text-xs font-black text-rose-600 uppercase tracking-wider mb-1">Especie Bloqueada</h4>
+                                                <p className="text-[11px] text-slate-500 max-w-xs mx-auto mb-4">
+                                                    Debes clasificar a esta especie primero completando su ruta en el <b>Circuito Lógico</b> antes de simular su resiliencia aquí.
+                                                </p>
+                                                <button
+                                                    onClick={() => setActiveTab('circuit')}
+                                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg text-xs uppercase"
+                                                >
+                                                    Ir al Circuito
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Estado Activo: Pseudocódigo estructurado */}
+                                        {showAdaptation && (
+                                            <div className="space-y-3 animate-fade-in h-full flex flex-col justify-center">
+                                                <div className="flex items-center gap-2 mb-2 border-b border-slate-200 pb-2">
+                                                    <span className="text-2xl">{LOGIC_FLOW.results[selectedSpecies].emoji}</span>
+                                                    <div>
+                                                        <h4 className="text-xs font-black text-slate-800">{LOGIC_FLOW.results[selectedSpecies].animal}</h4>
+                                                        <p className="text-[9px] text-indigo-500 uppercase font-black">Pseudocódigo de respuesta biológica</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2 text-[11px] font-mono leading-tight">
+                                                    {ADVERSE_CARDS[activeCardIndex].adaptationLogic[selectedSpecies] ? (
+                                                        ADVERSE_CARDS[activeCardIndex].adaptationLogic[selectedSpecies].map((logic, idx) => (
+                                                            <div key={idx} className="bg-white border border-slate-200 p-2 rounded-lg shadow-sm">
+                                                                <div className="text-red-500 font-bold mb-0.5">{logic.step}</div>
+                                                                <div className="text-slate-700">{logic.result}</div>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="bg-white border border-slate-200 p-2 rounded-lg shadow-sm text-slate-400 italic">
+                                                            No se encontraron reglas biológicas de adaptación para esta especie.
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    )}
+
+                    {/* MODAL DE CONFIRMACIÓN DE SALIDA (Para evitar confirm() nativo de JS) */}
+                    {showExitConfirm && (
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+                            <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl p-6 max-w-sm w-full text-center">
+                                <div className="text-4xl mb-3">🚪</div>
+                                <h3 className="text-lg font-black text-slate-800 mb-2">¿Volver al menú de inicio?</h3>
+                                <p className="text-xs text-slate-500 mb-6">Se reiniciará el recorrido actual y el rastreo de variables en el árbol del circuito.</p>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={handleConfirmExit}
+                                        className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg text-xs transition-colors"
+                                    >
+                                        Sí, salir
+                                    </button>
+                                    <button
+                                        onClick={() => setShowExitConfirm(false)}
+                                        className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg text-xs transition-colors border border-slate-200"
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                 </div>
             );
         }

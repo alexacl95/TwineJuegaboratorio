@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Laboratorio: La Campana de Gauss (Plinko)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { 
+            background-color: #f8fafc; 
+            font-family: system-ui, -apple-system, sans-serif; 
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-slate-800 bg-slate-50 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // --- COMPONENTE: PREGUNTA DE SELECCIÓN MÚLTIPLE ---
+        const RadioGroup = ({ options, name, value, onChange, disabled }) => (
+            <div className="flex flex-col gap-2 mt-2">
+                {options.map((opt, i) => (
+                    <label key={i} className={`flex items-start gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all ${value === opt.val ? 'bg-blue-50 border-blue-500 shadow-sm' : 'bg-white border-slate-200 hover:bg-slate-50'} ${disabled ? 'opacity-80 cursor-not-allowed' : ''}`}>
+                        <input 
+                            type="radio" 
+                            name={name} 
+                            value={opt.val} 
+                            checked={value === opt.val} 
+                            onChange={() => onChange(opt.val)} 
+                            disabled={disabled}
+                            className="mt-1 min-w-[16px] w-4 h-4 text-blue-600 focus:ring-blue-500" 
+                        />
+                        <span className="text-sm font-medium text-slate-700">{opt.label}</span>
+                    </label>
+                ))}
+            </div>
+        );
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('intro'); // 'intro' | 'lab'
+            
+            // --- ESTADOS: TALLER 1 (INTRODUCCIÓN) ---
+            const [t1q1, setT1q1] = useState('');
+            const [t1q2, setT1q2] = useState('');
+            const [t1Status, setT1Status] = useState(null);
+
+            // --- ESTADOS: TALLER 2 (LABORATORIO) ---
+            const [t2mu, setT2mu] = useState('');
+            const [t2sigma, setT2sigma] = useState('');
+            const [t2q3, setT2q3] = useState('');
+            const [t2q4, setT2q4] = useState('');
+            const [t2q5, setT2q5] = useState(''); // Nueva: Centro exacto
+            const [t2q6, setT2q6] = useState(''); // Nueva: Extremos
+            const [t2q7, setT2q7] = useState(''); // Nueva: Dirigir al 20
+            const [t2Status, setT2Status] = useState(null);
+
+            // --- FUNCIONES DE VERIFICACIÓN ---
+            const verifyT1 = () => {
+                const q1 = t1q1 === 'centro';
+                const q2 = t1q2 === 'derecha';
+                
+                setT1Status({ q1, q2, all: q1 && q2 });
+                if(q1 && q2) alert("¡Parte 1 completada! Has comprendido los fundamentos del azar.");
+            };
+
+            const verifyT2 = () => {
+                const q1 = t2mu === '13';
+                // Aceptamos coma o punto para los decimales
+                const parsedSigma = t2sigma.replace(',', '.');
+                const q2 = parsedSigma === '2.55';
+                const q3 = t2q3 === 'acerca';
+                const q4 = t2q4 === 'derecha';
+                const q5 = t2q5 === '15'; // 15.5%
+                const q6 = t2q6 === '0'; // 0.001%
+                const q7 = t2q7 === '0.77'; // Aprox 0.77
+
+                setT2Status({ q1, q2, q3, q4, q5, q6, q7, all: q1 && q2 && q3 && q4 && q5 && q6 && q7 });
+                if(q1 && q2 && q3 && q4 && q5 && q6 && q7) alert("¡Parte 2 completada! Has dominado la Campana de Gauss y las probabilidades.");
+            };
+
+            const inputClass = (status, fieldStatus) => {
+                const base = "w-24 text-center border-2 p-2 rounded-xl focus:outline-none transition-all font-mono font-bold text-lg ";
+                if (!status) return base + "border-slate-300 focus:border-blue-500";
+                return base + (fieldStatus ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-rose-500 bg-rose-50 text-rose-700");
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    
+                    {/* ENCABEZADO */}
+                    <header className="bg-sky-900 text-white p-4 shadow-md text-center shrink-0 z-50">
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tight flex items-center justify-center gap-3">
+                            <span>📊</span> Probabilidad Plinko & PhET
+                        </h1>
+                        <p className="text-xs md:text-sm text-sky-200 font-medium mt-1">Construyendo la Campana de Gauss</p>
+                    </header>
+
+                    {/* LAYOUT PRINCIPAL (SPLIT SCREEN) */}
+                    <div className="flex-grow flex flex-col lg:flex-row w-full h-full max-w-[1600px] mx-auto">
+                        
+                        {/* --- PANEL IZQUIERDO: SIMULADOR PHET (STICKY) --- */}
+                        <div className="w-full lg:w-1/2 p-3 sm:p-4 lg:p-6 lg:border-r border-slate-200 lg:sticky lg:top-0 lg:h-screen flex flex-col z-30">
+                            <div className="bg-white p-2 md:p-3 border border-slate-200 rounded-2xl md:rounded-3xl shadow-sm flex-grow relative w-full h-[45vh] lg:h-[80vh] min-h-[300px]">
+                                <iframe 
+                                    src="https://phet.colorado.edu/sims/html/plinko-probability/latest/plinko-probability_all.html?locale=es" 
+                                    className="absolute inset-0 w-full h-full rounded-xl md:rounded-2xl"
+                                    scrolling="no" 
+                                    allowFullScreen
+                                    title="Simulador PhET: Probabilidad Plinko"
+                                ></iframe>
+                            </div>
+                            <div className="text-center mt-3 text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest lg:hidden">
+                                ↓ Desliza la pantalla tocando fuera del simulador ↓
+                            </div>
+                        </div>
+
+                        {/* --- PANEL DERECHO: GUÍAS DE ESTUDIO --- */}
+                        <div className="w-full lg:w-1/2 bg-white flex flex-col relative">
+                            
+                            {/* TABS DE TALLERES */}
+                            <div className="flex bg-slate-50 border-b border-slate-200 sticky top-0 z-40">
+                                <button 
+                                    onClick={() => setActiveTab('intro')}
+                                    className={`flex-1 py-4 px-2 text-xs md:text-sm font-black uppercase tracking-wider transition-all border-b-4 ${activeTab === 'intro' ? 'border-sky-600 text-sky-700 bg-white' : 'border-transparent text-slate-500 hover:text-sky-600 hover:bg-white/50'}`}
+                                >
+                                    1. Observación del Azar
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('lab')}
+                                    className={`flex-1 py-4 px-2 text-xs md:text-sm font-black uppercase tracking-wider transition-all border-b-4 ${activeTab === 'lab' ? 'border-sky-600 text-sky-700 bg-white' : 'border-transparent text-slate-500 hover:text-sky-600 hover:bg-white/50'}`}
+                                >
+                                    2. Curva Teórica (Lab)
+                                </button>
+                            </div>
+
+                            {/* --- CONTENIDO PESTAÑA 1 --- */}
+                            {activeTab === 'intro' && (
+                                <div className="flex flex-col flex-grow animate-fade-in relative">
+                                    <div className="p-4 md:p-8 space-y-6 md:space-y-8 flex-grow pb-32">
+                                        
+                                        <div className="border-b pb-4">
+                                            <h2 className="text-xl md:text-2xl font-black text-slate-800">El Camino Aleatorio</h2>
+                                            <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+                                                Comprenderemos cómo la acumulación de eventos aleatorios binarios da lugar a una distribución normal.
+                                            </p>
+                                        </div>
+
+                                        {/* SECCIÓN 1 */}
+                                        <div className="bg-sky-50 p-4 md:p-5 rounded-2xl border border-sky-200">
+                                            <h3 className="font-black text-sky-900 mb-2 flex items-center gap-2"><span>1️⃣</span> Ventana de Introducción</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Abre la ventana de <strong>Intro</strong> en el simulador. Selecciona la opción de lanzar una ráfaga grande de bolas (usando el botón amarillo que deja caer muchas a la vez). Observa la formación de la "montaña" de bolas en la parte inferior.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">¿Dónde se acumulan más bolas y dónde menos?</label>
+                                            <RadioGroup 
+                                                name="t1q1" 
+                                                value={t1q1} 
+                                                onChange={setT1q1} 
+                                                disabled={t1Status?.all}
+                                                options={[
+                                                    { val: 'extremos', label: 'A) Se acumulan más bolas en los extremos y menos en el centro.' },
+                                                    { val: 'centro', label: 'B) Se acumulan más bolas en el centro y muy pocas en los extremos.' },
+                                                    { val: 'uniforme', label: 'C) Se distribuyen de manera uniforme (la misma cantidad) en todos los compartimientos.' }
+                                                ]} 
+                                            />
+                                            {t1Status && !t1Status.q1 && <p className="text-xs font-bold text-rose-600 mt-2">Error. Intenta lanzar unas 100 bolas y observa la forma que toma la pila de bolas.</p>}
+                                        </div>
+
+                                        {/* SECCIÓN 2 */}
+                                        <div className="bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-sky-900 mb-2 flex items-center gap-2"><span>2️⃣</span> El Camino de una Bola</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Cambia a la ventana de <strong>Laboratorio</strong>. Activa la casilla <strong>"Camino"</strong> a la derecha. Lanza una sola bola y observa cómo rebota. En cada clavija (punto blanco) tiene un 50% de probabilidad de ir a la derecha y 50% a la izquierda.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">De forma lógica, ¿qué tendría que ocurrir para que una bola cayera en el compartimiento del extremo derecho absoluto?</label>
+                                            <RadioGroup 
+                                                name="t1q2" 
+                                                value={t1q2} 
+                                                onChange={setT1q2} 
+                                                disabled={t1Status?.all}
+                                                options={[
+                                                    { val: 'derecha', label: 'A) Debe rebotar hacia la derecha de manera consecutiva en cada una de las clavijas que toque.' },
+                                                    { val: 'mitad', label: 'B) Debe rebotar hacia la izquierda en la mitad de las clavijas y a la derecha en la otra mitad.' },
+                                                    { val: 'imposible', label: 'C) Es físicamente imposible que una bola caiga en ese compartimiento.' }
+                                                ]} 
+                                            />
+                                            {t1Status && !t1Status.q2 && <p className="text-xs font-bold text-rose-600 mt-2">Error. Piensa en la trayectoria: un solo rebote a la izquierda la alejaría del extremo derecho.</p>}
+                                        </div>
+
+                                    </div>
+
+                                    {/* CONTROLES TALLER 1 */}
+                                    <div className="sticky bottom-0 mt-auto w-full bg-white border-t border-slate-200 p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-40 flex justify-center gap-3">
+                                        {!t1Status?.all ? (
+                                            <button onClick={verifyT1} className="w-full md:w-auto px-8 py-3 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-xl shadow-[0_4px_0_rgb(2,132,199)] hover:translate-y-[2px] hover:shadow-[0_2px_0_rgb(2,132,199)] transition-all text-sm md:text-base">
+                                                Verificar Respuestas
+                                            </button>
+                                        ) : (
+                                            <div className="w-full md:w-auto px-6 py-3 bg-emerald-100 text-emerald-800 font-bold rounded-xl flex items-center justify-center gap-2 text-sm md:text-base shadow-sm border border-emerald-200">
+                                                <span>✅</span> ¡Respuestas Correctas! Avanza a la siguiente pestaña.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- CONTENIDO PESTAÑA 2 --- */}
+                            {activeTab === 'lab' && (
+                                <div className="flex flex-col flex-grow animate-fade-in relative">
+                                    <div className="p-4 md:p-8 space-y-6 md:space-y-8 flex-grow pb-32">
+                                        
+                                        <div className="border-b pb-4">
+                                            <h2 className="text-xl md:text-2xl font-black text-slate-800">Refinando la Curva Normal</h2>
+                                            <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+                                                Comparemos el comportamiento real del azar frente al modelo teórico matemático y exploremos las probabilidades de eventos específicos.
+                                            </p>
+                                        </div>
+
+                                        {/* SECCIÓN 3 */}
+                                        <div className="bg-sky-50 p-4 md:p-5 rounded-2xl border border-sky-200">
+                                            <h3 className="font-black text-sky-900 mb-2 flex items-center gap-2"><span>3️⃣</span> Valores Ideales</h3>
+                                            <p className="text-sm text-slate-700 mb-4">En el panel derecho, aumenta las <strong>Filas al máximo (26)</strong>. Lanza al menos unas 200 bolas. Luego, activa la casilla inferior que dice <strong>"Ideal"</strong>.</p>
+                                            
+                                            <p className="font-bold text-slate-800 text-sm mb-3">Observa el panel de estadísticas y anota los valores <strong>teóricos (Ideales)</strong> exactos que te proporciona el sistema:</p>
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                                <div className="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center gap-2">
+                                                    <span className="text-xs font-bold text-slate-500 uppercase text-center">Media Teórica (μ)</span>
+                                                    <input type="number" value={t2mu} onChange={e=>setT2mu(e.target.value)} disabled={t2Status?.all} className={inputClass(t2Status, t2Status?.q1)} placeholder="?" />
+                                                </div>
+                                                <div className="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center gap-2">
+                                                    <span className="text-xs font-bold text-slate-500 uppercase text-center">Desviación Teórica (σ)</span>
+                                                    <input type="text" value={t2sigma} onChange={e=>setT2sigma(e.target.value)} disabled={t2Status?.all} className={inputClass(t2Status, t2Status?.q2)} placeholder="?" />
+                                                </div>
+                                            </div>
+                                            {(t2Status && (!t2Status.q1 || !t2Status.q2)) && <p className="text-xs font-bold text-rose-600 mb-4">Error en los números. Revisa los valores con el símbolo verde en el simulador (usa punto o coma para los decimales).</p>}
+
+                                            <label className="font-bold text-slate-800 text-sm">Sigue lanzando muchas más bolas (llegando a 1000 o 2000). ¿Qué pasa con el valor <strong>real (N)</strong> de la media y la desviación frente a los ideales?</label>
+                                            <RadioGroup 
+                                                name="t2q3" 
+                                                value={t2q3} 
+                                                onChange={setT2q3} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: 'aleja', label: 'A) Los valores reales se alejan cada vez más de la curva ideal.' },
+                                                    { val: 'acerca', label: 'B) Los valores reales se acercan cada vez más a los valores teóricos (Ley de los Grandes Números).' }
+                                                ]} 
+                                            />
+                                        </div>
+
+                                        {/* SECCIÓN 4 */}
+                                        <div className="bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-200">
+                                            <h3 className="font-black text-sky-900 mb-2 flex items-center gap-2"><span>4️⃣</span> Análisis Crítico General</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Observa en la parte superior el panel de <strong>"Probabilidad Binaria"</strong>. Por defecto está en 0.5 (50% derecha, 50% izquierda). Cambia ese valor a <strong>0.80</strong> y lanza un nuevo lote de bolas.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">¿Hacia dónde se desplaza el centro de la Campana de Gauss con esta nueva probabilidad?</label>
+                                            <RadioGroup 
+                                                name="t2q4" 
+                                                value={t2q4} 
+                                                onChange={setT2q4} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: 'derecha', label: 'A) Se desplaza fuertemente hacia el extremo derecho.' },
+                                                    { val: 'izquierda', label: 'B) Se desplaza fuertemente hacia el extremo izquierdo.' },
+                                                    { val: 'centro', label: 'C) Se queda en el centro pero la campana se hace más delgada.' }
+                                                ]} 
+                                            />
+                                            {t2Status && !t2Status.q4 && <p className="text-xs font-bold text-rose-600 mt-2">Error. Si hay un 80% de probabilidad de caer a la derecha en cada clavo, las bolas tenderán a ir hacia ese lado.</p>}
+                                        </div>
+
+                                        {/* SECCIÓN 5: EXPLORANDO PROBABILIDADES CENTRALES */}
+                                        <div className="bg-indigo-50 p-4 md:p-5 rounded-2xl border border-indigo-200">
+                                            <h3 className="font-black text-indigo-900 mb-2 flex items-center gap-2"><span>5️⃣</span> Probabilidades de Eventos (Centro)</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Reinicia el simulador (usando el botón de borrador). Mantén las <strong>Filas en 26</strong> y la <strong>Probabilidad Binaria en 0.50</strong>. En la derecha de la pantalla, activa la opción para ver <strong>% (Porcentajes)</strong>. Lanza unas cuantas bolas para habilitar la visualización ideal.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">Observando los números de la curva ideal, ¿cuál es la probabilidad exacta aproximada de que una bola caiga en el contenedor central (etiquetado como 13)?</label>
+                                            <RadioGroup 
+                                                name="t2q5" 
+                                                value={t2q5} 
+                                                onChange={setT2q5} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: '50', label: 'A) 50%, porque está exactamente en la mitad de la tabla.' },
+                                                    { val: '15', label: 'B) Aproximadamente 15.5%, siendo la probabilidad individual más alta de todos los contenedores.' },
+                                                    { val: '100', label: 'C) 100%, ya que la gravedad obliga a todas las bolas a pasar por el centro.' }
+                                                ]} 
+                                            />
+                                            {t2Status && !t2Status.q5 && <p className="text-xs font-bold text-rose-600 mt-2">Error. Fíjate en el número porcentual que flota arriba del contenedor 13 cuando la curva ideal está visible.</p>}
+                                        </div>
+
+                                        {/* SECCIÓN 6: PROBABILIDAD EXTREMA */}
+                                        <div className="bg-indigo-50 p-4 md:p-5 rounded-2xl border border-indigo-200">
+                                            <h3 className="font-black text-indigo-900 mb-2 flex items-center gap-2"><span>6️⃣</span> Probabilidades Extremas</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Con esa misma configuración, pon atención ahora a los contenedores de los extremos absolutos de la base (los números 0 y 26).</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">¿Qué probabilidad indica el sistema para el evento extremo de caer en el contenedor 26?</label>
+                                            <RadioGroup 
+                                                name="t2q6" 
+                                                value={t2q6} 
+                                                onChange={setT2q6} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: '5', label: 'A) 5%, una probabilidad moderada.' },
+                                                    { val: '0', label: 'B) Menos de 0.001%, una probabilidad extremadamente remota (casi cero).' },
+                                                    { val: '10', label: 'C) 10%, porque los rebotes hacia los lados son comunes.' }
+                                                ]} 
+                                            />
+                                            {t2Status && !t2Status.q6 && <p className="text-xs font-bold text-rose-600 mt-2">Error. Piensa que para caer en el 26, la bola tuvo que decidir rebotar a la derecha ¡26 veces seguidas de manera consecutiva!</p>}
+                                        </div>
+
+                                        {/* SECCIÓN 7: DIRIGIENDO BALONES */}
+                                        <div className="bg-emerald-50 p-4 md:p-5 rounded-2xl border border-emerald-200">
+                                            <h3 className="font-black text-emerald-900 mb-2 flex items-center gap-2"><span>7️⃣</span> Dirigiendo los Balones</h3>
+                                            <p className="text-sm text-slate-700 mb-4">Supongamos que apostamos a que la mayoría de los balones caerán en el <strong>contenedor número 20</strong>. Mantén las filas en 26. Ajusta poco a poco el deslizador de <strong>Probabilidad Binaria</strong> y lanza ráfagas de bolas hasta que la cima de la campana quede directamente encima del contenedor 20.</p>
+                                            
+                                            <label className="font-bold text-slate-800 text-sm">¿A qué valor tuviste que ajustar la Probabilidad Binaria para que la media (el pico de la montaña) quede alineada con el contenedor 20?</label>
+                                            <RadioGroup 
+                                                name="t2q7" 
+                                                value={t2q7} 
+                                                onChange={setT2q7} 
+                                                disabled={t2Status?.all}
+                                                options={[
+                                                    { val: '0.20', label: 'A) A 0.20 (20% de probabilidad de caer a la derecha).' },
+                                                    { val: '0.77', label: 'B) Aproximadamente a 0.77 (el 77% del recorrido hacia la derecha, ya que 20/26 ≈ 0.77).' },
+                                                    { val: '0.99', label: 'C) A 0.99 (99% de probabilidad, el nivel máximo permitido).' }
+                                                ]} 
+                                            />
+                                            {t2Status && !t2Status.q7 && <p className="text-xs font-bold text-rose-600 mt-2">Error. El contenedor 20 representa una posición matemática proporcional. Divide la meta (20) entre el total de filas (26).</p>}
+                                        </div>
+
+                                    </div>
+
+                                    {/* CONTROLES TALLER 2 */}
+                                    <div className="sticky bottom-0 mt-auto w-full bg-white border-t border-slate-200 p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-40 flex justify-center gap-3">
+                                        {!t2Status?.all ? (
+                                            <button onClick={verifyT2} className="w-full md:w-auto px-8 py-3 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-xl shadow-[0_4px_0_rgb(2,132,199)] hover:translate-y-[2px] hover:shadow-[0_2px_0_rgb(2,132,199)] transition-all text-sm md:text-base">
+                                                Verificar Respuestas
+                                            </button>
+                                        ) : (
+                                            <div className="w-full md:w-auto px-6 py-3 bg-emerald-100 text-emerald-800 font-bold rounded-xl flex items-center justify-center gap-2 text-sm md:text-base shadow-sm border border-emerald-200">
+                                                <span>✅</span> ¡Laboratorio Completado!
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
