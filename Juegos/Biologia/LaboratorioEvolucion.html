@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Laboratorio de Evolución Artificial</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { 
+            background-color: #f0fdf4; /* emerald-50 */
+            font-family: system-ui, -apple-system, sans-serif; 
+            -webkit-font-smoothing: antialiased;
+            touch-action: pan-y; /* Previene comportamientos extraños, pero permite scroll */
+        }
+        
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        .drawing-canvas {
+            touch-action: none; /* Bloquea el scroll mientras se dibuja */
+            cursor: crosshair;
+        }
+
+        .offspring-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .offspring-card:hover {
+            transform: scale(1.03) translateY(-4px);
+            box-shadow: 0 12px 20px -3px rgba(16, 185, 129, 0.15);
+        }
+        
+        /* Patrón de fondo biológico (puntos) */
+        .bg-dots {
+            background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        
+        /* Clase especial para simular ecuaciones matemáticas en HTML */
+        .math-eq {
+            font-family: "Times New Roman", Times, serif;
+            font-style: italic;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+
+        const MAX_GENERATIONS = 10; // Límite de generaciones establecido
+
+        // --- PARTES ANATÓMICAS DEFINIDAS ---
+        const ANATOMY_PARTS = [
+            { id: 'cuerpo', label: 'Cuerpo 🦦', placeholder: 'Dibuja el torso o cuerpo central.' },
+            { id: 'cabeza', label: 'Cabeza 🐱', placeholder: 'Dibuja la cabeza sobre o junto al cuerpo.' },
+            { id: 'ojos', label: 'Ojos 👀', placeholder: 'Dibuja los ojos en el área de la cabeza.' },
+            { id: 'boca', label: 'Boca 👄', placeholder: 'Dibuja la boca, pico o colmillos.' },
+            { id: 'patas', label: 'Patas 🦵', placeholder: 'Dibuja extremidades, aletas o soporte inferior.' },
+            { id: 'cola', label: 'Cola 🦎', placeholder: 'Dibuja una cola o antenas traseras.' }
+        ];
+
+        // Componente: Renderiza el organismo completo o destaca una parte mostrando las otras como fantasmas
+        const RenderOrganism = ({ parts, className="w-full h-full", activePartId = null }) => {
+            return (
+                <svg viewBox="0 0 400 400" className={className} style={{backgroundColor: 'white', borderRadius: '1rem'}}>
+                    {ANATOMY_PARTS.map(part => {
+                        const isGhost = activePartId !== null && part.id !== activePartId;
+                        const partLines = parts[part.id] || [];
+                        return partLines.map((line, idx) => (
+                            <polyline
+                                key={`${part.id}-${idx}`}
+                                points={line.points.map(p => `${p.x},${p.y}`).join(' ')}
+                                fill="none"
+                                stroke={isGhost ? '#e2e8f0' : line.color}
+                                strokeWidth={line.width}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeOpacity={isGhost ? 0.2 : 1}
+                            />
+                        ));
+                    })}
+                </svg>
+            );
+        };
+
+        // --- MOTOR MATEMÁTICO: INTERPOLADOR PARA MORFOSIS ANIMADA ---
+        const interpolateOrganism = (orgA, orgB, t) => {
+            if (!orgA) return orgB;
+            if (!orgB) return orgA;
+            let interpolated = {};
+            
+            ANATOMY_PARTS.forEach(part => {
+                const linesA = orgA[part.id] || [];
+                const linesB = orgB[part.id] || [];
+                const maxLen = Math.max(linesA.length, linesB.length);
+                let partLines = [];
+                
+                for (let i = 0; i < maxLen; i++) {
+                    const lineA = linesA[i];
+                    const lineB = linesB[i];
+                    
+                    if (lineA && lineB) {
+                        // Ambos existen: interpolar puntos de forma homogénea
+                        const maxPts = Math.max(lineA.points.length, lineB.points.length);
+                        let pts = [];
+                        for (let j = 0; j < maxPts; j++) {
+                            const pA = lineA.points[j] || lineA.points[lineA.points.length - 1];
+                            const pB = lineB.points[j] || lineB.points[lineB.points.length - 1];
+                            pts.push({
+                                x: pA.x + (pB.x - pA.x) * t,
+                                y: pA.y + (pB.y - pA.y) * t
+                            });
+                        }
+                        const color = t < 0.5 ? lineA.color : lineB.color;
+                        const width = lineA.width + (lineB.width - lineA.width) * t;
+                        partLines.push({ points: pts, color, width });
+                    } else if (lineA) {
+                        // Solo existe en el ancestro: se desvanece de grosor gradualmente
+                        partLines.push({
+                            ...lineA,
+                            width: lineA.width * (1 - t)
+                        });
+                    } else if (lineB) {
+                        // Mutación aditiva nueva: aparece gradualmente de la nada
+                        partLines.push({
+                            ...lineB,
+                            width: lineB.width * t
+                        });
+                    }
+                }
+                interpolated[part.id] = partLines;
+            });
+            return interpolated;
+        };
+
+        function App() {
+            // Estados principales: 'intro' | 'draw' | 'evolve' | 'history' | 'manual_edit' | 'victory'
+            const [gameState, setGameState] = useState('intro');
+            
+            // Historial evolutivo: almacena objetos con la estructura de partes
+            const [evolutionHistory, setEvolutionHistory] = useState([]);
+            
+            // Estructura de partes del animal actual
+            const [organismParts, setOrganismParts] = useState({
+                cuerpo: [], cabeza: [], ojos: [], boca: [], patas: [], cola: []
+            });
+
+            // Control de edición y dibujo
+            const [activePart, setActivePart] = useState('cuerpo');
+            const [lines, setLines] = useState([]); // Líneas de la parte activa actual
+            const [currentLine, setCurrentLine] = useState(null);
+            const [color, setColor] = useState('#1e293b');
+            const [strokeWidth, setStrokeWidth] = useState(4);
+            const svgRef = useRef(null);
+
+            // Estado de la evolución
+            const [offspring, setOffspring] = useState([]);
+            const [mutationRate, setMutationRate] = useState(2); // Escala 1-5
+            const [editingOrganism, setEditingOrganism] = useState(null); // Almacena el animal que se va a editar manualmente
+
+            // --- ESTADOS DEL REPRODUCTOR DE ANIMACIÓN (MORFOSIS) ---
+            const [playValue, setPlayValue] = useState(0); // Posición fraccionaria de reproducción (0 a history.length - 1)
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [animSpeed, setAnimSpeed] = useState(1); // Multiplicador de velocidad de reproducción
+
+            // --- SINCRONIZAR LIENZO AL CAMBIAR DE PARTE ANATÓMICA ---
+            useEffect(() => {
+                if (gameState === 'draw' || gameState === 'manual_edit') {
+                    setLines(organismParts[activePart] || []);
+                }
+            }, [activePart, gameState]);
+
+            // --- REPRODUCTOR EN BUCLE (REQUEST ANIMATION FRAME) ---
+            useEffect(() => {
+                let frameId;
+                let lastTime = performance.now();
+
+                const tick = (time) => {
+                    if (!isPlaying || evolutionHistory.length <= 1) return;
+                    
+                    const delta = time - lastTime;
+                    lastTime = time;
+
+                    setPlayValue(prev => {
+                        // Avanza el tiempo según la velocidad seleccionada
+                        let nextVal = prev + (delta / 1000) * animSpeed;
+                        const limit = evolutionHistory.length - 1;
+                        if (nextVal >= limit) {
+                            return 0; // Reinicio en bucle continuo
+                        }
+                        return nextVal;
+                    });
+
+                    frameId = requestAnimationFrame(tick);
+                };
+
+                if (isPlaying && evolutionHistory.length > 1) {
+                    lastTime = performance.now();
+                    frameId = requestAnimationFrame(tick);
+                }
+
+                return () => cancelAnimationFrame(frameId);
+            }, [isPlaying, animSpeed, evolutionHistory.length]);
+
+            // Forzar Play automático al entrar a la vista de Historia o Victoria
+            useEffect(() => {
+                if ((gameState === 'history' || gameState === 'victory') && evolutionHistory.length > 1) {
+                    setPlayValue(0);
+                    setIsPlaying(true);
+                } else {
+                    setIsPlaying(false);
+                }
+            }, [gameState]);
+
+            // --- LÓGICA DE DIBUJO ---
+            const getCoords = (e) => {
+                const svg = svgRef.current;
+                if (!svg) return { x: 0, y: 0 };
+                const CTM = svg.getScreenCTM();
+                let clientX, clientY;
+
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+
+                return {
+                    x: (clientX - CTM.e) / CTM.a,
+                    y: (clientY - CTM.f) / CTM.d
+                };
+            };
+
+            const startDrawing = (e) => {
+                e.preventDefault();
+                const coords = getCoords(e);
+                setCurrentLine({ points: [coords], color, width: strokeWidth });
+            };
+
+            const draw = (e) => {
+                e.preventDefault();
+                if (!currentLine) return;
+                const coords = getCoords(e);
+                setCurrentLine({
+                    ...currentLine,
+                    points: [...currentLine.points, coords]
+                });
+            };
+
+            const endDrawing = () => {
+                if (currentLine) {
+                    const newLines = [...lines, currentLine];
+                    setLines(newLines);
+                    setOrganismParts(prev => ({ ...prev, [activePart]: newLines }));
+                    setCurrentLine(null);
+                }
+            };
+
+            const clearCanvas = () => {
+                if (window.confirm('¿Seguro que quieres borrar el dibujo de esta parte?')) {
+                    setLines([]);
+                    setOrganismParts(prev => ({ ...prev, [activePart]: [] }));
+                }
+            };
+
+            const undoLastLine = () => {
+                const undone = lines.slice(0, -1);
+                setLines(undone);
+                setOrganismParts(prev => ({ ...prev, [activePart]: undone }));
+            };
+
+            // --- ALGORITMO GENÉTICO PRESERVATIVO (MUTACIONES ANATÓMICAS E INSURGENCIAS BIOLÓGICAS) ---
+            const mutateDrawing = (originalParts, rate) => {
+                if (!originalParts) return {};
+                
+                // Clonación profunda
+                let newParts = JSON.parse(JSON.stringify(originalParts));
+                
+                // 1. Obtener Bounding Box global de todo el organismo para transformaciones afines
+                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                let hasPoints = false;
+
+                ANATOMY_PARTS.forEach(part => {
+                    const originalLines = newParts[part.id] || [];
+                    originalLines.forEach(line => {
+                        line.points.forEach(p => {
+                            hasPoints = true;
+                            if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+                            if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+                        });
+                    });
+                });
+
+                const width = hasPoints ? Math.max(15, maxX - minX) : 200;
+                const height = hasPoints ? Math.max(15, maxY - minY) : 200;
+                const centerX = hasPoints ? minX + width / 2 : 200;
+                const centerY = hasPoints ? minY + height / 2 : 200;
+                const mainColor = newParts.cuerpo?.[0]?.color || '#1e293b';
+                const mainWidth = newParts.cuerpo?.[0]?.width || 4;
+
+                // Parámetros de mutación basados en la tasa (rate)
+                const scaleVariance = rate * 0.05; // Variación controlada del tamaño
+                const widthVariance = rate * 0.4;  // Variación del grosor de trazo
+                const pigmentChance = rate * 0.07;  // Probabilidad baja de cambio de color
+                const patternChance = rate * 0.14;  // Probabilidad de agregar manchas internas
+                const shrinkLegsChance = rate * 0.20; // Probabilidad de encoger patas hacia el cuerpo
+
+                // 2. Transformaciones de escala/proporciones por sección anatómica (para mantener la integridad)
+                ANATOMY_PARTS.forEach(part => {
+                    const partLines = newParts[part.id] || [];
+                    if (partLines.length === 0) return;
+
+                    // Cada parte anatómica muta su escala y grosor de forma uniforme
+                    const scaleX = 1 + (Math.random() - 0.5) * scaleVariance;
+                    const scaleY = 1 + (Math.random() - 0.5) * scaleVariance;
+                    const strokeChange = (Math.random() - 0.5) * widthVariance;
+
+                    // Cambiar color a una paleta natural armoniosa y poco estridente
+                    let targetColor = partLines[0].color;
+                    if (Math.random() < pigmentChance) {
+                        const naturalColors = ['#1e293b', '#334155', '#475569', '#5c4033', '#8b5a2b', '#cd853f', '#a0522d', '#2e8b57', '#4a5d4e'];
+                        targetColor = naturalColors[Math.floor(Math.random() * naturalColors.length)];
+                    }
+
+                    newParts[part.id] = partLines.map(line => {
+                        let newWidth = line.width + strokeChange;
+                        newWidth = Math.max(1.5, Math.min(12, newWidth)); // Límites seguros de grosor
+
+                        return {
+                            ...line,
+                            color: targetColor,
+                            width: newWidth,
+                            points: line.points.map(p => {
+                                // Escalar y trasladar ligeramente relativo al centro de masa global
+                                const x = centerX + (p.x - centerX) * scaleX;
+                                const y = centerY + (p.y - centerY) * scaleY;
+                                return { x, y };
+                            })
+                        };
+                    });
+                });
+
+                // --- VARIACIONES EN LAS PATAS (ENCOGER HACIA EL CUERPO) ---
+                if (newParts.patas && newParts.patas.length > 0 && Math.random() < shrinkLegsChance) {
+                    newParts.patas = newParts.patas.map(line => {
+                        // Buscamos el punto más alto de esta pata (conexión al cuerpo)
+                        const minYCoord = Math.min(...line.points.map(p => p.y));
+                        return {
+                            ...line,
+                            points: line.points.map(p => ({
+                                x: p.x,
+                                // Reducimos la longitud vertical de la pata atrayendo los puntos hacia arriba
+                                y: minYCoord + (p.y - minYCoord) * 0.45
+                            }))
+                        };
+                    });
+                }
+
+                // --- ANALIZAR LA CABEZA PARA VARIACIONES DE OJOS Y BOCA ---
+                let headMinX = Infinity, headMaxX = -Infinity, headMinY = Infinity, headMaxY = -Infinity;
+                let hasHead = false;
+                (newParts.cabeza || []).forEach(line => {
+                    line.points.forEach(p => {
+                        hasHead = true;
+                        if (p.x < headMinX) headMinX = p.x; if (p.x > headMaxX) headMaxX = p.x;
+                        if (p.y < headMinY) headMinY = p.y; if (p.y > headMaxY) headMaxY = p.y;
+                    });
+                });
+
+                if (hasHead) {
+                    const hCenterX = headMinX + (headMaxX - headMinX) / 2;
+                    const hSize = (headMaxX - headMinX) * 0.12;
+
+                    // --- VARIACIONES EN LA BOCA (DESAPARECER O NUEVO ESTILO) ---
+                    const mouthVariationChance = rate * 0.18;
+                    if (Math.random() < mouthVariationChance) {
+                        const r = Math.random();
+                        if (r < 0.35) {
+                            // Opción A: Desaparece completamente
+                            newParts.boca = [];
+                        } else {
+                            // Opción B: Cambiar estilo
+                            const mouthY = headMinY + (headMaxY - headMinY) * 0.68;
+                            if (r < 0.60) {
+                                // Estilo: Sonrisa curva suave
+                                let smilePoints = [];
+                                for (let a = 0.2; a <= Math.PI - 0.2; a += 0.5) {
+                                    smilePoints.push({
+                                        x: hCenterX + Math.cos(a) * hSize,
+                                        y: mouthY + Math.sin(a) * hSize * 0.5
+                                    });
+                                }
+                                newParts.boca = [{ points: smilePoints, color: '#e11d48', width: 3 }];
+                            } else if (r < 0.85) {
+                                // Estilo: Pico triangular cerrado
+                                newParts.boca = [{
+                                    points: [
+                                        { x: hCenterX - hSize, y: mouthY },
+                                        { x: hCenterX + hSize, y: mouthY },
+                                        { x: hCenterX, y: mouthY + hSize },
+                                        { x: hCenterX - hSize, y: mouthY }
+                                    ],
+                                    color: '#ea580c',
+                                    width: 3
+                                }];
+                            } else {
+                                // Estilo: Colmillos biológicos
+                                newParts.boca = [
+                                    { points: [{ x: hCenterX - hSize/2, y: mouthY }, { x: hCenterX - hSize/2, y: mouthY + hSize }], color: mainColor, width: 3.5 },
+                                    { points: [{ x: hCenterX + hSize/2, y: mouthY }, { x: hCenterX + hSize/2, y: mouthY + hSize }], color: mainColor, width: 3.5 }
+                                ];
+                            }
+                        }
+                    }
+
+                    // --- VARIACIONES EN LOS OJOS (DESAPARECER O NUEVO ESTILO) ---
+                    const eyesVariationChance = rate * 0.18;
+                    if (Math.random() < eyesVariationChance) {
+                        const r = Math.random();
+                        if (r < 0.35) {
+                            // Opción A: Desaparece completamente
+                            newParts.ojos = [];
+                        } else {
+                            // Opción B: Cambiar estilo
+                            const eyesY = headMinY + (headMaxY - headMinY) * 0.4;
+                            if (r < 0.60) {
+                                // Estilo: Ojos cerrados/felices (horizontales curvos)
+                                newParts.ojos = [
+                                    { points: [{ x: hCenterX - hSize * 1.5, y: eyesY }, { x: hCenterX - hSize * 0.5, y: eyesY }], color: '#1e293b', width: 3.5 },
+                                    { points: [{ x: hCenterX + hSize * 0.5, y: eyesY }, { x: hCenterX + hSize * 1.5, y: eyesY }], color: '#1e293b', width: 3.5 }
+                                ];
+                            } else if (r < 0.85) {
+                                // Estilo: Grandes ojos redondos (no invasivos)
+                                let eyeL = [];
+                                let eyeR = [];
+                                for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.8) {
+                                    eyeL.push({ x: (hCenterX - hSize) + Math.cos(a) * 4, y: eyesY + Math.sin(a) * 4 });
+                                    eyeR.push({ x: (hCenterX + hSize) + Math.cos(a) * 4, y: eyesY + Math.sin(a) * 4 });
+                                }
+                                newParts.ojos = [
+                                    { points: eyeL, color: '#2563eb', width: 2.5 },
+                                    { points: eyeR, color: '#2563eb', width: 2.5 }
+                                ];
+                            } else {
+                                // Estilo: Ojos salvajes/pupila vertical
+                                newParts.ojos = [
+                                    { points: [{ x: hCenterX - hSize, y: eyesY - 3 }, { x: hCenterX - hSize, y: eyesY + 3 }], color: '#10b981', width: 3.5 },
+                                    { points: [{ x: hCenterX + hSize, y: eyesY - 3 }, { x: hCenterX + hSize, y: eyesY + 3 }], color: '#10b981', width: 3.5 }
+                                ];
+                            }
+                        }
+                    }
+                }
+
+                // --- 3. MUTACIÓN ADITIVA CONTROLADA (MANCHAS DENTRO DEL CUERPO) ---
+                // Para evitar líneas caóticas y asegurar que estén dentro del objeto, las manchas
+                // y patrones decorativos se anclan a los puntos existentes del cuerpo del animal.
+                if (Math.random() < patternChance && newParts.cuerpo && newParts.cuerpo.length > 0) {
+                    const bodyLines = newParts.cuerpo;
+                    const numSpots = Math.floor(Math.random() * 2) + 1;
+                    const matchColor = '#475569'; // Tono sutil
+
+                    for (let i = 0; i < numSpots; i++) {
+                        // Seleccionamos un trazo del cuerpo al azar
+                        const targetLine = bodyLines[Math.floor(Math.random() * bodyLines.length)];
+                        if (targetLine && targetLine.points.length > 2) {
+                            // Seleccionamos un punto intermedio de la línea del cuerpo
+                            const anchorPt = targetLine.points[Math.floor(targetLine.points.length / 2)];
+                            const rSpot = 3 + Math.random() * 3;
+
+                            // Trazamos un pequeño anillo o lunar cerrado centrado exactamente en el cuerpo
+                            let spotPoints = [];
+                            for (let a = 0; a <= Math.PI * 2 + 0.1; a += Math.PI / 4) {
+                                spotPoints.push({
+                                    x: anchorPt.x + Math.cos(a) * rSpot,
+                                    y: anchorPt.y + Math.sin(a) * rSpot
+                                });
+                            }
+                            
+                            // Lo añadimos al cuerpo para que mantenga coherencia estructural
+                            newParts.cuerpo.push({
+                                points: spotPoints,
+                                color: matchColor,
+                                width: Math.max(1.5, mainWidth * 0.4)
+                            });
+                        }
+                    }
+                }
+
+                return newParts;
+            };
+
+            const generateOffspring = (parentParts, count = 4) => {
+                let newOffspring = [];
+                for (let i = 0; i < count; i++) {
+                    newOffspring.push({
+                        id: i,
+                        parts: mutateDrawing(parentParts, mutationRate)
+                    });
+                }
+                setOffspring(newOffspring);
+            };
+
+            // --- FLUJOS DE NAVEGACIÓN ---
+            const finishDraft = () => {
+                // Comprobar si al menos tiene cuerpo y cabeza dibujados
+                if (organismParts.cuerpo.length === 0 || organismParts.cabeza.length === 0) {
+                    alert("Por favor dibuja al menos el Cuerpo y la Cabeza de tu criatura para poder evolucionar.");
+                    return;
+                }
+                setEvolutionHistory([organismParts]);
+                generateOffspring(organismParts);
+                setGameState('evolve');
+            };
+
+            const selectSurvivor = (selectedParts) => {
+                const newHistory = [...evolutionHistory, selectedParts];
+                setEvolutionHistory(newHistory);
+                
+                if (newHistory.length >= MAX_GENERATIONS) {
+                    setGameState('victory'); // Pantalla final
+                } else {
+                    generateOffspring(selectedParts);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            };
+
+            const startManualEdit = (childParts) => {
+                setEditingOrganism(childParts);
+                setOrganismParts(JSON.parse(JSON.stringify(childParts))); // Clonación profunda
+                setActivePart('cuerpo');
+                setGameState('manual_edit');
+            };
+
+            const saveManualEdit = () => {
+                const newHistory = [...evolutionHistory, organismParts];
+                setEvolutionHistory(newHistory);
+                
+                if (newHistory.length >= MAX_GENERATIONS) {
+                    setGameState('victory');
+                } else {
+                    generateOffspring(organismParts);
+                    setGameState('evolve');
+                    setEditingOrganism(null);
+                }
+            };
+
+            const resetToIntro = () => {
+                setEvolutionHistory([]);
+                setOrganismParts({ cuerpo: [], cabeza: [], ojos: [], boca: [], patas: [], cola: [] });
+                setGameState('intro');
+            };
+
+            // --- EXTRACCIÓN DE INFORMACIÓN PARA EL REPRODUCTOR DE MORFOSIS ---
+            const renderInterpolatedAnimation = () => {
+                if (evolutionHistory.length === 0) return null;
+                const total = evolutionHistory.length;
+                
+                // Mapear el playValue a los marcos correspondientes
+                const indexA = Math.floor(playValue) % total;
+                const indexB = (indexA + 1) % total;
+                const progress = playValue - Math.floor(playValue);
+
+                const currentPartsA = evolutionHistory[indexA];
+                const currentPartsB = evolutionHistory[indexB];
+                
+                // Genera el organismo híbrido/intermedio para el frame actual
+                const morphParts = interpolateOrganism(currentPartsA, currentPartsB, progress);
+
+                return (
+                    <div className="flex flex-col items-center">
+                        <div className="w-full max-w-[280px] sm:max-w-[340px] aspect-square bg-slate-900 rounded-3xl p-3 shadow-xl border-4 border-slate-700 relative overflow-hidden">
+                            <RenderOrganism parts={morphParts} className="w-full h-full" />
+                            
+                            {/* Insignia flotante con la generación actual en la animación */}
+                            <div className="absolute bottom-4 left-4 bg-slate-850/90 text-white px-3 py-1.5 rounded-full text-xs font-black tracking-widest uppercase border border-slate-700 backdrop-blur-sm shadow-md">
+                                Gen {indexA} <span className="text-emerald-400">➔</span> Gen {indexB}
+                            </div>
+                        </div>
+
+                        {/* Mandos del Reproductor */}
+                        <div className="w-full max-w-[400px] mt-4 bg-slate-900 rounded-2xl p-4 border border-slate-800 text-white">
+                            <div className="flex items-center justify-between gap-4 mb-3">
+                                <button 
+                                    onClick={() => setIsPlaying(!isPlaying)}
+                                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all
+                                        ${isPlaying ? 'bg-amber-500 hover:bg-amber-600 text-slate-950' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}
+                                >
+                                    {isPlaying ? '⏸ Pausar' : '▶ Reproducir'}
+                                </button>
+                                
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] uppercase font-bold text-slate-400">Velocidad:</span>
+                                    <select 
+                                        value={animSpeed} 
+                                        onChange={(e) => setAnimSpeed(parseFloat(e.target.value))}
+                                        className="bg-slate-800 text-white text-xs font-bold p-1 px-2 rounded-lg border border-slate-700 focus:outline-none"
+                                    >
+                                        <option value="0.5">0.5x</option>
+                                        <option value="1">1.0x</option>
+                                        <option value="1.7">1.7x</option>
+                                        <option value="2.5">2.5x</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Barra de progreso/Scrubber manual interactivo */}
+                            <div className="flex flex-col gap-1">
+                                <input 
+                                    type="range"
+                                    min="0"
+                                    max={Math.max(0, total - 1)}
+                                    step="0.01"
+                                    value={playValue}
+                                    onChange={(e) => {
+                                        setIsPlaying(false); // Pausa la reproducción al arrastrar manualmente
+                                        setPlayValue(parseFloat(e.target.value));
+                                    }}
+                                    className="w-full accent-emerald-500 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer"
+                                />
+                                <div className="flex justify-between text-[9px] text-slate-500 uppercase font-bold tracking-wider px-1">
+                                    <span>Ancestro</span>
+                                    <span>Línea de Tiempo</span>
+                                    <span>Generación Actual ({Math.floor(playValue)})</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    
+                    {/* ENCABEZADO */}
+                    <header className="bg-emerald-800 text-white p-4 shadow-md text-center shrink-0">
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tight flex items-center justify-center gap-2">
+                            <span>🧬</span> Laboratorio de Selección Artificial
+                        </h1>
+                        <p className="text-xs md:text-sm text-emerald-200 font-medium">Anatomía modular y derivación evolutiva controlada</p>
+                    </header>
+
+                    {/* CONTENIDO PRINCIPAL */}
+                    <main className="flex-grow p-4 md:p-6 lg:p-8 flex justify-center items-start overflow-y-auto bg-dots">
+                        <div className="w-full max-w-5xl">
+                            
+                            {/* --- 1. PANTALLA INTRODUCTORIA --- */}
+                            {gameState === 'intro' && (
+                                <div className="bg-white p-6 md:p-10 rounded-3xl shadow-lg border border-slate-200 text-center animate-fade-in max-w-2xl mx-auto">
+                                    <div className="text-6xl mb-6">🦎🎨</div>
+                                    <h2 className="text-3xl font-black text-slate-800 mb-4">Evolución Dirigida Anatómica</h2>
+                                    <p className="text-slate-600 mb-8 leading-relaxed">
+                                        Diseña tu criatura dibujando por separado cada una de sus secciones biológicas: <strong>cabeza, cuerpo, ojos, boca, patas y cola</strong>. 
+                                        Luego, observa cómo mutan las siguientes generaciones y decide cuáles de ellas continuarán el ciclo evolutivo hasta llegar al límite de la <strong>Generación 10</strong>.
+                                    </p>
+                                    <button 
+                                        onClick={() => { setOrganismParts({ cuerpo: [], cabeza: [], ojos: [], boca: [], patas: [], cola: [] }); setActivePart('cuerpo'); setGameState('draw'); }}
+                                        className="w-full sm:w-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-lg rounded-xl shadow-[0_4px_0_rgb(5,150,105)] transition-all transform hover:-translate-y-[2px]"
+                                    >
+                                        Empezar a Dibujar ➔
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* --- 2. INTERFAZ DE DIBUJO INICIAL (MODULAR) --- */}
+                            {gameState === 'draw' && (
+                                <div className="animate-fade-in bg-white p-4 md:p-6 rounded-3xl shadow-lg border border-slate-200 flex flex-col lg:flex-row gap-6">
+                                    
+                                    {/* Selector de pestañas anatómicas (Lado izquierdo) */}
+                                    <div className="w-full lg:w-1/4 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 shrink-0 border-b lg:border-b-0 lg:border-r border-slate-100 pr-0 lg:pr-4">
+                                        <h3 className="hidden lg:block font-black text-slate-400 text-xs uppercase tracking-wider mb-3">Anatomía</h3>
+                                        {ANATOMY_PARTS.map(part => (
+                                            <button
+                                                key={part.id}
+                                                onClick={() => setActivePart(part.id)}
+                                                className={`px-4 py-3 rounded-xl font-bold text-sm text-left whitespace-nowrap transition-all flex items-center justify-between gap-3 flex-grow lg:flex-grow-0 border-2
+                                                    ${activePart === part.id 
+                                                        ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm' 
+                                                        : 'bg-slate-50 border-slate-200 hover:border-emerald-300 text-slate-600'
+                                                    }`}
+                                            >
+                                                <span>{part.label}</span>
+                                                <span className="text-xs opacity-80">
+                                                    {organismParts[part.id]?.length > 0 ? '✓' : '◦'}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Lienzo y controles */}
+                                    <div className="flex-grow flex flex-col items-center">
+                                        <div className="text-center mb-4">
+                                            <span className="bg-emerald-100 text-emerald-800 text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                                                Dibujando: {ANATOMY_PARTS.find(p=>p.id===activePart).label}
+                                            </span>
+                                            <p className="text-slate-400 text-xs mt-1">{ANATOMY_PARTS.find(p=>p.id===activePart).placeholder}</p>
+                                        </div>
+
+                                        {/* Canvas con Ghost View */}
+                                        <div className="relative bg-slate-100 p-2 rounded-2xl shadow-inner border-2 border-slate-200 mb-4 max-w-[400px] w-full aspect-square flex items-center justify-center">
+                                            <svg
+                                                ref={svgRef}
+                                                viewBox="0 0 400 400"
+                                                className="drawing-canvas bg-white w-full h-full rounded-xl"
+                                                onPointerDown={startDrawing}
+                                                onPointerMove={draw}
+                                                onPointerUp={endDrawing}
+                                                onPointerLeave={endDrawing}
+                                                onTouchStart={startDrawing}
+                                                onTouchMove={draw}
+                                                onTouchEnd={endDrawing}
+                                            >
+                                                {/* Renderiza partes que no son la activa de forma semitransparente */}
+                                                {ANATOMY_PARTS.map(part => {
+                                                    if (part.id === activePart) return null;
+                                                    return (organismParts[part.id] || []).map((line, idx) => (
+                                                        <polyline
+                                                            key={`ghost-${part.id}-${idx}`}
+                                                            points={line.points.map(p => `${p.x},${p.y}`).join(' ')}
+                                                            fill="none"
+                                                            stroke="#94a3b8"
+                                                            strokeWidth={line.width}
+                                                            strokeOpacity={0.2}
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                        />
+                                                    ));
+                                                })}
+
+                                                {/* Renderiza las líneas de la parte activa */}
+                                                {lines.map((line, i) => (
+                                                    <polyline
+                                                        key={i}
+                                                        points={line.points.map(p => `${p.x},${p.y}`).join(' ')}
+                                                        fill="none"
+                                                        stroke={line.color}
+                                                        strokeWidth={line.width}
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                    />
+                                                ))}
+
+                                                {/* Línea actual en trazado */}
+                                                {currentLine && (
+                                                    <polyline
+                                                        points={currentLine.points.map(p => `${p.x},${p.y}`).join(' ')}
+                                                        fill="none"
+                                                        stroke={currentLine.color}
+                                                        strokeWidth={currentLine.width}
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                    />
+                                                )}
+                                            </svg>
+                                        </div>
+
+                                        {/* Barra de Herramientas de Dibujo */}
+                                        <div className="w-full max-w-[400px] bg-slate-50 p-3 rounded-xl border border-slate-200 flex justify-between items-center gap-4">
+                                            <div className="flex items-center gap-2">
+                                                <input 
+                                                    type="color" 
+                                                    value={color} 
+                                                    onChange={(e) => setColor(e.target.value)} 
+                                                    className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+                                                />
+                                                <div className="flex bg-slate-200 rounded-lg p-1">
+                                                    {[2, 4, 8, 12].map(w => (
+                                                        <button 
+                                                            key={w} 
+                                                            onClick={() => setStrokeWidth(w)}
+                                                            className={`w-6 h-6 rounded flex items-center justify-center ${strokeWidth === w ? 'bg-white shadow' : ''}`}
+                                                        >
+                                                            <div className="bg-slate-800 rounded-full" style={{width: w / 2, height: w / 2}}></div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button onClick={undoLastLine} className="px-3 py-1 bg-white border border-slate-200 text-slate-700 font-bold text-xs rounded hover:bg-slate-50">Deshacer</button>
+                                                <button onClick={clearCanvas} className="px-3 py-1 bg-rose-50 text-rose-700 font-bold text-xs rounded hover:bg-rose-100">Borrar</button>
+                                            </div>
+                                        </div>
+
+                                        {/* Finalizar Ensamblado */}
+                                        <div className="w-full max-w-[400px] mt-6">
+                                            <button 
+                                                onClick={finishDraft}
+                                                className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-[0_4px_0_rgb(5,150,105)] hover:translate-y-[2px] hover:shadow-[0_2px_0_rgb(5,150,105)] transition-all"
+                                            >
+                                                🧬 Ensamblar y Generar Evolución
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- 3. PANTALLA PRINCIPAL DE EVOLUCIÓN (MÚLTIPLES HIJOS) --- */}
+                            {gameState === 'evolve' && (
+                                <div className="animate-fade-in space-y-6">
+                                    
+                                    {/* Panel Superior de Controles */}
+                                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                                        <div>
+                                            <h2 className="text-2xl font-black text-slate-800">Generación: {evolutionHistory.length} / {MAX_GENERATIONS}</h2>
+                                            <p className="text-slate-500 text-xs font-medium">Llega a la Generación {MAX_GENERATIONS} seleccionando especímenes estables.</p>
+                                        </div>
+                                        <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200 shrink-0">
+                                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Ruido Genético:</span>
+                                            <input 
+                                                type="range" min="1" max="5" step="0.5" 
+                                                value={mutationRate} 
+                                                onChange={(e) => setMutationRate(parseFloat(e.target.value))}
+                                                className="w-24 accent-emerald-600 animate-pulse"
+                                            />
+                                            <span className="font-bold text-emerald-600 text-sm">{mutationRate}x</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Módulo Evolutivo en Split Screen */}
+                                    <div className="flex flex-col lg:flex-row gap-6 items-start">
+                                        
+                                        {/* Criatura Padre (Ancestro Establecido) */}
+                                        <div className="w-full lg:w-1/3 flex flex-col items-center shrink-0">
+                                            <div className="bg-white p-4 rounded-2xl shadow-md border border-slate-200 w-full max-w-[300px]">
+                                                <div className="text-center font-bold text-slate-400 text-xs uppercase tracking-widest mb-3">Ancestro de Generación</div>
+                                                <div className="border border-slate-100 rounded-xl overflow-hidden aspect-square bg-slate-50">
+                                                    <RenderOrganism parts={evolutionHistory[evolutionHistory.length - 1]} />
+                                                </div>
+                                            </div>
+                                            <button 
+                                                onClick={() => setGameState('history')}
+                                                className="mt-4 px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition-all w-full max-w-[300px] flex items-center justify-center gap-2"
+                                            >
+                                                <span>🌳</span> Ver Árbol de Derivaciones
+                                            </button>
+                                        </div>
+
+                                        {/* Crías / Mutaciones */}
+                                        <div className="flex-grow w-full">
+                                            <div className="bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-r-xl mb-6 shadow-sm">
+                                                <h4 className="font-bold text-emerald-900 text-sm">¿Cómo deseas continuar el linaje?</h4>
+                                                <p className="text-emerald-700 text-xs mt-1">Haz clic directamente sobre una de las crías para <strong>Aceptar su Mutación</strong>, o haz clic en <strong>"Editar Parte"</strong> para rediseñar un componente en ese clon.</p>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                {offspring.map((child) => (
+                                                    <div 
+                                                        key={child.id}
+                                                        className="offspring-card bg-white p-3 rounded-2xl shadow-sm border-2 border-slate-200 flex flex-col overflow-hidden relative"
+                                                    >
+                                                        <div 
+                                                            onClick={() => selectSurvivor(child.parts)}
+                                                            className="flex-grow cursor-pointer group"
+                                                            title="Seleccionar este espécimen para la siguiente generación"
+                                                        >
+                                                            <div className="border border-slate-100 rounded-xl bg-slate-50 aspect-square overflow-hidden mb-3">
+                                                                <RenderOrganism parts={child.parts} />
+                                                            </div>
+                                                            <div className="text-center font-bold text-slate-500 text-xs uppercase tracking-wider mb-2">
+                                                                Especie Variante {child.id + 1}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Acciones para el clon */}
+                                                        <div className="border-t border-slate-100 pt-3 flex gap-2">
+                                                            <button 
+                                                                onClick={() => selectSurvivor(child.parts)}
+                                                                className="flex-1 py-2 bg-emerald-50 text-emerald-700 font-bold rounded-lg text-xs hover:bg-emerald-100 transition-colors"
+                                                            >
+                                                                ✓ Mantener Mutación
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => startManualEdit(child.parts)}
+                                                                className="flex-1 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg text-xs hover:bg-slate-200 transition-colors flex items-center justify-center gap-1"
+                                                            >
+                                                                <span>✏️</span> Editar Parte
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="mt-8 text-center">
+                                                <button 
+                                                    onClick={() => generateOffspring(evolutionHistory[evolutionHistory.length - 1])}
+                                                    className="px-6 py-2 border border-slate-300 rounded-xl font-bold hover:bg-white text-slate-500 hover:text-slate-800 transition-all text-xs"
+                                                >
+                                                    🔄 Generar otras 4 Variaciones del Padre
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            )}
+
+                            {/* --- 4. PESTAÑA: MODIFICACIÓN MANUAL / EDICIÓN DIRIGIDA --- */}
+                            {gameState === 'manual_edit' && (
+                                <div className="animate-fade-in bg-white p-4 md:p-6 rounded-3xl shadow-lg border border-slate-200 flex flex-col lg:flex-row gap-6">
+                                    
+                                    {/* Pestañas Anatómicas */}
+                                    <div className="w-full lg:w-1/4 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 shrink-0 border-b lg:border-b-0 lg:border-r border-slate-100 pr-0 lg:pr-4">
+                                        <div className="mb-2 hidden lg:block">
+                                            <h3 className="font-black text-slate-800 text-sm">Edición Genética</h3>
+                                            <p className="text-slate-400 text-xs">Modifica solo la parte elegida antes de re-ensamblar.</p>
+                                        </div>
+                                        {ANATOMY_PARTS.map(part => (
+                                            <button
+                                                key={part.id}
+                                                onClick={() => setActivePart(part.id)}
+                                                className={`px-4 py-3 rounded-xl font-bold text-sm text-left whitespace-nowrap transition-all flex items-center justify-between gap-3 flex-grow lg:flex-grow-0 border-2
+                                                    ${activePart === part.id 
+                                                        ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm' 
+                                                        : 'bg-slate-50 border-slate-200 hover:border-indigo-300 text-slate-600'
+                                                    }`}
+                                            >
+                                                <span>{part.label}</span>
+                                                <span className="text-xs opacity-80">
+                                                    {organismParts[part.id]?.length > 0 ? '✓' : '◦'}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Área del Canvas */}
+                                    <div className="flex-grow flex flex-col items-center">
+                                        <div className="text-center mb-4">
+                                            <span className="bg-indigo-100 text-indigo-800 text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                                                Re-diseñando: {ANATOMY_PARTS.find(p=>p.id===activePart).label}
+                                            </span>
+                                            <p className="text-slate-400 text-xs mt-1">Limpia y redibuja esta sección manteniendo las otras intactas.</p>
+                                        </div>
+
+                                        {/* Canvas con Ghost View */}
+                                        <div className="relative bg-slate-100 p-2 rounded-2xl shadow-inner border-2 border-slate-200 mb-4 max-w-[400px] w-full aspect-square flex items-center justify-center">
+                                            <svg
+                                                ref={svgRef}
+                                                viewBox="0 0 400 400"
+                                                className="drawing-canvas bg-white w-full h-full rounded-xl"
+                                                onPointerDown={startDrawing}
+                                                onPointerMove={draw}
+                                                onPointerUp={endDrawing}
+                                                onPointerLeave={endDrawing}
+                                                onTouchStart={startDrawing}
+                                                onTouchMove={draw}
+                                                onTouchEnd={endDrawing}
+                                            >
+                                                {/* Las demás partes se muestran como fantasmas translúcidos */}
+                                                {ANATOMY_PARTS.map(part => {
+                                                    if (part.id === activePart) return null;
+                                                    return (organismParts[part.id] || []).map((line, idx) => (
+                                                        <polyline
+                                                            key={`ghost-${part.id}-${idx}`}
+                                                            points={line.points.map(p => `${p.x},${p.y}`).join(' ')}
+                                                            fill="none"
+                                                            stroke="#cbd5e1"
+                                                            strokeWidth={line.width}
+                                                            strokeOpacity={0.25}
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                        />
+                                                    ));
+                                                })}
+
+                                                {/* Parte que estamos dibujando */}
+                                                {lines.map((line, i) => (
+                                                    <polyline
+                                                        key={i}
+                                                        points={line.points.map(p => `${p.x},${p.y}`).join(' ')}
+                                                        fill="none"
+                                                        stroke={line.color}
+                                                        strokeWidth={line.width}
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                    />
+                                                ))}
+
+                                                {/* Línea actual */}
+                                                {currentLine && (
+                                                    <polyline
+                                                        points={currentLine.points.map(p => `${p.x},${p.y}`).join(' ')}
+                                                        fill="none"
+                                                        stroke={currentLine.color}
+                                                        strokeWidth={currentLine.width}
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                    />
+                                                )}
+                                            </svg>
+                                        </div>
+
+                                        {/* Barra de Herramientas */}
+                                        <div className="w-full max-w-[400px] bg-slate-50 p-3 rounded-xl border border-slate-200 flex justify-between items-center gap-4">
+                                            <div className="flex items-center gap-2">
+                                                <input 
+                                                    type="color" 
+                                                    value={color} 
+                                                    onChange={(e) => setColor(e.target.value)} 
+                                                    className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+                                                />
+                                                <div className="flex bg-slate-200 rounded-lg p-1">
+                                                    {[2, 4, 8, 12].map(w => (
+                                                        <button 
+                                                            key={w} 
+                                                            onClick={() => setStrokeWidth(w)}
+                                                            className={`w-6 h-6 rounded flex items-center justify-center ${strokeWidth === w ? 'bg-white shadow' : ''}`}
+                                                        >
+                                                            <div className="bg-slate-800 rounded-full" style={{width: w / 2, height: w / 2}}></div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button onClick={undoLastLine} className="px-3 py-1 bg-white border border-slate-200 text-slate-700 font-bold text-xs rounded hover:bg-slate-50">Deshacer</button>
+                                                <button onClick={clearCanvas} className="px-3 py-1 bg-rose-50 text-rose-700 font-bold text-xs rounded hover:bg-rose-100">Borrar</button>
+                                            </div>
+                                        </div>
+
+                                        {/* Controles de Salida */}
+                                        <div className="w-full max-w-[400px] mt-6 flex gap-3">
+                                            <button 
+                                                onClick={() => { setGameState('evolve'); setEditingOrganism(null); }}
+                                                className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-sm"
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button 
+                                                onClick={saveManualEdit}
+                                                className="flex-[2] py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-[0_4px_0_rgb(67,56,202)] transition-all transform hover:-translate-y-[1px]"
+                                            >
+                                                💾 Re-Ensamblar y Guardar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- 5. HISTORIAL EVOLUTIVO (ÁRBOL COMPLETO Y REPRODUCTOR ANIMADO) --- */}
+                            {gameState === 'history' && (
+                                <div className="animate-fade-in space-y-6">
+                                    <div className="bg-slate-800 p-6 md:p-8 rounded-3xl shadow-xl border border-slate-700 text-white">
+                                        
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-slate-700 pb-4 gap-4">
+                                            <div>
+                                                <h2 className="text-3xl font-black">Historial del Linaje</h2>
+                                                <p className="text-slate-400 text-sm">Observa la cadena adaptativa desde el ancestro fundacional.</p>
+                                            </div>
+                                            <button 
+                                                onClick={() => setGameState('evolve')}
+                                                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all"
+                                            >
+                                                Volver al Laboratorio
+                                            </button>
+                                        </div>
+
+                                        {/* VISOR DE REPRODUCCIÓN INTERPOLADA (ANIMACIÓN CONTINUA) */}
+                                        <div className="bg-slate-900 rounded-3xl p-6 mb-8 border border-slate-750 flex flex-col items-center">
+                                            <h3 className="font-bold text-slate-300 text-sm uppercase tracking-wider mb-4">📺 Reproductor de Morfosis Evolutiva</h3>
+                                            {renderInterpolatedAnimation()}
+                                        </div>
+
+                                        <h3 className="font-bold text-slate-300 text-sm uppercase tracking-wider mb-4">🗂️ Registro de Fósiles Fotograma a Fotograma</h3>
+                                        <div className="flex gap-6 overflow-x-auto pb-6 pt-2 items-center snap-x no-scrollbar">
+                                            {evolutionHistory.map((organism, idx) => (
+                                                <div key={idx} className="flex items-center snap-center shrink-0">
+                                                    <div className="bg-white p-3 rounded-2xl w-[220px] md:w-[260px] shadow-2xl border border-slate-200 text-slate-800">
+                                                        <div className="text-center font-black text-xs uppercase mb-2 bg-slate-100 py-1.5 rounded-lg text-slate-600">
+                                                            {idx === 0 ? 'Ancestro (Gen 0)' : `Generación ${idx}`}
+                                                        </div>
+                                                        <div className="aspect-square border border-slate-100 rounded-xl bg-slate-50 overflow-hidden">
+                                                            <RenderOrganism parts={organism} />
+                                                        </div>
+                                                    </div>
+                                                    {idx !== evolutionHistory.length - 1 && (
+                                                        <div className="mx-3 text-emerald-400 text-4xl font-black animate-pulse">➔</div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="mt-6 p-6 bg-slate-700/50 rounded-2xl border border-slate-600 text-sm leading-relaxed max-w-3xl mx-auto text-slate-300">
+                                            <h4 className="font-bold text-white text-base mb-2">¿Cómo funciona esta simulación?</h4>
+                                            <p className="mb-2">
+                                                En la naturaleza, la evolución funciona a través de cambios aleatorios acumulados en el ADN. Al separar el diseño por bloques anatómicos (patas, cabeza, etc.), hemos simulado **mutaciones por secciones**. Al guiar la selección de forma manual o re-editar partes específicas, actúas como la presión ambiental que define el rumbo de la selección de esta nueva especie.
+                                            </p>
+                                            <p>
+                                                El reproductor interactivo de arriba interpola las coordenadas de cada línea para recrear visualmente la morfosis de adaptación que experimentaría la criatura a lo largo de miles de años de evolución acelerada.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- 6. PANTALLA DE VICTORIA (GEN 10 ALCANZADO) --- */}
+                            {gameState === 'victory' && (
+                                <div className="animate-fade-in space-y-6">
+                                    <div className="bg-slate-950 p-6 md:p-10 rounded-3xl shadow-2xl border border-emerald-500 text-white text-center">
+                                        <div className="text-7xl mb-4 animate-bounce">🏆🦅🐉</div>
+                                        <h2 className="text-3xl md:text-5xl font-black text-emerald-400 mb-2 tracking-tight">¡Éxito Evolutivo Completo!</h2>
+                                        <p className="text-slate-400 text-sm md:text-base font-medium mb-8">Has alcanzado el límite de 10 generaciones controlando la mutación adaptativa.</p>
+
+                                        {/* VISOR DE REPRODUCCIÓN INTERPOLADA (ANIMACIÓN CONTINUA EN VICTORIA) */}
+                                        <div className="bg-slate-900 rounded-3xl p-6 mb-8 border border-slate-800 flex flex-col items-center">
+                                            <h3 className="font-bold text-emerald-400 text-sm uppercase tracking-wider mb-4">📺 Reproductor de Morfosis: Gen 0 a Gen 10</h3>
+                                            {renderInterpolatedAnimation()}
+                                        </div>
+                                        
+                                        {/* Comparación Ancestral */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto mb-10">
+                                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center">
+                                                <h3 className="font-bold text-amber-500 text-xs uppercase tracking-widest mb-2">Ancestro Inicial (Generación 0)</h3>
+                                                <div className="aspect-square w-full max-w-[220px] bg-slate-950 rounded-xl overflow-hidden border border-slate-800">
+                                                    <RenderOrganism parts={evolutionHistory[0]} />
+                                                </div>
+                                            </div>
+                                            <div className="bg-slate-900 border border-slate-850 rounded-2xl p-4 flex flex-col items-center">
+                                                <h3 className="font-bold text-emerald-400 text-xs uppercase tracking-widest mb-2">Especie Adaptada (Generación 10)</h3>
+                                                <div className="aspect-square w-full max-w-[220px] bg-slate-950 rounded-xl overflow-hidden border border-slate-800">
+                                                    <RenderOrganism parts={evolutionHistory[evolutionHistory.length - 1]} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Resumen Conceptual */}
+                                        <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 text-left max-w-3xl mx-auto mb-8 text-sm md:text-base leading-relaxed text-slate-300">
+                                            <h4 className="font-black text-white text-base mb-2">Reflexión Científica</h4>
+                                            <p className="mb-4">
+                                                Al completar este experimento, has demostrado empíricamente la <strong>Selección Artificial</strong>. Las mutaciones graduales (modificación de pigmentos, escalado de extremidades y la aparición estocástica de manchas o rayas) crearon la materia prima de la variabilidad biológica.
+                                            </p>
+                                            <p>
+                                                Tus decisiones selectivas en cada iteración sirvieron de filtro selectivo, acumulando pequeñas variaciones que condujeron a un organismo morfológica y estéticamente diferente del primero. ¡Esto demuestra cómo cambian las especies en la naturaleza bajo presiones ambientales selectivas!
+                                            </p>
+                                        </div>
+
+                                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                            <button 
+                                                onClick={() => setGameState('history')}
+                                                className="px-8 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all border border-slate-700 text-sm md:text-base"
+                                            >
+                                                🌳 Ver Línea de Tiempo
+                                            </button>
+                                            <button 
+                                                onClick={resetToIntro}
+                                                className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl transition-all shadow-[0_4px_0_rgb(5,150,105)] text-sm md:text-base hover:translate-y-[2px]"
+                                            >
+                                                🔄 Iniciar Nueva Especie
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
