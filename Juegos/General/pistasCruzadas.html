@@ -36,7 +36,7 @@
     <div id="app" class="w-full max-w-6xl mx-auto flex-grow flex flex-col">
         
         <!-- PANTALLA DE CONFIGURACIÓN -->
-        <div id="setup-screen" class="flex-grow flex flex-col items-center justify-center w-full">
+        <div id="setup-screen" class="flex-grow flex flex-col items-center justify-center w-full gap-6">
             <div class="bg-white p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-xl w-full max-w-[95%] sm:max-w-md border border-slate-200">
                 <h1 class="text-2xl sm:text-3xl font-black text-center text-indigo-600 mb-2">Pistas Cruzadas</h1>
                 <p class="text-center text-slate-500 mb-6 sm:mb-8 text-sm sm:text-base">Configura tu partida local</p>
@@ -58,6 +58,29 @@
                 <button id="btn-start" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black text-base sm:text-lg py-3 sm:py-4 rounded-xl shadow-lg transform transition hover:-translate-y-1">
                     ¡Comenzar Juego!
                 </button>
+            </div>
+
+            <!-- MODAL / SECCIÓN DE REGLAMENTOS DIDÁCTICOS (AGREGADA) -->
+            <div class="bg-white p-5 sm:p-6 rounded-2xl shadow-lg w-full max-w-[95%] sm:max-w-2xl border border-slate-200">
+                <h2 class="text-lg sm:text-xl font-extrabold text-slate-800 mb-4 flex items-center gap-2">
+                    <span>📖</span> Guía de Juego en el Aula
+                </h2>
+                
+                <div class="flex border-b border-slate-200 mb-4 overflow-x-auto no-scrollbar" role="tablist">
+                    <button id="tab-classic" class="py-2 px-3 sm:px-4 text-xs sm:text-sm font-bold text-indigo-600 border-b-2 border-indigo-500 whitespace-nowrap" onclick="switchRulesTab('classic')">
+                        1. Modo Clásico
+                    </button>
+                    <button id="tab-teacher" class="py-2 px-3 sm:px-4 text-xs sm:text-sm font-medium text-slate-500 hover:text-indigo-600 border-b-2 border-transparent whitespace-nowrap" onclick="switchRulesTab('teacher')">
+                        2. Profesor Mediador
+                    </button>
+                    <button id="tab-student" class="py-2 px-3 sm:px-4 text-xs sm:text-sm font-medium text-slate-500 hover:text-indigo-600 border-b-2 border-transparent whitespace-nowrap" onclick="switchRulesTab('student')">
+                        3. Alumno Creador
+                    </button>
+                </div>
+
+                <div id="rules-content" class="text-xs sm:text-sm text-slate-600 space-y-3 min-h-[160px]">
+                    <!-- Contenido dinámico inyectado por la función switchRulesTab -->
+                </div>
             </div>
         </div>
 
@@ -155,6 +178,60 @@
             "Hospital", "Farmacia", "Banco", "Restaurante", "Hotel", "Iglesia", "Museo", "Biblioteca", "Gimnasio", "Cancha"
         ];
 
+        // --- REGLAS EXPLICATIVAS DIDÁCTICAS ---
+        const rulesData = {
+            classic: `
+                <div class="space-y-2 animate-fade-in">
+                    <p class="font-bold text-slate-800 text-sm sm:text-base">📍 Dinámica Cooperativa Presencial (Clásica):</p>
+                    <ul class="list-disc pl-5 space-y-1 text-slate-600 text-xs sm:text-sm">
+                        <li><strong>Preparación:</strong> Reparte en físico coordenadas secretas de la cuadrícula seleccionada a los miembros del equipo (ej: uno recibe la tarjeta <em>A1</em>, otro <em>B3</em>, etc.).</li>
+                        <li><strong>Acción:</strong> En su turno, uno de los jugadores dice en voz alta una pista que asocie las dos palabras clave de su coordenada (ej: si A es <em>Perro</em> y 1 es <em>Vaso</em>, la pista puede ser "Bebedero").</li>
+                        <li><strong>Discusión:</strong> El resto de los compañeros debate a qué intersección corresponde esa pista. Si concuerdan en que es A1, se marca en esta aplicación como Acierto o Fallo.</li>
+                    </ul>
+                </div>
+            `,
+            teacher: `
+                <div class="space-y-2 animate-fade-in">
+                    <p class="font-bold text-slate-800 text-sm sm:text-base">👨‍🏫 Dinámica de Proyección (Docente Mediador):</p>
+                    <ul class="list-disc pl-5 space-y-1 text-slate-600 text-xs sm:text-sm">
+                        <li><strong>Rol del Docente:</strong> Proyecta el juego en el aula y actúa como el moderador, tú sabes qué coordenadas deberán adivinar los jugadores.</li>
+                        <li><strong>Acción:</strong> Di a los jugadores una pista para una de tus coordenadas secretas en la cuadrícula.</li>
+                        <li><strong>Discusión en grupo:</strong> Los estudiantes deben debatir para ponerse de acuerdo en cuál es la coordenada a la que te refieres.</li>
+                        <li><strong>Validación:</strong> Una vez que el grupo tome una decisión, tú marcas en la pantalla si fue correcto o incorrecto en base a tus apuntes de la coordenada real.</li>
+                    </ul>
+                </div>
+            `,
+            student: `
+                <div class="space-y-2 animate-fade-in">
+                    <p class="font-bold text-slate-800 text-sm sm:text-base">🕵️‍♂️ Dinámica de Rol (Estudiante):</p>
+                    <ul class="list-disc pl-5 space-y-1 text-slate-600 text-xs sm:text-sm">
+                        <li><strong>Asignación:</strong> El docente proyecta la cuadrícula y, de forma secreta, le asigna una coordenada vacía a un estudiante.</li>
+                        <li><strong>Acción:</strong> El estudiante seleccionado asume el rol de mediador y debe pensar una sola pista que asocie ambas palabras de la coordenada asignada.</li>
+                        <li><strong>Discusión en el Aula:</strong> Todo el grupo analiza la pista y debate para intentar adivinar cuál es la intersección correcta.</li>
+                        <li><strong>Resolución:</strong> El profesor modera el debate y marca la celda en la pantalla con el resultado del grupo. Luego se selecciona a otro estudiante.</li>
+                    </ul>
+                </div>
+            `
+        };
+
+        function switchRulesTab(tabName) {
+            // Cambiar clases activas/inactivas en los botones de pestañas
+            const tabs = ['classic', 'teacher', 'student'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tabName) {
+                    btn.classList.add('text-indigo-600', 'border-indigo-500');
+                    btn.classList.remove('text-slate-500', 'border-transparent', 'font-medium');
+                } else {
+                    btn.classList.remove('text-indigo-600', 'border-indigo-500');
+                    btn.classList.add('text-slate-500', 'border-transparent', 'font-medium');
+                }
+            });
+
+            // Reemplazar contenido de las reglas
+            document.getElementById('rules-content').innerHTML = rulesData[tabName];
+        }
+
         // --- 2. ESTADO DEL JUEGO ---
         let currentSize = 3; // Por defecto 3x3
         let timerInterval = null;
@@ -177,6 +254,9 @@
 
         // --- 3. INICIALIZACIÓN DE EVENTOS ---
         document.addEventListener('DOMContentLoaded', () => {
+            // Cargar pestaña de instrucciones por defecto
+            switchRulesTab('classic');
+
             // Botones de tamaño de tablero
             document.querySelectorAll('.size-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
