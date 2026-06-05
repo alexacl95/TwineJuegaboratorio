@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Línea del Tiempo: Hitos de la Epidemiología</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: #1e293b;
+        }
+
+        /* Patrón de cuadrícula suave para el fondo */
+        .bg-grid-pattern {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* Animaciones para cartas y transiciones */
+        @keyframes slideInUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up {
+            animation: slideInUp 0.4s ease-out forwards;
+        }
+
+        @keyframes pulseBorder {
+            0%, 100% { border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 0 0 0px rgba(99, 102, 241, 0.2); }
+            50% { border-color: rgba(99, 102, 241, 0.8); box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.1); }
+        }
+        .animate-pulse-border {
+            animation: pulseBorder 2s infinite;
+        }
+
+        /* Desplazamiento suave */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-grid-pattern min-h-screen">
+    <!-- Contenedor raíz para React -->
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // BASE DE DATOS DE HITOS HISTÓRICOS CATEGORIZADOS (EXPANDIDA CON GRANDES HITOS Y SU CONTEXTO HISTÓRICO)
+        const initialMilestones = [
+            // --- CATEGORÍA: EPIDEMIOLOGÍA ---
+            {
+                id: 1001,
+                year: -430,
+                yearDisplay: "430 a.C.",
+                title: "La Peste de Atenas",
+                category: "epidemiologia",
+                icon: "🏛️",
+                shortDesc: "Primera gran plaga documentada de la antigüedad clásica descrita por Tucídides.",
+                fullDesc: "Durante la Guerra del Peloponeso, un brote devastador (sospechoso de tifo o viruela) diezmó a un tercio de Atenas, incluido su líder Pericles. Tucídides la describió con un rigor clínico sin precedentes en la literatura."
+            },
+            {
+                id: 1,
+                year: -400,
+                yearDisplay: "c. 400 a.C.",
+                title: "Hipócrates: Tratado de Aires, Aguas y Lugares",
+                category: "epidemiologia",
+                icon: "🌍",
+                shortDesc: "Primer intento de asociar la enfermedad con factores ambientales.",
+                fullDesc: "Hipócrates de Cos propuso que las enfermedades no eran castigos divinos, sino el resultado directo de la interacción humana con el clima, las aguas locales, la dieta y los vientos. Sentó las bases racionales de la salud ambiental."
+            },
+            {
+                id: 1002,
+                year: 165,
+                yearDisplay: "165 d.C.",
+                title: "La Peste Antonina",
+                category: "epidemiologia",
+                icon: "🦁",
+                shortDesc: "Devastadora plaga romana que causó millones de decesos y debilitó al imperio.",
+                fullDesc: "Se cree que fue viruela o sarampión traído por soldados romanos que regresaban de Oriente. Mató hasta a un tercio de la población en algunas zonas y se cobró la vida del coemperador Lucio Vero."
+            },
+            {
+                id: 15,
+                year: 541,
+                yearDisplay: "541 d.C.",
+                title: "Plaga de Justiniano (Primera Pandemia)",
+                category: "epidemiologia",
+                icon: "⛪",
+                shortDesc: "El primer brote registrado de peste bubónica que asoló al Imperio Bizantino.",
+                fullDesc: "Causada por la bacteria Yersinia pestis, asoló Constantinopla y el Imperio Bizantino. Históricamente situada en el año 541 d.C., es considerada la primera pandemia documentada de peste bubónica y cambió de forma drástica la geopolítica de la época."
+            },
+            {
+                id: 2,
+                year: 1347,
+                yearDisplay: "1347 d.C.",
+                title: "La Peste Negra y el Nacimiento de la Cuarentena",
+                category: "epidemiologia",
+                icon: "🐀",
+                shortDesc: "Arribo de la peste bubónica a Europa y primeras medidas de aislamiento.",
+                fullDesc: "Con la devastación del bacilo Yersinia pestis en Europa, se establecieron en Venecia y Ragusa los primeros periodos oficiales de aislamiento forzoso para barcos sospechosos de contagio, fijándose finalmente en 40 días ('cuarentena')."
+            },
+            {
+                id: 3,
+                year: 1546,
+                yearDisplay: "1546",
+                title: "Girolamo Fracastoro: Teoría del Contagio",
+                category: "epidemiologia",
+                icon: "🗣️",
+                shortDesc: "Presentación del contagio directo, por fomites y a distancia.",
+                fullDesc: "En su obra 'De Contagione et Contagiosis Morbis', propuso científicamente que las infecciones son causadas por partículas invisibles ('seminas') transferibles directamente de persona a persona, mediante ropa u objetos (fomites), o por el aire."
+            },
+            {
+                id: 4,
+                year: 1662,
+                yearDisplay: "1662",
+                title: "John Graunt: Boletines de Mortalidad",
+                category: "epidemiologia",
+                icon: "📊",
+                shortDesc: "Análisis pionero de datos bioestadísticos y demográficos en Londres.",
+                fullDesc: "Estudió sistemáticamente las listas de fallecidos de Londres, identificando patrones estacionales de muerte, diferencias por sexo y estimando la probabilidad de supervivencia infantil por primera vez, inaugurando la estadística médica moderna."
+            },
+            {
+                id: 1003,
+                year: 1665,
+                yearDisplay: "1665",
+                title: "La Gran Peste de Londres",
+                category: "epidemiologia",
+                icon: "🔔",
+                shortDesc: "El último gran brote masivo de peste bubónica ocurrido en Inglaterra.",
+                fullDesc: "Esta epidemia causó la muerte de más de 100,000 personas en Londres. Impulsó una de las primeras grandes huidas urbanas de la historia, cerrando teatros y universidades (incluida la de Isaac Newton)."
+            },
+            {
+                id: 16,
+                year: 1817,
+                yearDisplay: "1817",
+                title: "Siete Brotes de Cólera (Primera Pandemia)",
+                category: "epidemiologia",
+                icon: "💧",
+                shortDesc: "Inicio en Calcuta de las grandes oleadas mundiales de cólera.",
+                fullDesc: "En 1817 comenzó en la India la primera de las siete grandes pandemias de cólera. Esta serie de brotes masivos se expandió por las rutas comerciales del Imperio Británico e impulsó la urgencia de establecer saneamiento básico global."
+            },
+            {
+                id: 5,
+                year: 1796,
+                yearDisplay: "1796",
+                title: "Edward Jenner y la Vacunación",
+                category: "epidemiologia",
+                icon: "💉",
+                shortDesc: "Primer experimento de inmunización activa usando viruela vacuna.",
+                fullDesc: "Al observar que las ordeñadoras infectadas con viruela de las vacas eran inmunes a la viruela humana, Jenner inoculó a un niño con linfa de estas heridas, creando la primera vacuna exitosa y marcando el fin conceptual de una era de plagas."
+            },
+            {
+                id: 6,
+                year: 1847,
+                yearDisplay: "1847",
+                title: "Ignaz Semmelweis: Antisepsia y Lavado de Manos",
+                category: "epidemiologia",
+                icon: "🧼",
+                shortDesc: "Descubrimiento de la causa de la fiebre puerperal en Viena.",
+                fullDesc: "Semmelweis demostró que los médicos transmitían partículas de cadáveres a las parturientas durante el parto. Al obligar al personal médico a lavarse las manos con soluciones de cal clorada, redujo drásticamente la mortalidad hospitalaria."
+            },
+            {
+                id: 7,
+                year: 1854,
+                yearDisplay: "1854",
+                title: "John Snow y la Bomba de Broad Street",
+                category: "epidemiologia",
+                icon: "⛲",
+                shortDesc: "Retirada de la manija de la bomba que contenía el brote de cólera.",
+                fullDesc: "Considerado el padre de la epidemiología de campo, John Snow cartografió los casos de cólera en el barrio del Soho de Londres. Dedujo que el agua de una bomba pública era el vehículo de transmisión común y detuvo el brote al retirar su manija."
+            },
+            {
+                id: 17,
+                year: 1855,
+                yearDisplay: "1855",
+                title: "La Tercera Plaga de Peste Bubónica",
+                category: "epidemiologia",
+                icon: "💀",
+                shortDesc: "Pandemia originada en China que se expandió por rutas comerciales.",
+                fullDesc: "Inició en Yunnan, China, y se extendió de manera global diezmando de forma masiva a la India y Hong Kong. Durante esta crisis global, investigadores como Alexandre Yersin lograron aislar e identificar por primera vez a la bacteria causante."
+            },
+            {
+                id: 8,
+                year: 1882,
+                yearDisplay: "1882",
+                title: "Robert Koch: Descubrimiento de la Tuberculosis",
+                category: "epidemiologia",
+                icon: "🧪",
+                shortDesc: "Validación experimental de la teoría germinal de las enfermedades.",
+                fullDesc: "Koch presentó el descubrimiento de Mycobacterium tuberculosis y formuló sus famosos postulados lógicos de causalidad microbiológica, demostrando que un microorganismo específico produce siempre una enfermedad específica."
+            },
+            {
+                id: 9,
+                year: 1918,
+                yearDisplay: "1918",
+                title: "La Pandemia de Gripe Española",
+                category: "epidemiologia",
+                icon: "😷",
+                shortDesc: "Brote pandémico global masivo (Influenza A H1N1).",
+                fullDesc: "Una de las peores crisis sanitarias de la humanidad. Mató a decenas de millones de personas en todo el planeta a finales de la Primera Guerra Mundial y aceleró la necesidad de crear sistemas internacionales de vigilancia integrados."
+            },
+            {
+                id: 10,
+                year: 1948,
+                yearDisplay: "1948",
+                title: "Fundación de la Organización Mundial de la Salud",
+                category: "epidemiologia",
+                icon: "🇺🇳",
+                shortDesc: "Constitución de la OMS y unificación de criterios sanitarios.",
+                fullDesc: "Nace el organismo de las Naciones Unidas especializado en gestionar políticas de prevención, promoción e intervención a nivel mundial. Definió el concepto integral de salud más allá de la mera ausencia de enfermedad."
+            },
+            {
+                id: 11,
+                year: 1980,
+                yearDisplay: "1980",
+                title: "Erradicación Oficial de la Viruela por la OMS",
+                category: "epidemiologia",
+                icon: "🏆",
+                shortDesc: "Primer y único patógeno humano erradicado mediante vacunación.",
+                fullDesc: "Tras una intensa campaña mundial de inmunización activa, vigilancia estricta y cercos epidemiológicos, la Asamblea Mundial de la Salud declaró formalmente a la viruela como erradicada del planeta Tierra."
+            },
+            {
+                id: 12,
+                year: 1981,
+                yearDisplay: "1981",
+                title: "Primer Reporte de Casos de SIDA/VIH",
+                category: "epidemiologia",
+                icon: "❤️‍🩹",
+                shortDesc: "Detección inusual de neumonías y sarcoma de Kaposi por el CDC.",
+                fullDesc: "El CDC de EE. UU. documentó un conglomerado inusual de patologías en jóvenes sanos, iniciando una de las investigaciones epidemiológicas y virológicas más complejas para descifrar un nuevo virus de transmisión sexual y sanguínea."
+            },
+            {
+                id: 18,
+                year: 2002,
+                yearDisplay: "2002",
+                title: "Brote Global de SARS-CoV (Síndrome Respiratorio)",
+                category: "epidemiologia",
+                icon: "🦇",
+                shortDesc: "Surgimiento del primer gran coronavirus patógeno del siglo XXI.",
+                fullDesc: "Identificado en Guangdong, China, demostró la velocidad y el alcance de las amenazas respiratorias zoonóticas modernas en un mundo globalizado. Marcó un hito en la necesidad de transparencia epidemiológica internacional."
+            },
+            {
+                id: 13,
+                year: 2006,
+                yearDisplay: "2006",
+                title: "SIVIGILA: Sistema de Vigilancia en Colombia",
+                category: "epidemiologia",
+                icon: "🇨🇴",
+                shortDesc: "Nace el Decreto 3518 para organizar la vigilancia pública colombiana.",
+                fullDesc: "Se reglamenta oficialmente el Sistema de Vigilancia en Salud Pública (SIVIGILA) de Colombia para guiar la recolección, análisis e interpretación sistemática de eventos de interés, como infecciones vectoriales, accidentes ofídicos e intoxicaciones."
+            },
+            {
+                id: 19,
+                year: 2009,
+                yearDisplay: "2009",
+                title: "Pandemia de Gripe Porcina (H1N1)",
+                category: "epidemiologia",
+                icon: "🐷",
+                shortDesc: "Emergencia global causada por un nuevo subtipo de virus Influenza A.",
+                fullDesc: "Detectada inicialmente en América del Norte, esta pandemia se expandió con rapidez. Se caracterizó por presentar una combinación inusual de segmentos genéticos de origen porcino, aviar y humano, alertando a las redes globales de respuesta."
+            },
+            {
+                id: 14,
+                year: 2019,
+                yearDisplay: "2019",
+                title: "Pandemia de COVID-19 por SARS-CoV-2",
+                category: "epidemiologia",
+                icon: "🚨",
+                shortDesc: "Emergencia de salud pública internacional y disrupción global.",
+                fullDesc: "Identificada a finales de 2019, causó una crisis sanitaria mundial sin precedentes, cuarentenas globales masivas, modelados matemáticos en tiempo real y el desarrollo récord de vacunas basadas en ARN mensajero."
+            },
+
+            // --- CATEGORÍA: CIENCIA Y MEDICINA ---
+            {
+                id: 1004,
+                year: 160,
+                yearDisplay: "c. 160 d.C.",
+                title: "Galeno y la Teoría de los Cuatro Humores",
+                category: "ciencia_medicina",
+                icon: "⚖️",
+                shortDesc: "Establecimiento del dogma médico humoral que dominaría por más de un milenio.",
+                fullDesc: "Basándose en Hipócrates, Galeno de Pérgamo estructuró la teoría de que la salud dependía del perfecto equilibrio de cuatro líquidos o humores corporales: sangre, flema, bilis amarilla y bilis negra."
+            },
+            {
+                id: 101,
+                year: 1590,
+                yearDisplay: "1590",
+                title: "Invención del Primer Microscopio Compuesto",
+                category: "ciencia_medicina",
+                icon: "🔬",
+                shortDesc: "Zacharias Janssen revoluciona la visualización de la materia microscópica.",
+                fullDesc: "Se atribuye a los fabricantes de lentes Janssen la creación del primer microscopio compuesto. Este hito sentará las bases para que siglos más tarde la ciencia pueda descubrir y aislar a los gérmenes invisibles causantes de enfermedades contagiosas."
+            },
+            {
+                id: 102,
+                year: 1628,
+                yearDisplay: "1628",
+                title: "William Harvey describe la Circulación de la Sangre",
+                category: "ciencia_medicina",
+                icon: "🫀",
+                shortDesc: "Harvey refuta las teorías anatómicas tradicionales del sistema cardiovascular.",
+                fullDesc: "A través de su obra 'Exercitatio Anatomica de Motu Cordis et Sanguinis in Animalibus', demostró que el corazón actúa como una bomba central y que la sangre circula continuamente por el cuerpo, sentando los cimientos de la fisiología moderna."
+            },
+            {
+                id: 103,
+                year: 1665,
+                yearDisplay: "1665",
+                title: "Robert Hooke: Descubrimiento de la Célula",
+                category: "ciencia_medicina",
+                icon: "🧫",
+                shortDesc: "Hooke acuña el término 'célula' en su famosa obra 'Micrographia'.",
+                fullDesc: "Utilizando un microscopio diseñado por él mismo, observó cortes finos de corcho y descubrió estructuras poliédricas parecidas a las celdas de un panal de abejas, a las cuales llamó 'células'. Esto dio origen a la biología celular."
+            },
+            {
+                id: 1005,
+                year: 1676,
+                yearDisplay: "1676",
+                title: "Leeuwenhoek observa los 'Animálculos'",
+                category: "ciencia_medicina",
+                icon: "💧",
+                shortDesc: "Primer avistamiento registrado de bacterias vivas usando lentes tallados.",
+                fullDesc: "El comerciante holandés Anton van Leeuwenhoek reportó a la Royal Society la existencia de seres microscópicos en agua de lluvia y sarro dental, demostrando por primera vez que existía un universo de vida microscópica invisible al ojo humano."
+            },
+            {
+                id: 1006,
+                year: 1862,
+                yearDisplay: "1862",
+                title: "Louis Pasteur y la Pasteurización",
+                category: "ciencia_medicina",
+                icon: "🥛",
+                shortDesc: "Refutación definitiva de la generación espontánea de microbios.",
+                fullDesc: "Pasteur demostró de manera irrefutable que los microorganismos no se crean espontáneamente en los caldos, sino que viajan por el aire. Diseñó el proceso de calentamiento controlado (pasteurización) para destruir bacterias patógenas."
+            },
+            {
+                id: 1007,
+                year: 1885,
+                yearDisplay: "1885",
+                title: "Vacuna Antirrábica de Louis Pasteur",
+                category: "ciencia_medicina",
+                icon: "🐕",
+                shortDesc: "Primer tratamiento de inmunización exitoso contra la rabia humana.",
+                fullDesc: "Pasteur aplicó de forma experimental su vacuna de virus atenuado en el niño Joseph Meister, salvándole la vida tras ser mordido por un perro rabioso. Consolidó los pilares de la virología e inmunología práctica."
+            },
+            {
+                id: 104,
+                year: 1928,
+                yearDisplay: "1928",
+                title: "Alexander Fleming descubre la Penicilina",
+                category: "ciencia_medicina",
+                icon: "🍄",
+                shortDesc: "El hallazgo accidental de la penicilina marca el inicio de la era antibiótica.",
+                fullDesc: "Fleming observó que un hongo (Penicillium notatum) contaminó una placa de cultivo de Staphylococcus y destruyó las bacterias a su alrededor. El desarrollo de este antibiótico permitió reducir drásticamente la letalidad de las infecciones bacterianas."
+            },
+            {
+                id: 105,
+                year: 1953,
+                yearDisplay: "1953",
+                title: "Estructura de la Doble Hélice del ADN",
+                category: "ciencia_medicina",
+                icon: "🧬",
+                shortDesc: "Watson, Crick y Franklin descifran el código del material genético.",
+                fullDesc: "Se publica el modelo estructural del ADN, explicando cómo se replica y se transmite la información biológica. Esto transformará la epidemiología al permitir el mapeo de variantes genéticas y el rastreo genómico de patógenos."
+            },
+
+            // --- CATEGORÍA: HISTORIA UNIVERSAL ---
+            {
+                id: 1008,
+                year: -431,
+                yearDisplay: "431 a.C.",
+                title: "Estallido de la Guerra del Peloponeso",
+                category: "historia_universal",
+                icon: "🛡️",
+                shortDesc: "Conflicto que confinó a la población ateniense tras murallas defensivas.",
+                fullDesc: "El enfrentamiento entre Atenas y Esparta obligó al hacinamiento masivo de refugiados rurales dentro de los Muros Largos de Atenas. Estas críticas condiciones de sobrepoblación y falta de saneamiento desataron la Peste de Atenas en el 430 a.C."
+            },
+            {
+                id: 1009,
+                year: 161,
+                yearDisplay: "161 d.C.",
+                title: "Reinado de Marco Aurelio en el Imperio Romano",
+                category: "historia_universal",
+                icon: "🏛️",
+                shortDesc: "Inicio de la época de las guerras marcomanas y azote de la plaga.",
+                fullDesc: "Marco Aurelio asume como emperador de Roma. Sus campañas militares en las fronteras germanas movilizaron grandes ejércitos que contrajeron y propagaron la Peste Antonina por todos los confines del territorio imperial."
+            },
+            {
+                id: 1010,
+                year: 527,
+                yearDisplay: "527 d.C.",
+                title: "Asenso de Justiniano I al Trono de Bizancio",
+                category: "historia_universal",
+                icon: "👑",
+                shortDesc: "Inicio de las campañas militares bizantinas de reconquista territorial.",
+                fullDesc: "Justiniano I comenzó la expansión de su imperio por el Mediterráneo. Las constantes flotas comerciales y de suministros militares repletas de granos y roedores provenientes de Egipto facilitaron la introducción de la plaga en el 541 d.C."
+            },
+            {
+                id: 1011,
+                year: 1337,
+                yearDisplay: "1337 d.C.",
+                title: "Estallido de la Guerra de los Cien Años",
+                category: "historia_universal",
+                icon: "🏹",
+                shortDesc: "Largo conflicto feudal europeo entre Inglaterra y Francia.",
+                fullDesc: "La devastación económica, destrucción de cultivos e inestabilidad de las poblaciones feudales debido a la guerra mermaron drásticamente la resistencia inmune de la sociedad europea antes de la catastrófica llegada de la Peste Negra en 1347."
+            },
+            {
+                id: 201,
+                year: 1440,
+                yearDisplay: "1440",
+                title: "Invención de la Imprenta de Gutenberg",
+                category: "historia_universal",
+                icon: "📖",
+                shortDesc: "Inicia la era de la reproducción masiva de textos y difusión del saber.",
+                fullDesc: "Johannes Gutenberg perfeccionó la imprenta de tipos móviles en Alemania. Permitió la difusión rápida de conocimientos médicos, manuales de salud pública e informes de mortalidad (como los boletines analizados por John Graunt)."
+            },
+            {
+                id: 1012,
+                year: 1492,
+                yearDisplay: "1492",
+                title: "Intercambio Columbino / Llegada a América",
+                category: "historia_universal",
+                icon: "⛵",
+                shortDesc: "Unión biológica de dos mundos que desató catástrofes epidemiológicas.",
+                fullDesc: "La llegada europea a América introdujo patógenos como la viruela y el sarampión en poblaciones nativas sin inmunidad histórica previa, diezmando hasta al 90% de los habitantes. Al mismo tiempo, la sífilis arribó a Europa."
+            },
+            {
+                id: 202,
+                year: 1760,
+                yearDisplay: "1760",
+                title: "Inicio de la Revolución Industrial",
+                category: "historia_universal",
+                icon: "🏭",
+                shortDesc: "El auge tecnológico e industrial propicia una urbanización acelerada.",
+                fullDesc: "Comienza en Gran Bretaña un proceso de transformación económica y social que concentró a masas de población rural en las ciudades. El hacinamiento y la falta de saneamiento en estas nuevas urbes favorecieron la dispersión de epidemias."
+            },
+            {
+                id: 203,
+                year: 1789,
+                yearDisplay: "1789",
+                title: "Estallido de la Revolución Francesa",
+                category: "historia_universal",
+                icon: "🇫🇷",
+                shortDesc: "Movimiento revolucionario que redefinió los derechos ciudadanos y la política.",
+                fullDesc: "La Revolución Francesa transformó la noción de los derechos individuales y colectivos. Este hito promovió que los estados asumieran la salud pública y el saneamiento como obligaciones fundamentales hacia sus ciudadanos."
+            },
+            {
+                id: 1013,
+                year: 1818,
+                yearDisplay: "1818",
+                title: "Expansión del Imperialismo Británico en India",
+                category: "historia_universal",
+                icon: "🛶",
+                shortDesc: "La intensa actividad militar y comercial agrava el brote de Cólera.",
+                fullDesc: "Durante las campañas coloniales británicas, el transporte de tropas a lo largo del Río Ganges en Calcuta sirvió de catalizador biológico directo, dispersando la primera pandemia de cólera a nivel global de forma fulminante."
+            },
+            {
+                id: 204,
+                year: 1914,
+                yearDisplay: "1914",
+                title: "Estallido de la Primera Guerra Mundial",
+                category: "historia_universal",
+                icon: "🪖",
+                shortDesc: "Guerra de trincheras que movilizó a millones de tropas por Europa.",
+                fullDesc: "La movilización masiva, el hacinamiento en trincheras y el debilitamiento de los sistemas sanitarios en plena guerra mundial crearon el escenario ecológico perfecto para la letal propagación de la Gripe Española de 1918."
+            },
+            {
+                id: 205,
+                year: 1939,
+                yearDisplay: "1939",
+                title: "Inicio de la Segunda Guerra Mundial",
+                category: "historia_universal",
+                icon: "💣",
+                shortDesc: "Conflicto bélico global que aceleró desarrollos científicos y médicos.",
+                fullDesc: "La necesidad de tratar masivamente a heridos impulsó la producción a gran escala de la penicilina y la inmunización generalizada de tropas de combate, consolidando la medicina preventiva y la epidemiología militar aplicadas."
+            },
+            {
+                id: 206,
+                year: 1969,
+                yearDisplay: "1969",
+                title: "Llegada del Ser Humano a la Luna (Apolo 11)",
+                category: "historia_universal",
+                icon: "🚀",
+                shortDesc: "Hito aeroespacial que expande los límites de la tecnología humana.",
+                fullDesc: "La misión Apolo 11 aterriza con éxito en la Luna. Las estrictas medidas de aislamiento impuestas a los astronautas al regresar (cuarentena en la Tierra) ilustran la persistencia preventiva del concepto de aislamiento frente a agentes desconocidos."
+            }
+        ];
+
+        // CONFIGURACIÓN DE COLORES Y ETIQUETAS POR CATEGORÍA
+        const categoryConfig = {
+            epidemiologia: {
+                label: "Epidemiología",
+                color: "bg-emerald-100 text-emerald-800 border-emerald-300",
+                badge: "bg-emerald-600 text-white",
+                dot: "bg-emerald-500"
+            },
+            ciencia_medicina: {
+                label: "Ciencia y Medicina",
+                color: "bg-blue-100 text-blue-800 border-blue-300",
+                badge: "bg-blue-600 text-white",
+                dot: "bg-blue-500"
+            },
+            historia_universal: {
+                label: "Historia Universal",
+                color: "bg-amber-100 text-amber-800 border-amber-300",
+                badge: "bg-amber-600 text-white",
+                dot: "bg-amber-500"
+            }
+        };
+
+        // AUDIO SINTETIZADO (Web Audio API)
+        const playTone = (freq, type, duration) => {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = type;
+                oscillator.frequency.value = freq;
+                
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio no soportado o bloqueado por el navegador");
+            }
+        };
+
+        const playCorrectSound = () => {
+            playTone(523.25, 'sine', 0.15); // C5
+            setTimeout(() => playTone(659.25, 'sine', 0.25), 100); // E5
+        };
+
+        const playIncorrectSound = () => {
+            playTone(220, 'triangle', 0.2); // A3
+            setTimeout(() => playTone(146.83, 'triangle', 0.4), 150); // D3
+        };
+
+        const playGameOverSound = () => {
+            playTone(196, 'sawtooth', 0.3);
+            setTimeout(() => playTone(164.81, 'sawtooth', 0.3), 300);
+            setTimeout(() => playTone(130.81, 'sawtooth', 0.6), 600);
+        };
+
+        const playVictorySound = () => {
+            playTone(523.25, 'sine', 0.1);
+            setTimeout(() => playTone(587.33, 'sine', 0.1), 100);
+            setTimeout(() => playTone(659.25, 'sine', 0.1), 200);
+            setTimeout(() => playTone(783.99, 'sine', 0.4), 300);
+        };
+
+        // --- COMPONENTE PRINCIPAL ---
+        function App() {
+            // Estados de navegación y configuración
+            const [gameState, setGameState] = useState('menu'); // menu, playing, feedback, gameover, victory, tour
+            const [deck, setDeck] = useState([]);
+            const [timeline, setTimeline] = useState([]);
+            const [activeCard, setActiveCard] = useState(null);
+            
+            // Selección de categorías en configuración (Epidemiología forzado por defecto)
+            const [selectedCategories, setSelectedCategories] = useState(['epidemiologia']);
+            const [tourCategoryFilter, setTourCategoryFilter] = useState('todos');
+            
+            // Métricas y límites
+            const [mistakes, setMistakes] = useState(0);
+            const [maxMistakes, setMaxMistakes] = useState(4); 
+            const [score, setScore] = useState(0);
+            const [lastTurnResult, setLastTurnResult] = useState(null); // 'correct' | 'incorrect'
+            const [correctSlotIndex, setCorrectSlotIndex] = useState(-1);
+            const [showExitConfirm, setShowExitConfirm] = useState(false); 
+            
+            // Consenso y debate
+            const [timer, setTimer] = useState(60);
+            const [timerActive, setTimerActive] = useState(false);
+            const [discussionNote, setDiscussionNote] = useState('');
+            const timerRef = useRef(null);
+
+            // Tamaño del mazo elegido por el usuario (temporal en menú)
+            const [tempDeckSize, setTempDeckSize] = useState(10);
+
+            // MANEJO DEL TEMPORIZADOR
+            useEffect(() => {
+                if (timerActive && timer > 0) {
+                    timerRef.current = setTimeout(() => setTimer(t => t - 1), 1000);
+                } else if (timer === 0 && timerActive) {
+                    playTone(293.66, 'sawtooth', 0.5); 
+                    setTimerActive(false);
+                }
+                return () => clearTimeout(timerRef.current);
+            }, [timer, timerActive]);
+
+            const resetTimer = () => {
+                clearTimeout(timerRef.current);
+                setTimer(60);
+                setTimerActive(true);
+            };
+
+            const toggleTimer = () => {
+                setTimerActive(!timerActive);
+            };
+
+            // SELECCIÓN DE CATEGORÍAS (Siempre debe incluir epidemiología)
+            const toggleCategory = (cat) => {
+                if (cat === 'epidemiologia') return; // Forzado
+                if (selectedCategories.includes(cat)) {
+                    setSelectedCategories(selectedCategories.filter(c => c !== cat));
+                } else {
+                    setSelectedCategories([...selectedCategories, cat]);
+                }
+            };
+
+            // INICIALIZAR LA PARTIDA
+            const initializeGame = (sizeOption, levelOption) => {
+                setMaxMistakes(levelOption);
+                
+                // Filtrar el pool total según categorías seleccionadas
+                const filteredPool = initialMilestones.filter(m => 
+                    selectedCategories.includes(m.category)
+                );
+
+                // Mezclar de forma aleatoria
+                const shuffled = [...filteredPool].sort(() => 0.5 - Math.random());
+                
+                // Determinar el tamaño de juego real (no mayor al pool disponible)
+                const selectedSize = Math.min(sizeOption, shuffled.length);
+                const gameCards = shuffled.slice(0, selectedSize);
+                
+                // Tarjeta inicial del tablero y mazo restante
+                const startCard = gameCards[0];
+                const initialDeck = gameCards.slice(1);
+                
+                setTimeline([startCard]);
+                setDeck(initialDeck);
+                
+                if (initialDeck.length > 0) {
+                    setActiveCard(initialDeck[0]);
+                    setGameState('playing');
+                } else {
+                    setGameState('victory');
+                }
+
+                setMistakes(0);
+                setScore(0);
+                setTimer(60);
+                setTimerActive(false);
+                setDiscussionNote('');
+                setLastTurnResult(null);
+                setShowExitConfirm(false);
+            };
+
+            // INSERTAR CARTA EN RANURA SELECCIONADA
+            const handleSlotSelect = (slotIndex) => {
+                if (gameState !== 'playing') return;
+
+                let minYear = -Infinity;
+                let maxYear = Infinity;
+
+                if (slotIndex > 0) {
+                    minYear = timeline[slotIndex - 1].year;
+                }
+                if (slotIndex < timeline.length) {
+                    maxYear = timeline[slotIndex].year;
+                }
+
+                const yearToPlace = activeCard.year;
+                const isCorrect = yearToPlace >= minYear && yearToPlace <= maxYear;
+
+                // Encontrar ranura correcta para reubicar si el usuario falla
+                let realIndex = 0;
+                while (realIndex < timeline.length && timeline[realIndex].year < yearToPlace) {
+                    realIndex++;
+                }
+
+                setCorrectSlotIndex(realIndex);
+
+                // Modificar el tablero insertándolo en su sitio real
+                const updatedTimeline = [...timeline];
+                updatedTimeline.splice(realIndex, 0, activeCard);
+
+                if (isCorrect) {
+                    playCorrectSound();
+                    setScore(s => s + 10);
+                    setLastTurnResult('correct');
+                } else {
+                    playIncorrectSound();
+                    setMistakes(m => m + 1);
+                    setLastTurnResult('incorrect');
+                }
+
+                setTimeline(updatedTimeline);
+                setGameState('feedback');
+                setTimerActive(false);
+            };
+
+            // AVANZAR TURNO
+            const advanceTurn = () => {
+                const currentMistakes = mistakes;
+                
+                if (currentMistakes >= maxMistakes) {
+                    playGameOverSound();
+                    setGameState('gameover');
+                    return;
+                }
+
+                const remainingDeck = deck.slice(1);
+                setDeck(remainingDeck);
+
+                if (remainingDeck.length > 0) {
+                    setActiveCard(remainingDeck[0]);
+                    setGameState('playing');
+                    setLastTurnResult(null);
+                    setTimer(60);
+                } else {
+                    playVictorySound();
+                    setGameState('victory');
+                }
+            };
+
+            // REPORTAR ALERTA DE MONITOREO SIVIGILA
+            const getAlertLevel = () => {
+                const pct = mistakes / maxMistakes;
+                if (pct === 0) return { label: "SIN ALERTA", color: "bg-emerald-500 border-emerald-600", text: "Estabilidad en el sistema sanitario.", textColor: "text-emerald-700" };
+                if (pct <= 0.25) return { label: "BAJO", color: "bg-green-400 border-green-500", text: "Casos esporádicos esperados.", textColor: "text-green-700" };
+                if (pct <= 0.50) return { label: "MODERADO", color: "bg-amber-400 border-amber-500", text: "Alerta de variaciones inusuales.", textColor: "text-amber-800" };
+                if (pct <= 0.75) return { label: "ALTO", color: "bg-orange-500 border-orange-600", text: "Riesgo inminente de epidemia descontrolada.", textColor: "text-orange-900" };
+                return { label: "MUY ALTO / BROTE", color: "bg-rose-600 border-rose-700 animate-pulse", text: "Colapso del sistema sanitario en curso.", textColor: "text-rose-100" };
+            };
+
+            const alertStatus = getAlertLevel();
+
+            // --- VISTA 1: CONFIGURACIÓN Y MENÚ PRINCIPAL ---
+            if (gameState === 'menu') {
+                // Calcular cuántas cartas se tienen según las categorías marcadas
+                const totalFilteredCards = initialMilestones.filter(m => 
+                    selectedCategories.includes(m.category)
+                ).length;
+
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4">
+                        <div className="bg-white/95 backdrop-blur-md p-8 md:p-12 rounded-3xl shadow-2xl max-w-3xl w-full text-center border border-indigo-100 animate-fade-in">
+                            
+                            <div className="flex justify-center items-center gap-2 mb-6">
+                                <span className="text-6xl">🕰️</span>
+                            </div>
+
+                            <div className="inline-block bg-indigo-50 border border-indigo-100 text-indigo-700 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
+                                🎲 MODO COOPERATIVO DE AULA
+                            </div>
+
+                            <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight leading-tight mb-2">
+                                Línea del Tiempo: Hitos Epidemiológicos
+                            </h1>
+                            <p className="text-slate-500 font-medium max-w-lg mx-auto mb-8 text-sm md:text-base">
+                                Proyecta la pantalla. Los estudiantes debatirán las épocas y el contexto histórico universal de las epidemias antes de colocarlas correctamente en la línea de tiempo.
+                            </p>
+
+                            {/* Opciones de personalización */}
+                            <div className="bg-slate-50 border border-slate-100 p-6 rounded-2xl text-left space-y-6 mb-8 shadow-inner">
+                                <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wider flex items-center gap-2">
+                                    <span>🔧</span> Configuración del Reto de Aula
+                                </h3>
+                                
+                                {/* SECCIÓN: Selección de Categorías de Contextualización */}
+                                <div className="space-y-3">
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                        Categorías de Eventos a Incluir
+                                    </label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        {/* Epidemiología (Forzado) */}
+                                        <div className="p-3 bg-emerald-50 border-2 border-emerald-500 rounded-xl flex items-center gap-3 cursor-not-allowed">
+                                            <span className="text-2xl">🦠</span>
+                                            <div>
+                                                <span className="font-black text-xs text-emerald-800 block">Epidemiología</span>
+                                                <span className="text-[10px] text-emerald-600 font-semibold">Obligatorio (23)</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Ciencia y Medicina */}
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleCategory('ciencia_medicina')}
+                                            className={`p-3 border-2 rounded-xl flex items-center gap-3 transition-all text-left ${
+                                                selectedCategories.includes('ciencia_medicina')
+                                                ? 'bg-blue-50 border-blue-500 text-blue-900 shadow-sm'
+                                                : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100'
+                                            }`}
+                                        >
+                                            <span className="text-2xl">🔬</span>
+                                            <div>
+                                                <span className="font-black text-xs block">Ciencia / Medicina</span>
+                                                <span className="text-[10px] text-slate-400 font-semibold">+9 Cartas de contexto</span>
+                                            </div>
+                                        </button>
+
+                                        {/* Historia Universal */}
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleCategory('historia_universal')}
+                                            className={`p-3 border-2 rounded-xl flex items-center gap-3 transition-all text-left ${
+                                                selectedCategories.includes('historia_universal')
+                                                ? 'bg-amber-50 border-amber-500 text-amber-900 shadow-sm'
+                                                : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100'
+                                            }`}
+                                        >
+                                            <span className="text-2xl">📖</span>
+                                            <div>
+                                                <span className="font-black text-xs block">Historia Universal</span>
+                                                <span className="text-[10px] text-slate-400 font-semibold">+12 Cartas de contexto</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                                    {/* Cantidad de Eventos */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Cantidad de Eventos</label>
+                                        <div className="grid grid-cols-5 gap-2">
+                                            {[5, 10, 15, 20, 30].map(size => {
+                                                const isAvailable = size <= totalFilteredCards;
+                                                return (
+                                                    <button
+                                                        key={size}
+                                                        type="button"
+                                                        disabled={!isAvailable}
+                                                        onClick={() => setTempDeckSize(size)} 
+                                                        className={`py-2 px-1 rounded-xl font-bold text-sm border transition-all ${
+                                                            !isAvailable 
+                                                            ? 'bg-slate-100 border-slate-200 text-slate-300 cursor-not-allowed'
+                                                            : tempDeckSize === size
+                                                                ? 'bg-indigo-600 border-indigo-700 text-white shadow-md'
+                                                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                                                        }`}
+                                                    >
+                                                        {size}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        <span className="block text-[10px] text-slate-400 font-medium mt-1">
+                                            Pool disponible actual: {totalFilteredCards} cartas
+                                        </span>
+                                    </div>
+
+                                    {/* Nivel de Tolerancia SIVIGILA */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Tolerancia SIVIGILA</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {[2, 4, 6].map(lvl => (
+                                                <button
+                                                    key={lvl}
+                                                    type="button"
+                                                    onClick={() => setMistakes(lvl)} // Usamos mistakes temporalmente para guardar selección
+                                                    className={`py-2 px-3 rounded-xl font-bold text-sm border transition-all ${
+                                                        (mistakes === lvl || (mistakes === 0 && lvl === 4))
+                                                        ? 'bg-rose-600 border-rose-700 text-white shadow-md'
+                                                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                                                    }`}
+                                                >
+                                                    {lvl === 2 ? 'Crítico (2)' : lvl === 6 ? 'Leve (6)' : `Estándar (${lvl})`}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Acciones principales */}
+                            <div className="flex flex-col gap-3">
+                                <button 
+                                    onClick={() => {
+                                        const actualLvl = mistakes === 0 ? 4 : mistakes;
+                                        initializeGame(tempDeckSize, actualLvl);
+                                    }}
+                                    className="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-lg font-black uppercase tracking-wider rounded-2xl transition-all shadow-lg hover:shadow-indigo-500/20 active:scale-95 flex items-center justify-center gap-3"
+                                >
+                                    🚀 Iniciar Simulación Epidemiológica
+                                </button>
+                                
+                                <button 
+                                    onClick={() => setGameState('tour')}
+                                    className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold uppercase rounded-2xl transition-all border border-slate-200 flex items-center justify-center gap-2 text-sm tracking-wide"
+                                >
+                                    📚 Ver Recorrido Histórico (Modo de Estudio)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // --- VISTA: RECORRIDO HISTÓRICO (MODO ESTUDIO) ---
+            if (gameState === 'tour') {
+                // Ordenamos todos los hitos cronológicamente
+                const chronologicalMilestones = [...initialMilestones].sort((a, b) => a.year - b.year);
+                
+                // Filtramos según la categoría seleccionada en la cabecera del tour
+                const displayedTourMilestones = chronologicalMilestones.filter(m => 
+                    tourCategoryFilter === 'todos' || m.category === tourCategoryFilter
+                );
+
+                return (
+                    <div className="min-h-screen p-4 md:p-8 max-w-4xl mx-auto flex flex-col animate-slide-up">
+                        <header className="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+                            <div className="text-center md:text-left">
+                                <h1 className="text-2xl font-black text-slate-800">Recorrido Histórico</h1>
+                                <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mt-1">Catálogo de Hitos y Contextos Epidemiológicos</p>
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    setTourCategoryFilter('todos');
+                                    setGameState('menu');
+                                }}
+                                className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 py-2.5 rounded-xl transition-all text-sm uppercase tracking-wider shadow-md"
+                            >
+                                Volver al Configurador
+                            </button>
+                        </header>
+
+                        {/* Filtros de Categorías para el Tour */}
+                        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm mb-6 flex flex-wrap gap-2 justify-center">
+                            <button
+                                onClick={() => setTourCategoryFilter('todos')}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all border ${
+                                    tourCategoryFilter === 'todos'
+                                    ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                }`}
+                            >
+                                Todos ({chronologicalMilestones.length})
+                            </button>
+                            <button
+                                onClick={() => setTourCategoryFilter('epidemiologia')}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all border ${
+                                    tourCategoryFilter === 'epidemiologia'
+                                    ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm'
+                                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                }`}
+                            >
+                                Epidemiología (23)
+                            </button>
+                            <button
+                                onClick={() => setTourCategoryFilter('ciencia_medicina')}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all border ${
+                                    tourCategoryFilter === 'ciencia_medicina'
+                                    ? 'bg-blue-600 text-white border-blue-700 shadow-sm'
+                                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                }`}
+                            >
+                                Ciencia y Medicina (9)
+                            </button>
+                            <button
+                                onClick={() => setTourCategoryFilter('historia_universal')}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all border ${
+                                    tourCategoryFilter === 'historia_universal'
+                                    ? 'bg-amber-600 text-white border-amber-700 shadow-sm'
+                                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                }`}
+                            >
+                                Historia Universal (12)
+                            </button>
+                        </div>
+
+                        {/* Renderizado de la lista cronológica */}
+                        <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-8 relative">
+                            <div className="absolute left-10 md:left-14 top-8 bottom-8 w-1 bg-indigo-100 -translate-x-1/2"></div>
+                            
+                            {displayedTourMilestones.map((item, index) => (
+                                <div key={`tour-${item.id}`} className="relative z-10 flex items-start gap-4 md:gap-6 animate-slide-up" style={{ animationDelay: `${index * 0.03}s` }}>
+                                    
+                                    {/* Año */}
+                                    <div className="w-24 md:w-28 shrink-0 py-2.5 text-center rounded-2xl border font-mono font-black shadow-sm bg-slate-50 border-slate-200 text-slate-700">
+                                        <div className="text-[9px] uppercase text-slate-400 font-bold tracking-wider mb-0.5">ÉPOCA</div>
+                                        <div className="text-xs md:text-sm">{item.yearDisplay}</div>
+                                    </div>
+
+                                    {/* Tarjeta de Información */}
+                                    <div className="flex-1 p-5 rounded-2xl border border-slate-200 bg-white shadow-sm hover:border-indigo-300 transition-all">
+                                        <div className="flex items-start justify-between gap-3 mb-3">
+                                            <div className="flex items-start gap-3">
+                                                <span className="text-3xl">{item.icon}</span>
+                                                <div>
+                                                    <h3 className="font-extrabold text-slate-800 text-base md:text-lg leading-tight">
+                                                        {item.title}
+                                                    </h3>
+                                                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase border tracking-wider mt-1.5 ${categoryConfig[item.category].color}`}>
+                                                        {categoryConfig[item.category].label}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p className="text-slate-600 text-sm leading-relaxed border-t border-slate-100 pt-3">
+                                            {item.fullDesc}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {displayedTourMilestones.length === 0 && (
+                                <div className="text-center py-12 text-slate-400 font-medium">
+                                    No se encontraron hitos para esta categoría.
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Botón de retorno al pie de página */}
+                        <div className="mt-8 flex justify-center pb-12">
+                            <button 
+                                onClick={() => {
+                                    setTourCategoryFilter('todos');
+                                    setGameState('menu');
+                                }}
+                                className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-8 py-3.5 rounded-2xl transition-all text-sm uppercase tracking-wider shadow-lg flex items-center gap-2"
+                            >
+                                🚪 Regresar a la Configuración del Juego
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // --- VISTAS DURANTE JUEGO Y FEEDBACK ---
+            const isPlaying = gameState === 'playing';
+            const isFeedback = gameState === 'feedback';
+
+            return (
+                <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto flex flex-col relative">
+                    
+                    {/* Barra Superior Informativa */}
+                    <header className="w-full bg-white border border-slate-200 p-4 md:p-6 rounded-3xl shadow-sm flex flex-wrap items-center justify-between gap-4 mb-8">
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={() => setShowExitConfirm(true)}
+                                className="bg-slate-100 p-2.5 rounded-xl text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition-colors border border-slate-100"
+                                title="Volver al menú"
+                            >
+                                🏠
+                            </button>
+                            <div>
+                                <h1 className="text-xl font-black text-slate-800 leading-tight">Epidemiología en el Tiempo</h1>
+                                <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Actividad Grupal Directiva</p>
+                            </div>
+                        </div>
+
+                        {/* Estado SIVIGILA */}
+                        <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 py-2 px-4 rounded-2xl">
+                            <div className="text-left">
+                                <span className="block text-[9px] font-black uppercase text-slate-400 tracking-wider">Alerta de Aula SIVIGILA</span>
+                                <span className={`text-xs font-black uppercase px-2 py-0.5 rounded-md ${alertStatus.textColor} ${alertStatus.color}`}>
+                                    {alertStatus.label}
+                                </span>
+                            </div>
+                            <div className="w-px h-8 bg-slate-200"></div>
+                            <div className="text-left">
+                                <span className="block text-[9px] font-black uppercase text-slate-400 tracking-wider">Fallos</span>
+                                <span className="text-sm font-black text-slate-700">{mistakes} / {maxMistakes}</span>
+                            </div>
+                        </div>
+
+                        {/* Mazo Restante y Puntos */}
+                        <div className="flex gap-4">
+                            <div className="text-center bg-slate-50 border border-slate-200 py-1.5 px-3 rounded-xl min-w-[70px]">
+                                <span className="block text-[9px] font-black uppercase text-slate-400 tracking-wider">Siguientes</span>
+                                <span className="text-base font-black text-indigo-600">{deck.length} hitos</span>
+                            </div>
+                            <div className="text-center bg-indigo-50 border border-indigo-100 py-1.5 px-3 rounded-xl min-w-[70px]">
+                                <span className="block text-[9px] font-black uppercase text-indigo-400 tracking-wider">Puntaje</span>
+                                <span className="text-base font-black text-indigo-600">{score} pts</span>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Dashboard de juego y debate */}
+                    { (isPlaying || isFeedback) && (
+                        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start flex-grow">
+                            
+                            {/* COLUMNA IZQUIERDA: Carta Objetivo y Debate de Clase */}
+                            <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-8">
+                                
+                                {/* Contenedor de la carta activa */}
+                                <div className="bg-white border-2 border-slate-200 rounded-3xl shadow-lg p-6 md:p-8 text-center relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-violet-500"></div>
+                                    
+                                    <div className="flex flex-col items-center gap-2 mb-4">
+                                        <span className="inline-block bg-indigo-50 border border-indigo-100 text-indigo-700 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                                            {isPlaying ? "💬 DEBATIR E INSERTAR" : "📊 ANÁLISIS DE RESULTADO"}
+                                        </span>
+                                        {/* Badge de Categoría */}
+                                        <span className={`px-3 py-0.5 rounded-full text-[10px] font-bold uppercase border tracking-wider ${categoryConfig[activeCard.category].color}`}>
+                                            {categoryConfig[activeCard.category].label}
+                                        </span>
+                                    </div>
+
+                                    {/* Icono de gran formato */}
+                                    <div className="w-24 h-24 bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-6 text-5xl shadow-sm">
+                                        {activeCard.icon}
+                                    </div>
+
+                                    {/* Título de Hito */}
+                                    <h2 className="text-2xl font-black text-slate-800 leading-tight mb-4">
+                                        {activeCard.title}
+                                    </h2>
+
+                                    {/* Descripción corta */}
+                                    <p className="text-slate-500 font-medium text-sm md:text-base leading-relaxed mb-6">
+                                        {activeCard.shortDesc}
+                                    </p>
+
+                                    {/* Si estamos en feedback, revelar el año y descripción extendida */}
+                                    {isFeedback && (
+                                        <div className="mt-6 pt-6 border-t border-slate-100 space-y-4 animate-slide-up">
+                                            <div>
+                                                <span className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Época Confirmada</span>
+                                                <span className="inline-block bg-indigo-600 text-white font-black text-3xl py-1 px-6 rounded-2xl shadow-md tracking-wider">
+                                                    {activeCard.yearDisplay}
+                                                </span>
+                                            </div>
+
+                                            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-left text-xs md:text-sm text-slate-300 leading-relaxed shadow-inner">
+                                                <span className="text-indigo-400 font-bold block mb-1">Impacto e Importancia:</span>
+                                                {activeCard.fullDesc}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Botón para avanzar de turno tras feedback ubicado inmediatamente debajo de la carta */}
+                                {isFeedback && (
+                                    <button 
+                                        onClick={advanceTurn}
+                                        className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-base font-black uppercase tracking-wider rounded-2xl transition-all shadow-lg hover:shadow-emerald-900/20 active:scale-95 flex items-center justify-center gap-2 animate-pulse"
+                                    >
+                                        Siguiente Hito de Estudio ➔
+                                    </button>
+                                )}
+
+                                {/* Panel de Control de Debate para el Docente */}
+                                <div className="bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 shadow-xl space-y-6">
+                                    <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                                        <h3 className="text-xs font-bold tracking-wider uppercase text-slate-400 flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                                            Consenso del Grupo
+                                        </h3>
+                                        <span className="text-xs font-bold text-indigo-400">HERRAMIENTAS DOCENTES</span>
+                                    </div>
+
+                                    {/* Reloj de debate */}
+                                    <div className="flex items-center justify-between bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-3xl">⏱️</span>
+                                            <div>
+                                                <span className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">Tiempo de debate</span>
+                                                <span className={`text-2xl font-black font-mono tracking-widest ${timer < 15 ? 'text-rose-500 animate-pulse' : 'text-slate-200'}`}>
+                                                    00:{timer < 10 ? `0${timer}` : timer}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={toggleTimer}
+                                                className={`px-4 py-2 font-black text-xs uppercase rounded-xl transition-all ${
+                                                    timerActive ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                                                }`}
+                                            >
+                                                {timerActive ? 'Pausa' : 'Iniciar'}
+                                            </button>
+                                            <button 
+                                                onClick={resetTimer}
+                                                className="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-xl transition-all text-xs"
+                                                title="Reiniciar a 60 segundos"
+                                            >
+                                                🔄
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Zona de anotaciones temporales de la clase */}
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">Ideas o hipótesis del grupo</label>
+                                        <textarea
+                                            value={discussionNote}
+                                            onChange={(e) => setDiscussionNote(e.target.value)}
+                                            placeholder="Escribe hipótesis de los alumnos aquí... (Ej: 'Votación grupo A: Entre Cólera y Koch')"
+                                            className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 outline-none p-3 rounded-xl text-xs md:text-sm text-slate-300 font-mono resize-none h-20 placeholder:text-slate-700"
+                                        />
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            {/* COLUMNA DERECHA: Línea de tiempo interactiva vertical */}
+                            <div className="lg:col-span-7 space-y-4">
+                                <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-100 pb-3">
+                                        Línea del Tiempo Actual
+                                    </h3>
+
+                                    <div className="relative pl-6 md:pl-10 space-y-6">
+                                        
+                                        {/* Línea divisora central vertical */}
+                                        <div className="absolute left-10 md:left-14 top-4 bottom-4 w-1 bg-gradient-to-b from-indigo-200 via-slate-200 to-indigo-200 -translate-x-1/2"></div>
+
+                                        {/* Primera ranura (Al inicio de los tiempos) */}
+                                        {isPlaying && (
+                                            <div className="relative z-20 flex justify-center -ml-6 md:-ml-10">
+                                                <button
+                                                    onClick={() => handleSlotSelect(0)}
+                                                    className="bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 border-2 border-dashed border-indigo-300 hover:border-solid hover:border-indigo-700 py-2.5 px-6 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-sm animate-pulse-border flex items-center gap-2"
+                                                >
+                                                    ➕ Insertar antes de {timeline[0].yearDisplay}
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Renderizado secuencial de tarjetas en la línea de tiempo */}
+                                        {timeline.map((item, index) => {
+                                            const isActiveResult = isFeedback && item.id === activeCard.id;
+                                            
+                                            return (
+                                                <React.Fragment key={`group-${item.id}`}>
+                                                    
+                                                    {/* Tarjeta de hito colocado */}
+                                                    <div className="relative z-10 flex items-start gap-4 md:gap-6 animate-slide-up" style={{ animationDelay: `${index * 0.05}s` }}>
+                                                        
+                                                        {/* Nodo indicador de año */}
+                                                        <div className={`w-24 md:w-28 shrink-0 py-2 text-center rounded-2xl border font-mono tracking-tight font-black shadow-sm ${
+                                                            isActiveResult 
+                                                            ? 'bg-indigo-600 border-indigo-700 text-white scale-110 shadow-indigo-200' 
+                                                            : 'bg-slate-100 border-slate-200 text-slate-700'
+                                                        }`}>
+                                                            <div className="text-[10px] uppercase text-slate-400 font-bold tracking-wider leading-none mb-1">AÑO</div>
+                                                            <div className="text-xs md:text-sm">{item.yearDisplay}</div>
+                                                        </div>
+
+                                                        {/* Cuerpo de la Tarjeta colocada */}
+                                                        <div className={`flex-1 p-4 md:p-5 rounded-2xl border transition-all ${
+                                                            isActiveResult
+                                                            ? (lastTurnResult === 'correct' 
+                                                                ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-400/20 shadow-emerald-50' 
+                                                                : 'bg-rose-50 border-rose-400 ring-2 ring-rose-400/20 shadow-rose-50')
+                                                            : 'bg-white border-slate-200 shadow-sm'
+                                                        }`}>
+                                                            <div className="flex flex-col gap-2">
+                                                                <div className="flex items-start justify-between gap-3">
+                                                                    <div className="flex items-start gap-3">
+                                                                        <span className="text-2xl md:text-3xl">{item.icon}</span>
+                                                                        <div>
+                                                                            <h4 className="font-extrabold text-slate-800 text-sm md:text-base leading-tight mb-1">
+                                                                                {item.title}
+                                                                            </h4>
+                                                                            <p className="text-slate-500 font-medium text-xs md:text-sm">
+                                                                                {item.shortDesc}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                    {/* Categoría Badge */}
+                                                                    <span className={`shrink-0 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border tracking-wider h-fit ${categoryConfig[item.category].color}`}>
+                                                                        {categoryConfig[item.category].label}
+                                                                    </span>
+                                                                </div>
+
+                                                                {/* Feedback contextual de corrección */}
+                                                                {isActiveResult && (
+                                                                    <div className={`mt-2 py-1.5 px-3 rounded-lg text-xs font-black uppercase tracking-wider text-center ${
+                                                                        lastTurnResult === 'correct' 
+                                                                        ? 'bg-emerald-100 text-emerald-800' 
+                                                                        : 'bg-rose-100 text-rose-800'
+                                                                    }`}>
+                                                                        {lastTurnResult === 'correct' ? '✅ ¡Ubicación Correcta!' : '❌ ¡Ubicación Errónea! (Se reubicó aquí)'}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Ranura de inserción interactiva entre cartas */}
+                                                    {isPlaying && (
+                                                        <div className="relative z-20 flex justify-center -ml-6 md:-ml-10">
+                                                            <button
+                                                                onClick={() => handleSlotSelect(index + 1)}
+                                                                className="bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 border-2 border-dashed border-indigo-300 hover:border-solid hover:border-indigo-700 py-2 px-5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all shadow-sm animate-pulse-border flex items-center gap-2"
+                                                            >
+                                                                ➕ Insertar después de {item.yearDisplay}
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </React.Fragment>
+                                            );
+                                        })}
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    )}
+
+                    {/* VISTA 5: SISTEMA SANITARIO COLAPSADO (GAME OVER) */}
+                    {gameState === 'gameover' && (
+                        <div className="min-h-[70vh] flex items-center justify-center p-4">
+                            <div className="bg-white border-2 border-rose-300 p-8 md:p-12 rounded-3xl shadow-2xl max-w-md w-full text-center animate-slide-up">
+                                <div className="text-7xl mb-4">🚨</div>
+                                <h2 className="text-xs font-bold text-rose-500 uppercase tracking-widest mb-2">Simulación Fallida</h2>
+                                <h1 className="text-3xl font-black text-slate-800 mb-4">Alerta Sanitaria Crítica</h1>
+                                <p className="text-slate-500 font-medium mb-6">
+                                    Se ha superado el máximo de errores permitidos por el sistema de monitoreo. La epidemia se ha propagado de forma incontrolable debido a decisiones de sincronización erróneas.
+                                </p>
+
+                                <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 mb-8">
+                                    <div className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-1">Métricas Finales</div>
+                                    <div className="text-4xl font-black text-rose-600">{score} <span className="text-xs text-rose-400 font-medium">puntos</span></div>
+                                </div>
+
+                                <button 
+                                    onClick={() => setGameState('menu')}
+                                    className="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white font-bold uppercase rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                                >
+                                    🏠 Volver al Menú
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* VISTA 6: VICTORIA EPIDEMIOLÓGICA */}
+                    {gameState === 'victory' && (
+                        <div className="min-h-[70vh] flex items-center justify-center p-4">
+                            <div className="bg-white border-2 border-emerald-300 p-8 md:p-12 rounded-3xl shadow-2xl max-w-md w-full text-center animate-slide-up">
+                                <div className="text-7xl mb-4">🏆</div>
+                                <h2 className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-2">Simulación Completada</h2>
+                                <h1 className="text-3xl font-black text-slate-800 mb-4">Sincronización Total</h1>
+                                <p className="text-slate-500 font-medium mb-6">
+                                    ¡Excelente trabajo cooperativo! El aula ha resuelto la línea temporal de la historia de la salud pública, controlando las amenazas epidemiológicas y manteniendo el nivel de alerta estable.
+                                </p>
+
+                                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 mb-8">
+                                    <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Puntuación de Aula</div>
+                                    <div className="text-5xl font-black text-emerald-600">{score} <span className="text-xs text-emerald-400 font-medium">puntos</span></div>
+                                </div>
+
+                                <button 
+                                    onClick={() => setGameState('menu')}
+                                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                                >
+                                    🏠 Reintentar otra Simulación
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODAL PERSONALIZADO DE CONFIRMACIÓN DE SALIDA */}
+                    {showExitConfirm && (
+                        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-white p-6 md:p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl animate-slide-up border border-slate-100">
+                                <div className="text-5xl mb-4">🚪</div>
+                                <h3 className="text-lg font-black text-slate-800 mb-2">¿Detener Simulación?</h3>
+                                <p className="text-slate-500 text-sm mb-6">
+                                    Perderás el progreso de la partida actual y volverás a la pantalla de configuración.
+                                </p>
+                                <div className="flex gap-3">
+                                    <button 
+                                        onClick={() => setShowExitConfirm(false)}
+                                        className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors text-sm"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button 
+                                        onClick={() => {
+                                            setShowExitConfirm(false);
+                                            setGameState('menu');
+                                        }}
+                                        className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition-colors text-sm shadow-md shadow-rose-600/10"
+                                    >
+                                        Sí, salir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
