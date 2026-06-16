@@ -6,7 +6,6 @@
     <title>Adivinanza de Colores 🎨</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
@@ -253,7 +252,7 @@
             { categoria: "🔬 Óptica y Física", pregunta: "¿Cuáles son los tres colores primarios de la luz en la síntesis aditiva (RGB)?", num_colores: 3, respuesta: ["rojo", "verde", "azul"], explicacion: "La luz combina el Rojo (Red), Verde (Green) y Azul (Blue) para formar todos los colores en pantallas y proyectores." },
             { categoria: "🌱 Biología", pregunta: "What color represents the natural pigment chlorophyll?", num_colores: 1, respuesta: ["verde"], explicacion: "La clorofila absorbe luz azul y roja, y refleja la verde, dándole este color a las hojas de las plantas." },
             { categoria: "🎭 Historia", pregunta: "Tradicionalmente en la cultura occidental, ¿qué color representa el luto y la solemnidad?", num_colores: 1, respuesta: ["negro"], explicacion: "El negro representa la ausencia de luz y es el color de luto habitual en Occidente." },
-            { categoria: "🎨 Bellas Artes", pregunta: "¿Qué colores primarios debes mezclar en pintura para obtener el color Morado?", num_colores: 2, respuesta: ["azul", "rojo"], explicacion: "En la mezcla sustractiva tradicional de pigmentos, la combinación del azul y el rojo produce el morado." }
+            { categoria: "🎨 Bellas Artes", pregunta: "¿Qué colores primarios debes mezclar en pintura para obtener el color Morado?", num_colores: 2, respuesta: ["azul", "rojo"], explicacion: "En la mezcla sustractiva tradicional de pigmentos, la combination del azul y el rojo produce el morado." }
         ];
 
         // --- ESTADO GLOBAL DEL JUEGO ---
@@ -432,11 +431,13 @@
             return parsedQuestions;
         }
 
-        // --- INTENTO DE LECTURA DE cartas.xlsx ---
+        // --- INTENTO DE LECTURA DE cartas.xlsx (AGREGADO NO-CACHE) ---
         async function loadExcelFile() {
             const statusEl = document.getElementById('excel-status');
             try {
-                const response = await fetch('cartas.xlsx');
+                // Agregamos no-cache para asegurar que la web no cargue una versión vieja del Excel
+                const fetchUrl = 'cartas.xlsx?nocache=' + new Date().getTime();
+                const response = await fetch(fetchUrl);
                 if (!response.ok) throw new Error("CORS o archivo inaccesible automáticamente");
                 
                 const arrayBuffer = await response.arrayBuffer();
@@ -450,14 +451,17 @@
                 if (parsedQuestions.length === 0) throw new Error("La hoja de cálculo está vacía.");
                 
                 questions = parsedQuestions;
-                statusEl.className = "bg-emerald-100 text-emerald-800 text-xs font-bold px-4 py-2 rounded-full border border-emerald-200 text-center animate-pop-in inline-block";
-                statusEl.textContent = `✅ cartas.xlsx cargado por defecto (${questions.length} cartas)`;
+                if(statusEl) {
+                    statusEl.className = "bg-emerald-100 text-emerald-800 text-xs font-bold px-4 py-2 rounded-full border border-emerald-200 text-center animate-pop-in inline-block";
+                    statusEl.textContent = `✅ cartas.xlsx cargado por defecto (${questions.length} cartas)`;
+                }
             } catch (err) {
                 console.warn("Fallo la lectura automática (CORS / Local Server). Esperando carga asistida o usando mazo de respaldo.", err);
-            } catch (err) {
                 questions = BACKUP_QUESTIONS;
-                statusEl.className = "bg-yellow-100 text-yellow-800 text-xs font-bold px-4 py-2 rounded-full border border-yellow-200 text-center";
-                statusEl.textContent = `⚠️ cartas.xlsx no leído automáticamente. Cárgalo abajo manualmente o usa el mazo de respaldo.`;
+                if(statusEl) {
+                    statusEl.className = "bg-yellow-100 text-yellow-800 text-xs font-bold px-4 py-2 rounded-full border border-yellow-200 text-center";
+                    statusEl.textContent = `⚠️ cartas.xlsx no leído automáticamente. Cárgalo abajo manualmente o usa el mazo de respaldo.`;
+                }
             }
         }
 
