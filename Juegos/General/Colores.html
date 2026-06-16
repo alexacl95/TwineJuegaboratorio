@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Adivinanza de Colores 🎨</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: #1e293b;
+            -webkit-font-smoothing: antialiased;
+        }
+        .bg-grid-pattern {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-pop-in {
+            animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen bg-grid-pattern flex flex-col justify-between py-6 px-3 sm:p-6 md:p-8">
+
+    <div class="w-full max-w-4xl mx-auto my-auto space-y-6">
+        
+        <header class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-6 rounded-3xl shadow-xl text-center animate-pop-in">
+            <h1 class="text-3xl sm:text-5xl font-black tracking-tight flex items-center justify-center gap-3">
+                <span>🎨</span> Adivinanza de Colores
+            </h1>
+            <p class="text-xs sm:text-sm font-bold uppercase tracking-widest text-indigo-100 mt-2">
+                Reto de Asociación y Lógica en Equipos
+            </p>
+        </header>
+
+        <div id="setup-screen" class="bg-white p-6 sm:p-10 rounded-3xl shadow-lg border border-slate-200 space-y-8 animate-fade-in">
+            
+            <div class="space-y-4">
+                <div class="flex justify-center">
+                    <span id="excel-status" class="bg-amber-100 text-amber-800 text-xs font-bold px-4 py-2 rounded-full animate-pulse border border-amber-200 text-center">
+                        🔄 Buscando archivo cartas.xlsx en el directorio...
+                    </span>
+                </div>
+                
+                <div id="cors-fallback-box" class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-center max-w-lg mx-auto space-y-3">
+                    <p class="text-xs text-indigo-900 font-bold">📂 ¿Ejecutando de forma local?</p>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">
+                        Si tu navegador bloquea la lectura automática debido a políticas de seguridad local (CORS), simplemente arrastra o selecciona tu archivo <strong>cartas.xlsx</strong> aquí abajo:
+                    </p>
+                    <div class="flex justify-center gap-2">
+                        <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" class="hidden" />
+                        <button id="btn-file-trigger" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm">
+                            📎 Seleccionar cartas.xlsx
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center space-y-2">
+                <span class="text-5xl">🧭</span>
+                <h2 class="text-2xl font-black text-slate-800">Reglas del Juego</h2>
+                <div class="text-slate-500 text-sm max-w-xl mx-auto leading-relaxed text-left space-y-2 bg-slate-50 p-4 rounded-xl border">
+                    <p class="font-bold text-center text-slate-700 mb-2">¿Cómo se puntúa?</p>
+                    <p>1. <strong>Empate Total (Todos aciertan):</strong> Todos los equipos ganan 1 punto y se acumula 1 punto en el Pozo Extra.</p>
+                    <p>2. <strong>Todos Fallan:</strong> Nadie gana puntos y el pozo acumulado se conserva para la siguiente pregunta.</p>
+                    <p>3. <strong>Aciertos Parciales:</strong> Los equipos que acierten ganan puntos de acuerdo a la cantidad de equipos que fallaron (F) más los puntos que tenga el Pozo acumulado (el cual se reinicia a 0).</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                <div class="space-y-3">
+                    <label class="block text-sm font-extrabold text-slate-400 uppercase tracking-widest">¿Cuántos Equipos Juegan?</label>
+                    <div id="num-teams-container" class="flex bg-slate-100 p-1 rounded-2xl w-full justify-between border border-slate-200">
+                        </div>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="block text-sm font-extrabold text-slate-400 uppercase tracking-widest">Puntuación de Victoria</label>
+                    <div id="target-score-container" class="flex bg-slate-100 p-1 rounded-2xl w-full justify-between border border-slate-200">
+                        </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-4">Personalizar nombres de Equipos</h3>
+                <div id="teams-names-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    </div>
+            </div>
+
+            <button id="btn-start" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xl rounded-2xl shadow-[0_4px_0_rgb(67,56,202)] hover:translate-y-[2px] transition-all">
+                ¡Iniciar Sistema de Juego! ➔
+            </button>
+        </div>
+
+        <div id="game-screen" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <button id="btn-exit" class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition-colors" title="Salir al menú principal">
+                        🏠
+                    </button>
+                    <div>
+                        <h3 class="font-extrabold text-slate-800 text-lg">Puntuaciones del Reto</h3>
+                        <p id="target-score-lbl" class="text-xs text-slate-400 font-bold uppercase tracking-wider">Meta: 15 Puntos para ganar</p>
+                    </div>
+                </div>
+                <div id="scoreboard-teams-container" class="flex flex-wrap items-center gap-4 justify-center">
+                    </div>
+            </div>
+
+            <div id="round-feedback" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-800 font-bold text-sm text-center shadow-inner">
+                </div>
+
+            <div class="bg-white p-6 sm:p-10 rounded-3xl shadow-lg border border-slate-200 space-y-6 relative overflow-hidden">
+                <div class="flex justify-between items-center">
+                    <span id="question-category" class="bg-indigo-100 text-indigo-800 text-xs font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full">
+                        Categoría
+                    </span>
+                    <span id="question-colors-count" class="bg-purple-100 text-purple-800 text-xs font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full">
+                        Contiene X colores
+                    </span>
+                </div>
+
+                <h2 id="question-text" class="text-2xl sm:text-3xl font-black text-slate-800 leading-snug">
+                    ¿Pregunta?
+                </h2>
+
+                <div id="reveal-container" class="pt-6 border-t border-slate-100 text-center">
+                    <button id="btn-reveal" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg rounded-2xl shadow-[0_4px_0_rgb(67,56,202)] hover:translate-y-[2px] transition-all">
+                        👁️ Revelar Colores de Respuesta
+                    </button>
+                </div>
+
+                <div id="answer-container" class="hidden pt-6 border-t border-slate-100 space-y-6 animate-pop-in">
+                    <div>
+                        <h4 class="text-sm font-extrabold text-slate-400 uppercase tracking-widest mb-3">Colores Correctos:</h4>
+                        <div id="correct-colors-list" class="flex flex-wrap gap-3">
+                            </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-5 rounded-2xl text-slate-600 text-sm sm:text-base leading-relaxed border">
+                        <h4 class="font-extrabold text-slate-800 text-base mb-1">Análisis de la Respuesta</h4>
+                        <p id="explanation-text">Explicación teórica aquí.</p>
+                    </div>
+
+                    <div class="bg-indigo-50 border border-indigo-100 p-6 rounded-2xl space-y-4">
+                        <h3 class="text-slate-800 font-extrabold text-sm uppercase tracking-widest text-center">
+                            ¿Qué equipos adivinaron correctamente todos los colores?
+                        </h3>
+                        
+                        <div id="voting-teams-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            </div>
+
+                        <div class="pt-4 text-center">
+                            <button id="btn-confirm-scores" class="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-[0_4px_0_rgb(67,56,202)] hover:translate-y-[2px] transition-all">
+                                💾 Confirmar Puntuación y Siguiente Pregunta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="victory-screen" class="hidden max-w-xl mx-auto animate-fade-in space-y-6">
+            <div class="bg-slate-900 border-4 border-emerald-500 rounded-[2rem] p-6 md:p-10 shadow-2xl text-center text-white">
+                <div class="text-7xl mb-4 animate-bounce">🏆🌟👑</div>
+                <h2 class="text-3xl md:text-5xl font-black text-emerald-400 tracking-tight mb-2">¡Partida Completada!</h2>
+                <p id="victory-msg" class="text-slate-400 text-sm md:text-base font-medium mb-8">Un equipo ha alcanzado los puntos necesarios para ganar.</p>
+
+                <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 text-left max-w-sm mx-auto mb-8 space-y-3">
+                    <h3 class="font-extrabold text-slate-300 text-xs uppercase tracking-widest text-center mb-4">Marcador Final</h3>
+                    <div id="victory-leaderboard" class="space-y-2">
+                        </div>
+                </div>
+
+                <button id="btn-restart" class="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-55 text-white font-black rounded-xl transition-all shadow-[0_4px_0_rgb(5,150,105)] text-sm md:text-base hover:translate-y-[2px]">
+                    🔄 Volver a Configurar
+                </button>
+            </div>
+        </div>
+
+        <div id="gameover-screen" class="hidden max-w-xl mx-auto animate-fade-in space-y-6">
+            <div class="bg-white border-2 border-slate-200 rounded-[2rem] p-6 md:p-10 shadow-xl text-center text-slate-800">
+                <div class="text-7xl mb-4">💔</div>
+                <h2 class="text-3xl font-black text-rose-600 tracking-tight mb-2">Fin del Mazo de Preguntas</h2>
+                <p class="text-slate-500 text-sm md:text-base font-medium mb-8">Se han agotado todas las cartas del archivo Excel sin que ningún equipo alcance la meta estipulada.</p>
+
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 text-left max-w-sm mx-auto mb-8 space-y-3">
+                    <h3 class="font-extrabold text-slate-400 text-xs uppercase tracking-widest text-center mb-4">Marcador Final Acumulado</h3>
+                    <div id="gameover-leaderboard" class="space-y-2">
+                        </div>
+                </div>
+
+                <button id="btn-restart-gameover" class="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-[0_4px_0_rgb(67,56,202)] text-sm md:text-base hover:translate-y-[2px] transition-all">
+                    Ir al Menú de Configuración
+                </button>
+            </div>
+        </div>
+
+        <div id="exit-modal" class="hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 animate-pop-in text-center">
+                <div class="text-5xl mb-4">🚪</div>
+                <h3 class="text-xl font-black text-slate-800 mb-2">¿Quieres abandonar la partida?</h3>
+                <p class="text-sm text-slate-500 mb-6">Perderás todo el progreso y las puntuaciones de los equipos.</p>
+                <div class="flex gap-3">
+                    <button id="btn-exit-cancel" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors text-sm">
+                        Cancelar
+                    </button>
+                    <button id="btn-exit-confirm" class="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition-colors text-sm shadow-md shadow-rose-600/10">
+                        Sí, salir
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- PALETA DE LOS 11 COLORES DEL JUEGO ---
+        const GAME_COLORS = {
+            negro: { name: 'Negro', hex: '#000000', text: 'text-white' },
+            gris: { name: 'Gris', hex: '#64748b', text: 'text-white' },
+            blanco: { name: 'Blanco', hex: '#ffffff', text: 'text-slate-800 border border-slate-300' },
+            rojo: { name: 'Rojo', hex: '#ef4444', text: 'text-white' },
+            naranja: { name: 'Naranja', hex: '#f97316', text: 'text-white' },
+            amarillo: { name: 'Amarillo', hex: '#eab308', text: 'text-slate-900' },
+            verde: { name: 'Verde', hex: '#22c55e', text: 'text-white' },
+            azul: { name: 'Azul', hex: '#3b82f6', text: 'text-white' },
+            morado: { name: 'Morado', hex: '#a855f7', text: 'text-white' },
+            rosado: { name: 'Rosado', hex: '#ec4899', text: 'text-white' },
+            cafe: { name: 'Café', hex: '#78350f', text: 'text-white' }
+        };
+
+        // --- PREGUNTAS DE RESPALDO ---
+        const BACKUP_QUESTIONS = [
+            { categoria: "🌍 Geografía", pregunta: "¿Qué colores componen la bandera nacional de Colombia?", num_colores: 3, respuesta: ["amarillo", "azul", "rojo"], explicacion: "El amarillo representa la riqueza del suelo, el azul los dos océanos y el cielo, y el rojo la sangre de los libertadores." },
+            { categoria: "🔬 Óptica y Física", pregunta: "¿Cuáles son los tres colores primarios de la luz en la síntesis aditiva (RGB)?", num_colores: 3, respuesta: ["rojo", "verde", "azul"], explicacion: "La luz combina el Rojo (Red), Verde (Green) y Azul (Blue) para formar todos los colores en pantallas y proyectores." },
+            { categoria: "🌱 Biología", pregunta: "What color represents the natural pigment chlorophyll?", num_colores: 1, respuesta: ["verde"], explicacion: "La clorofila absorbe luz azul y roja, y refleja la verde, dándole este color a las hojas de las plantas." },
+            { categoria: "🎭 Historia", pregunta: "Tradicionalmente en la cultura occidental, ¿qué color representa el luto y la solemnidad?", num_colores: 1, respuesta: ["negro"], explicacion: "El negro representa la ausencia de luz y es el color de luto habitual en Occidente." },
+            { categoria: "🎨 Bellas Artes", pregunta: "¿Qué colores primarios debes mezclar en pintura para obtener el color Morado?", num_colores: 2, respuesta: ["azul", "rojo"], explicacion: "En la mezcla sustractiva tradicional de pigmentos, la combinación del azul y el rojo produce el morado." }
+        ];
+
+        // --- ESTADO GLOBAL DEL JUEGO ---
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let numTeams = 3;
+        let targetScore = 15;
+        let teams = [];
+        let extraPointsPot = 0;
+        let roundWinners = {}; 
+
+        // --- SISTEMA DE AUDIO NATIVO ---
+        function playSound(type) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                
+                if (type === 'success') {
+                    const notes = [392.00, 523.25, 659.25];
+                    notes.forEach((freq, index) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, ctx.currentTime + index * 0.08);
+                        gain.gain.setValueAtTime(0.12, ctx.currentTime + index * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + index * 0.08 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(ctx.currentTime + index * 0.08);
+                        osc.stop(ctx.currentTime + index * 0.08 + 0.25);
+                    });
+                } else if (type === 'error') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(140, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'victory') {
+                    const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, index) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, ctx.currentTime + index * 0.1);
+                        gain.gain.setValueAtTime(0.15, ctx.currentTime + index * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + index * 0.1 + 0.4);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(ctx.currentTime + index * 0.1);
+                        osc.stop(ctx.currentTime + index * 0.1 + 0.4);
+                    });
+                }
+            } catch (e) {}
+        }
+
+        // --- NORMALIZADOR DE COLORES Y BUSCADOR DE COLUMNAS TOLERANTE ---
+        function normalizeColor(str) {
+            if (!str) return '';
+            const cleanStr = str.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            if (cleanStr.includes('amarillo') || cleanStr.includes('yellow')) return 'amarillo';
+            if (cleanStr.includes('azul') || cleanStr.includes('blue')) return 'azul';
+            if (cleanStr.includes('rojo') || cleanStr.includes('red')) return 'rojo';
+            if (cleanStr.includes('verde') || cleanStr.includes('green')) return 'verde';
+            if (cleanStr.includes('naranja') || cleanStr.includes('narana') || cleanStr.includes('orange') || cleanStr.includes('anaranjado')) return 'naranja';
+            if (cleanStr.includes('morado') || cleanStr.includes('purple') || cleanStr.includes('violeta')) return 'morado';
+            if (cleanStr.includes('rosado') || cleanStr.includes('rosa') || cleanStr.includes('pink')) return 'rosado';
+            if (cleanStr.includes('cafe') || cleanStr.includes('marron') || cleanStr.includes('brown')) return 'cafe';
+            if (cleanStr.includes('negro') || cleanStr.includes('black')) return 'negro';
+            if (cleanStr.includes('blanco') || cleanStr.includes('white')) return 'blanco';
+            if (cleanStr.includes('gris') || cleanStr.includes('gray') || cleanStr.includes('grey')) return 'gris';
+            
+            return '';
+        }
+
+        function findColumnValue(row, keysToTry) {
+            for (let k in row) {
+                let cleanKey = k.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+                for (let target of keysToTry) {
+                    let cleanTarget = target.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+                    if (cleanKey === cleanTarget || cleanKey.includes(cleanTarget) || cleanTarget.includes(cleanKey)) {
+                        return row[k];
+                    }
+                }
+            }
+            return null;
+        }
+
+        // --- PROCESADOR DE DATOS DE EXCEL ---
+        function parseWorksheetCustom(worksheet) {
+            const ref = worksheet['!ref'] || "A1:E100";
+            const range = XLSX.utils.decode_range(ref);
+            let headerRowIdx = -1;
+            let colMapping = { categoria: -1, pregunta: -1, num_colores: -1, respuesta: -1, explicacion: -1 };
+
+            for (let R = range.s.r; R <= Math.min(range.e.r, range.s.r + 10); R++) {
+                let matches = 0;
+                for (let C = range.s.c; C <= range.e.c; C++) {
+                    const cell = worksheet[XLSX.utils.encode_cell({ r: R, c: C })];
+                    if (cell && cell.v !== undefined && cell.v !== null) {
+                        const val = String(cell.v).toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        if (val.includes("pregunta") || val.includes("respuesta") || val.includes("categoria") || val.includes("color") || val.includes("explicacion")) {
+                            matches++;
+                        }
+                    }
+                }
+                if (matches >= 2) {
+                    headerRowIdx = R;
+                    break;
+                }
+            }
+
+            if (headerRowIdx === -1) headerRowIdx = range.s.r;
+
+            for (let C = range.s.c; C <= range.e.c; C++) {
+                const cell = worksheet[XLSX.utils.encode_cell({ r: headerRowIdx, c: C })];
+                if (cell && cell.v !== undefined && cell.v !== null) {
+                    const val = String(cell.v).toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+                    if (val.includes("categoria") || val.includes("tema") || val.includes("modulo") || val.includes("classification")) {
+                        colMapping.categoria = C;
+                    } else if (val.includes("pregunta") || val.includes("question") || val.includes("enunciado") || val.includes("texto")) {
+                        colMapping.pregunta = C;
+                    } else if (val.includes("numero") || val.includes("cantidad") || (val.includes("color") && !val.includes("resp"))) {
+                        colMapping.num_colores = C;
+                    } else if (val.includes("resp") || val.includes("solucion") || (val.includes("color") && val.includes("resp"))) {
+                        colMapping.respuesta = C;
+                    } else if (val.includes("explicacion") || val.includes("porque") || val.includes("justificacion") || val.includes("desc")) {
+                        colMapping.explicacion = C;
+                    }
+                }
+            }
+
+            if (colMapping.pregunta === -1) colMapping.pregunta = range.s.c + 1; 
+            if (colMapping.categoria === -1) colMapping.categoria = range.s.c; 
+            if (colMapping.num_colores === -1) colMapping.num_colores = range.s.c + 2; 
+            if (colMapping.respuesta === -1) colMapping.respuesta = range.s.c + 3; 
+
+            const parsedQuestions = [];
+            const getVal = (r, c) => {
+                if (c === -1) return "";
+                const cell = worksheet[XLSX.utils.encode_cell({ r, c })];
+                if (!cell || cell.v === undefined || cell.v === null) return "";
+                return String(cell.v).trim();
+            };
+
+            for (let R = headerRowIdx + 1; R <= range.e.r; R++) {
+                const preguntaVal = getVal(R, colMapping.pregunta);
+                if (preguntaVal === "") continue; 
+
+                const categoriaVal = getVal(R, colMapping.categoria) || "General";
+                const numColoresRaw = getVal(R, colMapping.num_colores);
+                const numColoresVal = parseInt(numColoresRaw) || 1;
+                const respuestaRaw = getVal(R, colMapping.respuesta);
+                const explicacionVal = getVal(R, colMapping.explicacion) || "Respuesta correcta validada.";
+
+                const respuestaArray = respuestaRaw
+                    .split(/[;,\/|&\-+y\s\r\n]+/)
+                    .map(color => normalizeColor(color))
+                    .filter(color => color !== "" && GAME_COLORS[color] !== undefined);
+
+                parsedQuestions.push({
+                    categoria: categoriaVal,
+                    pregunta: preguntaVal,
+                    num_colores: respuestaArray.length > 0 ? respuestaArray.length : (isNaN(numColoresVal) ? 1 : numColoresVal),
+                    respuesta: respuestaArray.length > 0 ? respuestaArray : ['blanco'],
+                    explicacion: explicacionVal
+                });
+            }
+
+            return parsedQuestions;
+        }
+
+        // --- INTENTO DE LECTURA DE cartas.xlsx ---
+        async function loadExcelFile() {
+            const statusEl = document.getElementById('excel-status');
+            try {
+                const response = await fetch('cartas.xlsx');
+                if (!response.ok) throw new Error("CORS o archivo inaccesible automáticamente");
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const data = new Uint8Array(arrayBuffer);
+                const workbook = XLSX.read(data, { type: 'array' });
+                
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                const parsedQuestions = parseWorksheetCustom(worksheet);
+                if (parsedQuestions.length === 0) throw new Error("La hoja de cálculo está vacía.");
+                
+                questions = parsedQuestions;
+                statusEl.className = "bg-emerald-100 text-emerald-800 text-xs font-bold px-4 py-2 rounded-full border border-emerald-200 text-center animate-pop-in";
+                statusEl.textContent = `✅ cartas.xlsx cargado correctamente (${questions.length} cartas)`;
+                
+                document.getElementById('cors-fallback-box').classList.add('hidden');
+            } catch (err) {
+                questions = BACKUP_QUESTIONS;
+                statusEl.className = "bg-yellow-100 text-yellow-800 text-xs font-bold px-4 py-2 rounded-full border border-yellow-200 text-center";
+                statusEl.textContent = `⚠️ cartas.xlsx no leído automáticamente. Cárgalo abajo manualmente o usa el mazo de respaldo.`;
+            }
+        }
+
+        // --- MANEJADOR DE CARGA MANUAL ---
+        function handleManualFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+
+                    const parsedQuestions = parseWorksheetCustom(worksheet);
+
+                    if (parsedQuestions.length === 0) throw new Error("El archivo está vacío o no contiene preguntas válidas.");
+
+                    questions = parsedQuestions;
+                    
+                    const statusEl = document.getElementById('excel-status');
+                    statusEl.className = "bg-emerald-100 text-emerald-800 text-xs font-bold px-4 py-2 rounded-full border border-emerald-200 text-center animate-pop-in";
+                    statusEl.textContent = `✅ ¡Éxito! Mazo actualizado correctamente (${questions.length} cartas)`;
+                    
+                    playSound('success');
+                } catch (err) {
+                    alert("No se pudo leer el archivo. Revisa que siga la estructura básica de columnas.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- RENDERIZADO DE LA INTERFAZ ---
+
+        function renderSetupControls() {
+            const numTeamsContainer = document.getElementById('num-teams-container');
+            const targetScoreContainer = document.getElementById('target-score-container');
+
+            numTeamsContainer.innerHTML = '';
+            [2, 3, 4, 5, 6, 8].forEach(n => {
+                const btn = document.createElement('button');
+                btn.className = `flex-1 py-3 font-black rounded-xl text-sm transition-all ${numTeams === n ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'}`;
+                btn.textContent = n;
+                btn.onclick = () => {
+                    numTeams = n;
+                    updateTeamsList();
+                    renderSetupControls();
+                };
+                numTeamsContainer.appendChild(btn);
+            });
+
+            targetScoreContainer.innerHTML = '';
+            [10, 15, 20, 30, 50].forEach(s => {
+                const btn = document.createElement('button');
+                btn.className = `flex-1 py-3 font-black rounded-xl text-sm transition-all ${targetScore === s ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'}`;
+                btn.textContent = `${s} pts`;
+                btn.onclick = () => {
+                    targetScore = s;
+                    renderSetupControls();
+                };
+                targetScoreContainer.appendChild(btn);
+            });
+        }
+
+        function updateTeamsList() {
+            const colorNames = ["Rojo", "Azul", "Verde", "Amarillo", "Naranja", "Morado", "Rosado", "Café", "Negro", "Gris"];
+            teams = [];
+            const grid = document.getElementById('teams-names-grid');
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= numTeams; i++) {
+                const colorName = colorNames[(i - 1) % colorNames.length];
+                const team = { id: i, name: `Equipo ${colorName}`, score: 0 };
+                teams.push(team);
+
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm animate-pop-in";
+                div.innerHTML = `
+                    <span class="w-4 h-4 rounded-full bg-indigo-500 shrink-0"></span>
+                    <input type="text" id="input-team-${i}" value="${team.name}" class="w-full text-slate-700 font-bold text-sm focus:outline-none focus:border-b-2 focus:border-indigo-500" />
+                `;
+                grid.appendChild(div);
+
+                const input = div.querySelector('input');
+                input.oninput = (e) => {
+                    team.name = e.target.value;
+                };
+            }
+        }
+
+        // --- FLUJO ACTIVO DE PARTIDA ---
+
+        function startGame() {
+            if (questions.length === 0) {
+                alert("La base de datos de preguntas está vacía.");
+                return;
+            }
+
+            // Mezclar mazo
+            questions = [...questions].sort(() => 0.5 - Math.random());
+            currentQuestionIndex = 0;
+            extraPointsPot = 0;
+            document.getElementById('round-feedback').className = "hidden";
+
+            // Reiniciar puntajes
+            teams.forEach(t => t.score = 0);
+
+            // Mostrar Tablero
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            loadQuestion();
+            playSound('success');
+        }
+
+        function loadQuestion() {
+            const activeQuestion = questions[currentQuestionIndex];
+            
+            document.getElementById('target-score-lbl').textContent = `Meta: ${targetScore} Puntos para ganar`;
+            
+            const scoreboardContainer = document.getElementById('scoreboard-teams-container');
+            scoreboardContainer.innerHTML = '';
+            teams.forEach(t => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-center min-w-[80px]";
+                div.innerHTML = `
+                    <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-tight">${t.name}</div>
+                    <div class="text-lg font-black text-slate-800 leading-none mt-1">${t.score} <span class="text-[10px] text-slate-400">pts</span></div>
+                `;
+                scoreboardContainer.appendChild(div);
+            });
+
+            // Pozo Extra
+            const potDiv = document.createElement('div');
+            potDiv.className = "bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-xl text-center min-w-[80px] animate-pulse";
+            potDiv.innerHTML = `
+                <div class="text-[10px] font-extrabold text-indigo-400 uppercase tracking-tight">Pozo Extra</div>
+                <div class="text-lg font-black text-indigo-700 leading-none mt-1">+${extraPointsPot} <span class="text-[10px]">pts</span></div>
+            `;
+            scoreboardContainer.appendChild(potDiv);
+
+            // Cargar Carta
+            document.getElementById('question-category').textContent = activeQuestion.categoria;
+            document.getElementById('question-colors-count').textContent = `Contiene ${activeQuestion.num_colores} ${activeQuestion.num_colores === 1 ? 'color' : 'colores'}`;
+            document.getElementById('question-text').textContent = activeQuestion.pregunta;
+
+            document.getElementById('reveal-container').classList.remove('hidden');
+            document.getElementById('answer-container').classList.add('hidden');
+
+            roundWinners = {};
+            teams.forEach(t => { roundWinners[t.id] = false; });
+        }
+
+        function revealAnswer() {
+            const activeQuestion = questions[currentQuestionIndex];
+            document.getElementById('reveal-container').classList.add('hidden');
+            document.getElementById('answer-container').classList.remove('hidden');
+
+            const colorsListContainer = document.getElementById('correct-colors-list');
+            colorsListContainer.innerHTML = '';
+            activeQuestion.respuesta.forEach(colorKey => {
+                const colorData = GAME_COLORS[colorKey];
+                if (!colorData) return;
+                const chip = document.createElement('div');
+                chip.style.backgroundColor = colorData.hex;
+                chip.className = `px-6 py-3 rounded-full font-black text-sm shadow-md flex items-center gap-2 ${colorData.text}`;
+                chip.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-current opacity-80"></span>${colorData.name}`;
+                colorsListContainer.appendChild(chip);
+            });
+
+            document.getElementById('explanation-text').textContent = activeQuestion.explicacion;
+
+            const votingGrid = document.getElementById('voting-teams-grid');
+            votingGrid.innerHTML = '';
+            teams.forEach(t => {
+                const btn = document.createElement('button');
+                btn.id = `btn-vote-team-${t.id}`;
+                btn.className = "p-4 rounded-xl border-2 font-black text-sm flex items-center justify-between transition-all border-slate-200 bg-slate-50 text-slate-500 hover:border-indigo-300";
+                btn.innerHTML = `<span>${t.name}</span><span class="v-check w-5 h-5 rounded-full border flex items-center justify-center text-xs border-slate-300 text-slate-300"></span>`;
+                
+                btn.onclick = () => {
+                    roundWinners[t.id] = !roundWinners[t.id];
+                    if (roundWinners[t.id]) {
+                        btn.className = "p-4 rounded-xl border-2 font-black text-sm flex items-center justify-between transition-all border-indigo-600 bg-white text-indigo-700 shadow-md";
+                        btn.querySelector('.v-check').className = "v-check w-5 h-5 rounded-full border flex items-center justify-center text-xs bg-indigo-600 border-indigo-600 text-white";
+                        btn.querySelector('.v-check').textContent = "✓";
+                    } else {
+                        btn.className = "p-4 rounded-xl border-2 font-black text-sm flex items-center justify-between transition-all border-slate-200 bg-slate-50 text-slate-500 hover:border-indigo-300";
+                        btn.querySelector('.v-check').className = "v-check w-5 h-5 rounded-full border flex items-center justify-center text-xs border-slate-300 text-slate-300";
+                        btn.querySelector('.v-check').textContent = "";
+                    }
+                };
+                votingGrid.appendChild(btn);
+            });
+
+            playSound('success');
+        }
+
+        function confirmScoresAndNext() {
+            const winnersList = Object.keys(roundWinners).filter(id => roundWinners[id]).map(Number);
+            const numWinners = winnersList.length;
+            const numLosers = teams.length - numWinners;
+
+            let feedbackText = "";
+
+            if (numWinners === teams.length) {
+                // EMPATE TOTAL
+                teams.forEach(t => t.score += 1);
+                extraPointsPot += 1;
+                feedbackText = `¡Empate Total! Todos ganaron 1 punto y se acumula 1 punto extra (Pozo actual: ${extraPointsPot} pts).`;
+                playSound('success');
+            } else if (numWinners === 0) {
+                // TODOS FALLAN
+                feedbackText = `Nadie acertó. Las puntuaciones se mantienen y el pozo acumulado de ${extraPointsPot} pts pasa a la siguiente pregunta.`;
+                playSound('error');
+            } else {
+                // ACIERTOS PARCIALES
+                const pointsToAward = numLosers + extraPointsPot;
+                teams.forEach(t => {
+                    if (winnersList.includes(t.id)) {
+                        t.score += pointsToAward;
+                    }
+                });
+                feedbackText = `¡Aciertos! Los ganadores obtienen ${pointsToAward} pts (${numLosers} por rivales fallidos + ${extraPointsPot} del pozo acumulado). El pozo vuelve a 0.`;
+                extraPointsPot = 0;
+                playSound('success');
+            }
+
+            const feedbackEl = document.getElementById('round-feedback');
+            feedbackEl.textContent = `📢 ${feedbackText}`;
+            feedbackEl.classList.remove('hidden');
+
+            const winnerTeam = teams.find(t => t.score >= targetScore);
+
+            if (winnerTeam) {
+                setTimeout(() => {
+                    showVictoryScreen();
+                }, 1200);
+            } else {
+                // AVANZAR MAZO DE PREGUNTAS (Sin repetición)
+                currentQuestionIndex++;
+                if (currentQuestionIndex >= questions.length) {
+                    setTimeout(() => {
+                        showGameoverScreen();
+                    }, 1200);
+                } else {
+                    loadQuestion();
+                }
+            }
+        }
+
+        // --- PANTALLA DE VICTORIA ---
+        function showVictoryScreen() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('victory-screen').classList.remove('hidden');
+            document.getElementById('victory-msg').textContent = `Un equipo ha alcanzado los ${targetScore} puntos necesarios para la victoria.`;
+
+            const leaderboardContainer = document.getElementById('victory-leaderboard');
+            leaderboardContainer.innerHTML = '';
+            
+            const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
+            sortedTeams.forEach((t, idx) => {
+                const row = document.createElement('div');
+                row.className = "flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800";
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-lg font-black text-emerald-400">#${idx + 1}</span>
+                        <span class="font-extrabold text-white text-sm">${t.name}</span>
+                    </div>
+                    <div class="font-black text-emerald-400 text-base">${t.score} pts</div>
+                `;
+                leaderboardContainer.appendChild(row);
+            });
+            playSound('victory');
+        }
+
+        // --- PANTALLA DE MAZO AGOTADO (GAMEOVER) ---
+        function showGameoverScreen() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('gameover-screen').classList.remove('hidden');
+
+            const leaderboardContainer = document.getElementById('gameover-leaderboard');
+            leaderboardContainer.innerHTML = '';
+            
+            const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
+            sortedTeams.forEach((t, idx) => {
+                const row = document.createElement('div');
+                row.className = "flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200 shadow-sm";
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-lg font-black text-slate-400">#${idx + 1}</span>
+                        <span class="font-extrabold text-slate-700 text-sm">${t.name}</span>
+                    </div>
+                    <div class="font-black text-indigo-600 text-base">${t.score} pts</div>
+                `;
+                leaderboardContainer.appendChild(row);
+            });
+            playSound('error');
+        }
+
+        // --- ASIGNACIÓN DE EVENTOS ---
+        document.getElementById('btn-start').onclick = startGame;
+        document.getElementById('btn-reveal').onclick = revealAnswer;
+        document.getElementById('btn-confirm-scores').onclick = confirmScoresAndNext;
+        
+        document.getElementById('btn-file-trigger').onclick = () => { document.getElementById('excel-file-input').click(); };
+        document.getElementById('excel-file-input').onchange = handleManualFileSelect;
+
+        document.getElementById('btn-exit').onclick = () => { document.getElementById('exit-modal').classList.remove('hidden'); };
+        document.getElementById('btn-exit-cancel').onclick = () => { document.getElementById('exit-modal').classList.add('hidden'); };
+        
+        document.getElementById('btn-exit-confirm').onclick = () => {
+            document.getElementById('exit-modal').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('setup-screen').classList.remove('hidden');
+            renderSetupControls();
+        };
+
+        document.getElementById('btn-restart').onclick = () => {
+            document.getElementById('victory-screen').classList.add('hidden');
+            document.getElementById('setup-screen').classList.remove('hidden');
+            renderSetupControls();
+        };
+
+        document.getElementById('btn-restart-gameover').onclick = () => {
+            document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('setup-screen').classList.remove('hidden');
+            renderSetupControls();
+        };
+
+        window.onload = async () => {
+            await loadExcelFile();
+            renderSetupControls();
+            updateTeamsList();
+        };
+    </script>
+</body>
+</html>
