@@ -58,15 +58,16 @@
                     </span>
                 </div>
                 
-                <div id="cors-fallback-box" class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-center max-w-lg mx-auto space-y-3">
-                    <p class="text-xs text-indigo-900 font-bold">📂 ¿Ejecutando de forma local?</p>
-                    <p class="text-[11px] text-slate-500 leading-relaxed">
-                        Si tu navegador bloquea la lectura automática debido a políticas de seguridad local (CORS), simplemente arrastra o selecciona tu archivo <strong>cartas.xlsx</strong> aquí abajo:
+                <!-- Caja para Cargar Archivo Opcional -->
+                <div id="custom-file-box" class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-center max-w-lg mx-auto space-y-3">
+                    <p class="text-sm text-indigo-900 font-bold">📂 Cargar Mazo Personalizado</p>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        El juego intenta cargar <strong>cartas.xlsx</strong> por defecto. Si deseas usar preguntas diferentes o tu navegador bloqueó la lectura automática, selecciona tu archivo Excel aquí:
                     </p>
                     <div class="flex justify-center gap-2">
                         <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" class="hidden" />
-                        <button id="btn-file-trigger" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm">
-                            📎 Seleccionar cartas.xlsx
+                        <button id="btn-file-trigger" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm flex items-center gap-2">
+                            📎 Seleccionar otro archivo Excel
                         </button>
                     </div>
                 </div>
@@ -449,10 +450,10 @@
                 if (parsedQuestions.length === 0) throw new Error("La hoja de cálculo está vacía.");
                 
                 questions = parsedQuestions;
-                statusEl.className = "bg-emerald-100 text-emerald-800 text-xs font-bold px-4 py-2 rounded-full border border-emerald-200 text-center animate-pop-in";
-                statusEl.textContent = `✅ cartas.xlsx cargado correctamente (${questions.length} cartas)`;
-                
-                document.getElementById('cors-fallback-box').classList.add('hidden');
+                statusEl.className = "bg-emerald-100 text-emerald-800 text-xs font-bold px-4 py-2 rounded-full border border-emerald-200 text-center animate-pop-in inline-block";
+                statusEl.textContent = `✅ cartas.xlsx cargado por defecto (${questions.length} cartas)`;
+            } catch (err) {
+                console.warn("Fallo la lectura automática (CORS / Local Server). Esperando carga asistida o usando mazo de respaldo.", err);
             } catch (err) {
                 questions = BACKUP_QUESTIONS;
                 statusEl.className = "bg-yellow-100 text-yellow-800 text-xs font-bold px-4 py-2 rounded-full border border-yellow-200 text-center";
@@ -481,9 +482,10 @@
                     questions = parsedQuestions;
                     
                     const statusEl = document.getElementById('excel-status');
-                    statusEl.className = "bg-emerald-100 text-emerald-800 text-xs font-bold px-4 py-2 rounded-full border border-emerald-200 text-center animate-pop-in";
-                    statusEl.textContent = `✅ ¡Éxito! Mazo actualizado correctamente (${questions.length} cartas)`;
+                    statusEl.className = "bg-emerald-100 text-emerald-800 text-xs font-bold px-4 py-2 rounded-full border border-emerald-200 text-center animate-pop-in inline-block";
+                    statusEl.textContent = `✅ ¡Éxito! Mazo "${file.name}" cargado correctamente (${questions.length} cartas)`;
                     
+                    document.getElementById('btn-file-trigger').innerHTML = `📎 ${file.name}`;
                     playSound('success');
                 } catch (err) {
                     alert("No se pudo leer el archivo. Revisa que siga la estructura básica de columnas.");
