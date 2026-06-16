@@ -57,16 +57,18 @@
                     </span>
                 </div>
                 
-                <!-- Caja para Cargar Archivo Opcional -->
-                <div id="custom-file-box" class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-center max-w-lg mx-auto space-y-3">
-                    <p class="text-sm text-indigo-900 font-bold">📂 Cargar Mazo Personalizado</p>
-                    <p class="text-xs text-slate-500 leading-relaxed">
-                        El juego intenta cargar <strong>cartas.xlsx</strong> por defecto. Si deseas usar preguntas diferentes o tu navegador bloqueó la lectura automática, selecciona tu archivo Excel aquí:
+                <!-- Caja para Cargar Archivo Opcional / Manual -->
+                <div id="custom-file-box" class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 md:p-6 text-center max-w-lg mx-auto space-y-3 shadow-inner">
+                    <p class="text-base text-indigo-900 font-black flex items-center justify-center gap-2">
+                        <span>📂</span> Base de Datos de Preguntas
                     </p>
-                    <div class="flex justify-center gap-2">
+                    <p class="text-xs md:text-sm text-slate-600 leading-relaxed font-medium">
+                        El juego intenta cargar <strong>cartas.xlsx</strong> por defecto. Si tu navegador bloquea la carga local o deseas usar un mazo de preguntas diferente, cárgalo manualmente aquí:
+                    </p>
+                    <div class="flex justify-center gap-2 pt-2">
                         <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" class="hidden" />
-                        <button id="btn-file-trigger" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm flex items-center gap-2">
-                            📎 Seleccionar otro archivo Excel
+                        <button id="btn-file-trigger" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm md:text-base font-black rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2">
+                            📎 Utilizar excel propio
                         </button>
                     </div>
                 </div>
@@ -489,7 +491,7 @@
                     statusEl.className = "bg-emerald-100 text-emerald-800 text-xs font-bold px-4 py-2 rounded-full border border-emerald-200 text-center animate-pop-in inline-block";
                     statusEl.textContent = `✅ ¡Éxito! Mazo "${file.name}" cargado correctamente (${questions.length} cartas)`;
                     
-                    document.getElementById('btn-file-trigger').innerHTML = `📎 ${file.name}`;
+                    document.getElementById('btn-file-trigger').innerHTML = `📎 Archivo cargado: ${file.name}`;
                     playSound('success');
                 } catch (err) {
                     alert("No se pudo leer el archivo. Revisa que siga la estructura básica de columnas.");
